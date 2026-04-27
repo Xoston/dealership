@@ -1,0 +1,98 @@
+.container {
+  background: rgba(255,255,255,0.8);
+  backdrop-filter: blur(10px);
+  padding: 2rem;
+  border-radius: 20px;
+  margin-top: 2rem;
+  box-shadow: 0 10px 25px rgba(74,20,140,0.2);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 1.2rem;
+}
+
+.field label {
+  font-weight: 600;
+  margin-bottom: 0.4rem;
+  color: var(--text);
+}
+
+.field input {
+  padding: 0.8rem 1rem;
+  border: 2px solid rgba(74,20,140,0.15);
+  border-radius: 12px;
+  background: white;
+  transition: all 0.3s;
+  font-size: 1rem;
+  font-family: inherit;
+}
+
+.field input:focus {
+  outline: none;
+  border-color: var(--primary-light);
+  box-shadow: 0 0 0 4px rgba(123,31,162,0.1);
+}
+
+.calcBtn {
+  background: linear-gradient(135deg, var(--primary), var(--primary-light));
+  color: white;
+  border: none;
+  padding: 0.8rem 2rem;
+  border-radius: 30px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  box-shadow: 0 4px 15px rgba(74,20,140,0.3);
+  width: 100%;
+}
+
+.calcBtn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(74,20,140,0.5);
+}
+
+.error {
+  color: var(--error);
+  margin-top: 0.5rem;
+}
+
+.result {
+  margin-top: 1.5rem;
+  padding: 1.5rem;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+}
+
+.result summary {
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 1rem;
+  color: var(--primary);
+}
+
+.paymentTable {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.paymentTable th,
+.paymentTable td {
+  padding: 0.5rem;
+  text-align: left;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.paymentTable th {
+  background-color: #f4f0f8;
+  color: var(--primary);
+  font-weight: 600;
+}
+
+.paymentTable tr:hover td {
+  background-color: #faf6fd;
+}

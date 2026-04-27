@@ -1,0 +1,150 @@
+.container {
+  max-width: 1000px;
+  margin: 2rem auto;
+  padding: 0 2rem;
+}
+
+.loading {
+  text-align: center;
+  padding: 3rem;
+  font-size: 1.5rem;
+  color: var(--primary);
+}
+
+.title {
+  font-family: 'Playfair Display', serif;
+  font-size: 2.5rem;
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.tabs {
+  display: flex;
+  border-bottom: 1px solid #e0e0e0;
+  margin-bottom: 2rem;
+  gap: 1rem;
+}
+
+.tab {
+  padding: 0.8rem 1.5rem;
+  background: none;
+  border: none;
+  border-bottom: 3px solid transparent;
+  font-weight: 600;
+  color: #666;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.tab:hover {
+  color: var(--primary);
+}
+
+.active {
+  border-bottom-color: var(--primary);
+  color: var(--primary);
+}
+
+.cardsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1rem;
+}
+
+.card {
+  background: white;
+  border-radius: 16px;
+  padding: 1.2rem;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+}
+
+.cardHeader {
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  font-size: 1.1rem;
+}
+
+.cardBody {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  font-size: 0.95rem;
+  color: #555;
+}
+
+.price {
+  color: var(--primary);
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.empty {
+  text-align: center;
+  color: #888;
+  padding: 2rem;
+}
+
+/* Профиль */
+.profileSection {
+  background: white;
+  padding: 2rem;
+  border-radius: 20px;
+  box-shadow: 0 8px 25px rgba(0,0,0,0.05);
+}
+
+.profileForm {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.field label {
+  font-weight: 600;
+  color: #444;
+}
+
+.field input {
+  padding: 0.8rem 1rem;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-family: inherit;
+}
+
+.field input:disabled {
+  background: #f5f5f5;
+  color: #888;
+}
+
+.saveBtn {
+  align-self: flex-start;
+  background: var(--primary);
+  color: white;
+  border: none;
+  padding: 0.8rem 2rem;
+  border-radius: 30px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.saveBtn:hover {
+  background: var(--primary-light);
+}
+
+.successMsg {
+  color: #2e7d32;
+  font-weight: 500;
+}
+
+.errorMsg {
+  color: #d32f2f;
+  font-weight: 500;
+}

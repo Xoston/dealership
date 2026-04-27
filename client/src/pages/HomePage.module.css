@@ -1,0 +1,116 @@
+.container {
+  position: relative;
+  height: 100vh;
+  overflow: hidden;
+  background: #000;
+}
+
+.slidesWrapper {
+  position: absolute;
+  inset: 0;
+}
+
+.slide {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(0deg, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.2) 50%, rgba(0,0,0,0.5) 100%);
+}
+
+.content {
+  position: relative;
+  text-align: center;
+  color: white;
+  z-index: 1;
+  padding: 0 2rem;
+}
+
+.content h1 {
+  font-family: 'Playfair Display', serif;
+  font-size: 5rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  text-shadow: 0 4px 30px rgba(0,0,0,0.5);
+}
+
+.content h2 {
+  font-family: 'Playfair Display', serif;
+  font-size: 4rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  text-shadow: 0 4px 30px rgba(0,0,0,0.5);
+}
+
+.content p {
+  font-size: 1.5rem;
+  margin-bottom: 2rem;
+  font-weight: 300;
+  text-shadow: 0 2px 15px rgba(0,0,0,0.4);
+}
+
+.price {
+  font-size: 2rem !important;
+  font-weight: 600 !important;
+  color: #ce93d8;
+}
+
+.cta {
+  display: inline-block;
+  background: rgba(255,255,255,0.15);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,0.3);
+  color: white;
+  padding: 0.8rem 2.5rem;
+  border-radius: 50px;
+  font-weight: 600;
+  font-size: 1.1rem;
+  text-decoration: none;
+  transition: all 0.3s;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.cta:hover {
+  background: rgba(255,255,255,0.25);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+}
+
+.dots {
+  position: absolute;
+  right: 2rem;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  z-index: 100;
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.4);
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.dot:hover {
+  background: rgba(255,255,255,0.8);
+}
+
+.activeDot {
+  background: white;
+  transform: scale(1.4);
+  box-shadow: 0 0 10px rgba(255,255,255,0.5);
+}

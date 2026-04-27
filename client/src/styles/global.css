@@ -1,0 +1,64 @@
+:root {
+  --primary: #4A148C;
+  --primary-light: #7B1FA2;
+  --accent: #E1BEE7;
+  --bg: #ffffff;
+  --text: #1a1a1a;
+  --glass-bg: rgba(255, 255, 255, 0.25);
+  --glass-border: rgba(255, 255, 255, 0.18);
+  --error: #D32F2F;
+  --radius: 16px;
+  --shadow: 0 8px 32px rgba(74, 20, 140, 0.15);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: #f8f6fb;
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Анимированный градиентный фон */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, rgba(74,20,140,0.05) 0%, rgba(123,31,162,0.03) 50%, rgba(206,147,216,0.05) 100%);
+  background-size: 400% 400%;
+  animation: gradientShift 15s ease infinite;
+  z-index: -2;
+}
+
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+a {
+  text-decoration: none;
+  color: var(--primary);
+  transition: color 0.3s;
+}
+
+/* Кастомный скроллбар */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(74,20,140,0.05);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--primary-light);
+  border-radius: 10px;
+}
