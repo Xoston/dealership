@@ -4,7 +4,7 @@ import api, { getImageUrl } from '../services/api';
 import { motion, AnimatePresence } from 'framer-motion';
 import styles from './AdminPanel.module.css';
 
-// Полный список марок и моделей (расширенный)
+// Полный список марок и моделей (тот же, что используется в админ-панели)
 const brandModels = {
   "BMW": ["1 Series", "2 Series Gran Coupe", "2 Series Coupe", "3 Series Sedan", "3 Series Touring",
     "4 Series Gran Coupe", "4 Series Coupe", "5 Series Sedan", "5 Series Touring",
@@ -512,10 +512,10 @@ const AdminPanel = () => {
                     </div>
                   </div>
 
-                  {/* Технические характеристики */}
+                  {/* Технические характеристики (сеткой) */}
                   <details className={styles.techDetails}>
                     <summary>Технические характеристики</summary>
-                    <div className={styles.formRow}>
+                    <div className={styles.specsGrid}>
                       <div className={styles.formGroup}>
                         <label>Объём двигателя, л</label>
                         <input type="number" step="0.1" value={carForm.engine_volume || ''} onChange={e => setCarForm({...carForm, engine_volume: e.target.value})} />
@@ -534,8 +534,6 @@ const AdminPanel = () => {
                           <option value="electric">Электро</option>
                         </select>
                       </div>
-                    </div>
-                    <div className={styles.formRow}>
                       <div className={styles.formGroup}>
                         <label>Расход, л/100км</label>
                         <input type="number" step="0.1" value={carForm.consumption || ''} onChange={e => setCarForm({...carForm, consumption: e.target.value})} />
@@ -559,8 +557,6 @@ const AdminPanel = () => {
                           <option value="variator">Вариатор</option>
                         </select>
                       </div>
-                    </div>
-                    <div className={styles.formRow}>
                       <div className={styles.formGroup}>
                         <label>Разгон 0-100 км/ч, с</label>
                         <input type="number" step="0.1" value={carForm.acceleration || ''} onChange={e => setCarForm({...carForm, acceleration: e.target.value})} />
@@ -573,9 +569,7 @@ const AdminPanel = () => {
                         <label>Клиренс, мм</label>
                         <input type="number" value={carForm.clearance || ''} onChange={e => setCarForm({...carForm, clearance: e.target.value})} />
                       </div>
-                    </div>
-                    <div className={styles.formRow}>
-                      <div className={styles.formGroup} style={{ maxWidth: '150px' }}>
+                      <div className={styles.formGroup}>
                         <label>Мест</label>
                         <input type="number" value={carForm.seats || ''} onChange={e => setCarForm({...carForm, seats: e.target.value})} />
                       </div>
@@ -627,4 +621,4 @@ const AdminPanel = () => {
   );
 };
 
-export default AdminPanel;  
+export default AdminPanel;
