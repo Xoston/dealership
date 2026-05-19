@@ -11,64 +11,62 @@
   z-index: 1000;
   box-shadow: 0 2px 10px rgba(0,0,0,0.05);
 }
-
 .logo a {
   font-family: 'Playfair Display', serif;
   font-size: 1.8rem;
   font-weight: 700;
   color: var(--text);
-  letter-spacing: 2px;
+  text-decoration: none;
   transition: transform 0.3s;
-  display: inline-block;
 }
-.logo a:hover {
-  transform: scale(1.05);
-}
-
+.logo a:hover { transform: scale(1.05); }
 .links {
   display: flex;
-  gap: 2rem;
+  gap: 1.5rem;
   align-items: center;
 }
-
 .links a {
   font-weight: 500;
+  text-decoration: none;
   color: var(--text);
-  opacity: 0.8;
-  position: relative;
-  transition: opacity 0.3s, color 0.3s;
+  opacity: 0.9;
+  transition: opacity 0.3s;
 }
-.links a::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  bottom: -4px;
-  width: 0;
-  height: 2px;
-  background: var(--primary);
-  transition: width 0.3s;
-}
-.links a:hover {
-  opacity: 1;
-  color: var(--primary);
-}
-.links a:hover::after {
-  width: 100%;
-}
-
-.logoutBtn {
+.links a:hover { opacity: 1; }
+.logoutBtn, .themeBtn, .notificationBtn {
   background: transparent;
-  border: 1.5px solid var(--primary);
+  border: 1px solid var(--primary);
   color: var(--primary);
-  padding: 0.4rem 1.5rem;
-  border-radius: 25px;
+  padding: 0.4rem 0.8rem;
+  border-radius: 20px;
   cursor: pointer;
   font-weight: 600;
   transition: all 0.3s;
-  backdrop-filter: blur(5px);
+  font-size: 0.9rem;
 }
-.logoutBtn:hover {
+.logoutBtn:hover, .themeBtn:hover, .notificationBtn:hover {
   background: var(--primary);
   color: white;
-  box-shadow: 0 0 15px rgba(74,20,140,0.4);
 }
+.notificationBtn {
+  position: relative;
+}
+.badge {
+  position: absolute;
+  top: -6px;
+  right: -8px;
+  background: #D32F2F;
+  color: white;
+  border-radius: 50%;
+  padding: 0.1rem 0.4rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+@media (max-width: 768px) {
+  .navbar { flex-direction: column; padding: 1rem; }
+  .links { flex-wrap: wrap; justify-content: center; margin-top: 0.5rem; }
+}
+.notificationWrapper {
+  position: relative;
+}
+/* остальные стили без изменений */

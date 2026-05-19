@@ -13,6 +13,8 @@ def get_connection():
 def init_db():
     conn = get_connection()
     cursor = conn.cursor()
+
+    # Создание таблиц, если их нет
     cursor.executescript("""
     CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -32,8 +34,25 @@ def init_db():
         description TEXT,
         image_url TEXT,
         body_type TEXT DEFAULT 'sedan',
+        restyling BOOLEAN DEFAULT FALSE,
+        engine_volume REAL,
+        power INTEGER,
+        fuel_type TEXT,
+        consumption REAL,
+        drive_type TEXT,
+        transmission TEXT,
+        acceleration REAL,
+        max_speed INTEGER,
+        clearance INTEGER,
+        seats INTEGER,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP
+    );
+    CREATE TABLE IF NOT EXISTS car_images (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        car_id INTEGER NOT NULL,
+        image_url TEXT NOT NULL,
+        FOREIGN KEY (car_id) REFERENCES cars(id) ON DELETE CASCADE
     );
     CREATE TABLE IF NOT EXISTS loan_applications (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -72,5 +91,27 @@ def init_db():
         FOREIGN KEY (car_id) REFERENCES cars(id)
     );
     """)
+
+    # Миграция: добавляем новые столбцы, если их нет
+    new_columns = [
+        "engine_volume REAL",
+        "power INTEGER",
+        "fuel_type TEXT",
+        "consumption REAL",
+        "drive_type TEXT",
+        "transmission TEXT",
+        "acceleration REAL",
+        "max_speed INTEGER",
+        "clearance INTEGER",
+        "seats INTEGER"
+    ]
+    for col_def in new_columns:
+        col_name = col_def.split()[0]
+        col_type = col_def.split()[-1]
+        try:
+            cursor.execute(f"ALTER TABLE cars ADD COLUMN {col_name} {col_type}")
+        except sqlite3.OperationalError:
+            pass  # колонка уже существует
+
     conn.commit()
     conn.close()

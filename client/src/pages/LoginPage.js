@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import styles from './Auth.module.css';
 
 const LoginPage = () => {
   const { login } = useAuth();
@@ -20,14 +22,43 @@ const LoginPage = () => {
   };
 
   return (
-    <div style={{ maxWidth: 400, margin: '2rem auto' }}>
-      <h2>Вход</h2>
-      <form onSubmit={handleSubmit}>
-        <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required style={{ width: '100%', marginBottom: '1rem' }} />
-        <input type="password" placeholder="Пароль" value={password} onChange={(e) => setPassword(e.target.value)} required style={{ width: '100%', marginBottom: '1rem' }} />
-        {error && <p style={{ color: 'red' }}>{error}</p>}
-        <button type="submit" style={{ background: 'var(--primary)', color: 'white', border: 'none', padding: '0.7rem 1.5rem', borderRadius: '8px', cursor: 'pointer' }}>Войти</button>
-      </form>
+    <div className={styles.wrapper}>
+      <motion.div
+        className={styles.card}
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        <h2 className={styles.title}>Добро пожаловать</h2>
+        <p className={styles.subtitle}>Войдите, чтобы продолжить</p>
+        <form onSubmit={handleSubmit} className={styles.form}>
+          <div className={styles.field}>
+            <label>Email</label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="your@email.com"
+              required
+            />
+          </div>
+          <div className={styles.field}>
+            <label>Пароль</label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••••"
+              required
+            />
+          </div>
+          {error && <p className={styles.error}>{error}</p>}
+          <button type="submit" className={styles.btn}>Войти</button>
+        </form>
+        <p className={styles.footerText}>
+          Ещё нет аккаунта? <Link to="/register">Зарегистрироваться</Link>
+        </p>
+      </motion.div>
     </div>
   );
 };

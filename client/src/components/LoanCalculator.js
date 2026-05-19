@@ -31,16 +31,16 @@ const LoanCalculator = ({ carId, carPrice }) => {
       <h3>Кредитный калькулятор</h3>
       <form onSubmit={handleCalculate}>
         <div className={styles.field}>
-          <label>Сумма кредита</label>
-          <input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} required />
+          <label htmlFor="amount">Сумма кредита</label>
+          <input id="amount" type="number" value={amount} onChange={(e) => setAmount(e.target.value)} required />
         </div>
         <div className={styles.field}>
-          <label>Срок (мес.)</label>
-          <input type="number" value={term} onChange={(e) => setTerm(e.target.value)} required />
+          <label htmlFor="term">Срок (мес.)</label>
+          <input id="term" type="number" value={term} onChange={(e) => setTerm(e.target.value)} required />
         </div>
         <div className={styles.field}>
-          <label>Годовая ставка (%)</label>
-          <input type="number" step="0.1" value={rate} onChange={(e) => setRate(e.target.value)} required />
+          <label htmlFor="rate">Годовая ставка (%)</label>
+          <input id="rate" type="number" step="0.1" value={rate} onChange={(e) => setRate(e.target.value)} required />
         </div>
         <button type="submit" className={styles.calcBtn}>Рассчитать</button>
       </form>

@@ -6,6 +6,8 @@ const AuthContext = createContext(null);
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light');
+  const [notifications, setNotifications] = useState([]);
 
   useEffect(() => {
     const token = localStorage.getItem('access_token');
@@ -18,6 +20,15 @@ export const AuthProvider = ({ children }) => {
       setLoading(false);
     }
   }, []);
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('theme', theme);
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme(prev => prev === 'light' ? 'dark' : 'light');
+  };
 
   const login = async (email, password) => {
     const res = await authService.login(email, password);
@@ -36,8 +47,20 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
   };
 
+  const addNotification = (msg) => {
+    setNotifications(prev => [...prev, { id: Date.now(), message: msg }]);
+  };
+
+  const clearNotifications = () => {
+    setNotifications([]);
+  };
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout }}>
+    <AuthContext.Provider value={{
+      user, loading, login, register, logout,
+      theme, toggleTheme,
+      notifications, addNotification, clearNotifications
+    }}>
       {children}
     </AuthContext.Provider>
   );

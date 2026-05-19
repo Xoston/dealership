@@ -29,6 +29,13 @@ class Token(BaseModel):
     user: UserOut
 
 # ---------- Cars ----------
+class CarImageOut(BaseModel):
+    id: int
+    car_id: int
+    image_url: str
+
+    model_config = {"from_attributes": True}
+
 class CarBase(BaseModel):
     brand: str
     model: str
@@ -37,6 +44,17 @@ class CarBase(BaseModel):
     description: Optional[str] = None
     image_url: Optional[str] = None
     body_type: str = "sedan"
+    restyling: bool = False
+    engine_volume: Optional[float] = None
+    power: Optional[int] = None
+    fuel_type: Optional[str] = None
+    consumption: Optional[float] = None
+    drive_type: Optional[str] = None
+    transmission: Optional[str] = None
+    acceleration: Optional[float] = None
+    max_speed: Optional[int] = None
+    clearance: Optional[int] = None
+    seats: Optional[int] = None
 
     @field_validator("price")
     @classmethod
@@ -56,11 +74,23 @@ class CarUpdate(BaseModel):
     description: Optional[str] = None
     image_url: Optional[str] = None
     body_type: Optional[str] = None
+    restyling: Optional[bool] = None
+    engine_volume: Optional[float] = None
+    power: Optional[int] = None
+    fuel_type: Optional[str] = None
+    consumption: Optional[float] = None
+    drive_type: Optional[str] = None
+    transmission: Optional[str] = None
+    acceleration: Optional[float] = None
+    max_speed: Optional[int] = None
+    clearance: Optional[int] = None
+    seats: Optional[int] = None
 
 class CarOut(CarBase):
     id: int
     created_at: datetime
     updated_at: Optional[datetime]
+    images: list[CarImageOut] = []
 
     model_config = {"from_attributes": True}
 
@@ -82,7 +112,7 @@ class LoanCalculateResponse(BaseModel):
     monthly_payment: float
     total_payment: float
     overpayment: float
-    schedule: list[dict]  # [{month, payment, principal, interest, balance}]
+    schedule: list[dict]
 
 class LoanApplicationOut(BaseModel):
     id: int
@@ -101,7 +131,7 @@ class LoanApplicationOut(BaseModel):
 # ---------- Test Drive ----------
 class TestDriveRequestCreate(BaseModel):
     car_id: int
-    preferred_date: str          # теперь простая строка
+    preferred_date: str
     phone: str
     message: Optional[str] = None
 

@@ -1,8 +1,10 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from .database import init_db
 from .routes import cars, auth, loans, testdrives, purchases, admin
 from .audit import event_manager, FileLoggerObserver
+import os
 
 app = FastAPI(title="Luxury Car Dealership API", version="1.0.0")
 
@@ -16,6 +18,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+os.makedirs("uploads", exist_ok=True)
+app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
+
 file_logger = FileLoggerObserver("audit.log")
 event_manager.subscribe(file_logger)
 
@@ -24,7 +29,7 @@ app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
 app.include_router(loans.router, prefix="/api/loans", tags=["loans"])
 app.include_router(testdrives.router, prefix="/api/testdrives", tags=["testdrives"])
 app.include_router(purchases.router, prefix="/api/purchases", tags=["purchases"])
-app.include_router(admin.router)  # уже с префиксом /api/admin внутри
+app.include_router(admin.router)
 
 @app.get("/")
 def root():

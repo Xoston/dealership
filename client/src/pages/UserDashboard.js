@@ -1,11 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
 import { motion } from 'framer-motion';
 import styles from './UserDashboard.module.css';
 
 const UserDashboard = () => {
-  const { user, setUser } = useAuth();
+  const { user, setUser, notifications, addNotification, clearNotifications } = useAuth();
   const [activeTab, setActiveTab] = useState('profile');
   const [purchases, setPurchases] = useState([]);
   const [testDrives, setTestDrives] = useState([]);
@@ -17,25 +17,59 @@ const UserDashboard = () => {
   });
   const [updateStatus, setUpdateStatus] = useState(null);
 
+  const fetchData = useCallback(async () => {
+    try {
+      const [pRes, tRes, lRes] = await Promise.all([
+        api.get('/purchases/my'),
+        api.get('/testdrives/my'),
+        api.get('/loans/my'),
+      ]);
+      setPurchases(pRes.data);
+      setTestDrives(tRes.data);
+      setLoans(lRes.data);
+
+      // Проверка статусов для уведомлений
+      const savedLoanStatuses = JSON.parse(localStorage.getItem('loanStatuses') || '{}');
+      const newNotifications = [];
+      lRes.data.forEach(loan => {
+        const prevStatus = savedLoanStatuses[loan.id];
+        if (prevStatus && prevStatus !== loan.status) {
+          const text = loan.status === 'approved' ? `Кредит #${loan.id} одобрен` : `Кредит #${loan.id} отклонён`;
+          newNotifications.push(text);
+        }
+      });
+      const savedTDStatuses = JSON.parse(localStorage.getItem('tdStatuses') || '{}');
+      tRes.data.forEach(td => {
+        const prevStatus = savedTDStatuses[td.id];
+        if (prevStatus && prevStatus !== td.status) {
+          const text = td.status === 'approved' ? `Тест-драйв #${td.id} одобрен` : `Тест-драйв #${td.id} отклонён`;
+          newNotifications.push(text);
+        }
+      });
+      newNotifications.forEach(msg => addNotification(msg));
+
+      // Обновляем сохранённые статусы
+      const newLoanStatuses = {};
+      lRes.data.forEach(l => { newLoanStatuses[l.id] = l.status; });
+      localStorage.setItem('loanStatuses', JSON.stringify(newLoanStatuses));
+      const newTDStatuses = {};
+      tRes.data.forEach(t => { newTDStatuses[t.id] = t.status; });
+      localStorage.setItem('tdStatuses', JSON.stringify(newTDStatuses));
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  }, [addNotification]);
+
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [pRes, tRes, lRes] = await Promise.all([
-          api.get('/purchases/my'),
-          api.get('/testdrives/my'),
-          api.get('/loans/my'),
-        ]);
-        setPurchases(pRes.data);
-        setTestDrives(tRes.data);
-        setLoans(lRes.data);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
     if (user) fetchData();
-  }, [user]);
+  }, [user, fetchData]);
+
+  // При переключении на вкладки обновляем
+  useEffect(() => {
+    if (activeTab === 'loans' || activeTab === 'testdrives') fetchData();
+  }, [activeTab, fetchData]);
 
   const handleProfileUpdate = async (e) => {
     e.preventDefault();
@@ -53,8 +87,10 @@ const UserDashboard = () => {
   const tabs = [
     { key: 'profile', label: 'Профиль' },
     { key: 'purchases', label: 'Мои покупки' },
+    { key: 'favorites', label: 'Избранное' },
     { key: 'testdrives', label: 'Тест-драйвы' },
     { key: 'loans', label: 'Кредиты' },
+    { key: 'notifications', label: 'Уведомления' },
   ];
 
   const renderContent = () => {
@@ -70,20 +106,11 @@ const UserDashboard = () => {
               </div>
               <div className={styles.field}>
                 <label>Полное имя</label>
-                <input
-                  type="text"
-                  value={profileForm.full_name}
-                  onChange={(e) => setProfileForm({ ...profileForm, full_name: e.target.value })}
-                  required
-                />
+                <input type="text" value={profileForm.full_name} onChange={(e) => setProfileForm({ ...profileForm, full_name: e.target.value })} required />
               </div>
               <div className={styles.field}>
                 <label>Телефон</label>
-                <input
-                  type="tel"
-                  value={profileForm.phone}
-                  onChange={(e) => setProfileForm({ ...profileForm, phone: e.target.value })}
-                />
+                <input type="tel" value={profileForm.phone} onChange={(e) => setProfileForm({ ...profileForm, phone: e.target.value })} />
               </div>
               <button type="submit" className={styles.saveBtn}>Сохранить изменения</button>
               {updateStatus === 'success' && <p className={styles.successMsg}>Профиль обновлен</p>}
@@ -96,9 +123,7 @@ const UserDashboard = () => {
           <div className={styles.cardsGrid}>
             {purchases.map((p, idx) => (
               <div key={idx} className={styles.card}>
-                <div className={styles.cardHeader}>
-                  <strong>{p.brand} {p.model}</strong> ({p.year})
-                </div>
+                <div className={styles.cardHeader}><strong>{p.brand} {p.model}</strong> ({p.year})</div>
                 <div className={styles.cardBody}>
                   <span>Дата: {new Date(p.purchase_date).toLocaleDateString()}</span>
                   <span className={styles.price}>{p.price.toLocaleString()} ₽</span>
@@ -107,6 +132,11 @@ const UserDashboard = () => {
             ))}
           </div>
         ) : <p className={styles.empty}>У вас ещё нет покупок.</p>;
+      case 'favorites':
+        const favIds = JSON.parse(localStorage.getItem('favorites') || '[]');
+        return favIds.length ? (
+          <p className={styles.empty}>Избранное (ID: {favIds.join(', ')}) – доработайте отображение по желанию</p>
+        ) : <p className={styles.empty}>Нет избранных автомобилей.</p>;
       case 'testdrives':
         return testDrives.length ? (
           <div className={styles.cardsGrid}>
@@ -129,15 +159,28 @@ const UserDashboard = () => {
               <div key={loan.id} className={styles.card}>
                 <div className={styles.cardHeader}>Кредитная заявка</div>
                 <div className={styles.cardBody}>
-                  <span>Сумма: {loan.amount.toLocaleString()} ₽</span>
+                  <span>Сумма: {loan.amount?.toLocaleString()} ₽</span>
                   <span>Срок: {loan.term_months} мес.</span>
-                  <span>Платёж: {loan.monthly_payment} ₽/мес.</span>
-                  <span>{loan.status}</span>
+                  <span>Платёж: {loan.monthly_payment?.toLocaleString()} ₽/мес.</span>
+                  <span className={`${styles.loanStatus} ${loan.status === 'approved' ? styles.approved : loan.status === 'rejected' ? styles.rejected : styles.pending}`}>
+                    {loan.status === 'approved' ? 'Одобрена' : loan.status === 'rejected' ? 'Отклонена' : 'Рассчитана'}
+                  </span>
                 </div>
               </div>
             ))}
           </div>
         ) : <p className={styles.empty}>Кредитных заявок пока нет.</p>;
+      case 'notifications':
+        return notifications.length ? (
+          <div className={styles.cardsGrid}>
+            {notifications.map((n, idx) => (
+              <div key={idx} className={`${styles.card} ${styles.notificationCard}`}>
+                <div className={styles.cardBody}>{n.message}</div>
+              </div>
+            ))}
+            <button className={styles.clearBtn} onClick={clearNotifications}>Очистить все</button>
+          </div>
+        ) : <p className={styles.empty}>Нет новых уведомлений.</p>;
       default:
         return null;
     }
@@ -150,11 +193,7 @@ const UserDashboard = () => {
       <h2 className={styles.title}>Личный кабинет – {user.full_name}</h2>
       <div className={styles.tabs}>
         {tabs.map(tab => (
-          <button
-            key={tab.key}
-            className={`${styles.tab} ${activeTab === tab.key ? styles.active : ''}`}
-            onClick={() => setActiveTab(tab.key)}
-          >
+          <button key={tab.key} className={`${styles.tab} ${activeTab === tab.key ? styles.active : ''}`} onClick={() => setActiveTab(tab.key)}>
             {tab.label}
           </button>
         ))}

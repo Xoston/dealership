@@ -9,35 +9,40 @@ const slides = [
     type: 'welcome',
     title: 'Искусство движения',
     subtitle: 'Эксклюзивные автомобили для тех, кто ценит совершенство',
-    bg: 'https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80',
+    bg: 'https://images.pexels.com/photos/170811/pexels-photo-170811.jpeg?auto=compress&cs=tinysrgb&w=1350&h=900&dpr=2',
+    overlay: 'linear-gradient(0deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.3) 50%, rgba(0,0,0,0.7) 100%)',
   },
   {
     id: 1,
     type: 'car',
-    model: 'BMW M5 Competition',
-    price: 14500000,
-    bg: 'https://images.unsplash.com/photo-1555215695-3004980ad54e?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80',
+    model: 'BMW M8 Gran Coupe',
+    price: 17500000,
+    bg: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRk1zcTIPWK5DG9cKv4uBtEFtC7kN0yYMoucg&s',
+    overlay: 'radial-gradient(circle at center, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.85) 100%)',
   },
   {
     id: 2,
     type: 'car',
     model: 'Porsche 911 Turbo S',
     price: 22000000,
-    bg: 'https://images.unsplash.com/photo-1614162692292-7ac56d7f7f1e?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80',
+    bg: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQA2Dlziw1pONEu76yfKWitfOrUAX-tbQydNQ&s',
+    overlay: 'radial-gradient(circle at center, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.85) 100%)',
   },
   {
     id: 3,
     type: 'car',
-    model: 'Range Rover Sport',
+    model: 'Range Rover Sport SV',
     price: 18500000,
-    bg: 'https://images.unsplash.com/photo-1606664515524-ed2f786a0bd6?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80',
+    bg: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRe_EfXhLNQJfKyBjtJpb3mGnBWxxGjOWrmyw&s',
+    overlay: 'radial-gradient(circle at center, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.85) 100%)',
   },
   {
     id: 4,
     type: 'car',
-    model: 'Mercedes-Benz S-Class',
-    price: 20000000,
-    bg: 'https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80',
+    model: 'Mercedes-AMG GT 63',
+    price: 19500000,
+    bg: 'https://images.pexels.com/photos/120049/pexels-photo-120049.jpeg?auto=compress&cs=tinysrgb&w=1350&h=900&dpr=2',
+    overlay: 'radial-gradient(circle at center, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.85) 100%)',
   },
 ];
 
@@ -85,24 +90,27 @@ const HomePage = () => {
             transition={{ duration: 0.8, ease: 'easeInOut' }}
             style={{ backgroundImage: `url(${slides[currentSlide].bg})` }}
           >
-            <div className={styles.overlay} />
-            {slides[currentSlide].type === 'welcome' ? (
-              <div className={styles.content}>
-                <h1>{slides[currentSlide].title}</h1>
-                <p>{slides[currentSlide].subtitle}</p>
-                <Link to="/catalog" className={styles.cta}>Смотреть каталог</Link>
-              </div>
-            ) : (
-              <div className={styles.content}>
-                <h2>{slides[currentSlide].model}</h2>
-                <p className={styles.price}>
-                  от {slides[currentSlide].price.toLocaleString()} ₽
-                </p>
-                <Link to="/catalog" className={styles.cta}>
-                  Подробнее
-                </Link>
-              </div>
-            )}
+            {/* Динамический оверлей для каждого слайда */}
+            <div className={styles.overlay} style={{ background: slides[currentSlide].overlay }} />
+            <div className={styles.content}>
+              {slides[currentSlide].type === 'welcome' ? (
+                <>
+                  <h1>{slides[currentSlide].title}</h1>
+                  <p>{slides[currentSlide].subtitle}</p>
+                  <Link to="/catalog" className={styles.cta}>Смотреть каталог</Link>
+                </>
+              ) : (
+                <>
+                  <h2>{slides[currentSlide].model}</h2>
+                  <p className={styles.price}>
+                    от {slides[currentSlide].price.toLocaleString()} ₽
+                  </p>
+                  <Link to="/catalog" className={styles.cta}>
+                    Подробнее
+                  </Link>
+                </>
+              )}
+            </div>
           </motion.div>
         </AnimatePresence>
       </div>

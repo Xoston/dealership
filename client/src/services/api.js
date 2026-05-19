@@ -13,4 +13,14 @@ api.interceptors.request.use(config => {
   return config;
 });
 
+// Базовый URL для статических файлов (изображений)
+export const IMAGE_BASE = 'http://localhost:8000';
+
+// Помощник: если URL относительный, делает его абсолютным
+export const getImageUrl = (url) => {
+  if (!url) return '/images/default-car.jpg';
+  if (url.startsWith('http')) return url;
+  return IMAGE_BASE + url;
+};
+
 export default api;
