@@ -66,6 +66,12 @@ const AdminPanel = () => {
   const [testDrives, setTestDrives] = useState([]);
   const [loans, setLoans] = useState([]);
   const [loading, setLoading] = useState(true);
+  const handleTestDriveStatus = async (tdId, status) => {
+  try {
+    await api.put(`/admin/testdrives/${tdId}/status`, { status });
+    setTestDrives(prev => prev.map(td => td.id === tdId ? { ...td, status } : td));
+  } catch (err) { alert('Ошибка обновления статуса'); }
+};
 
   // ---------- Модальное окно (добавление / редактирование) ----------
   const [showFormModal, setShowFormModal] = useState(false);
@@ -392,21 +398,37 @@ const AdminPanel = () => {
 
         {/* Тест-драйвы */}
         {activeTab === 'testdrives' && (
-          <div>
-            <table className={styles.table}>
-              <thead><tr><th>ID</th><th>Пользователь</th><th>Авто ID</th><th>Дата</th><th>Статус</th></tr></thead>
-              <tbody>
-                {testDrives.map(td => (
-                  <tr key={td.id}>
-                    <td>{td.id}</td><td>{td.user_id}</td><td>{td.car_id}</td>
-                    <td>{new Date(td.preferred_date).toLocaleString()}</td><td>{td.status}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-
+  <div>
+    <table className={styles.table}>
+      <thead>
+        <tr><th>ID</th><th>Пользователь</th><th>Авто ID</th><th>Дата</th><th>Статус</th><th>Действия</th></tr>
+      </thead>
+      <tbody>
+        {testDrives.map(td => (
+          <tr key={td.id}>
+            <td>{td.id}</td>
+            <td>{td.user_id}</td>
+            <td>{td.car_id}</td>
+            <td>{new Date(td.preferred_date).toLocaleString()}</td>
+            <td>
+              <span className={`${styles.status} ${td.status === 'approved' ? styles.approved : td.status === 'rejected' ? styles.rejected : styles.pending}`}>
+                {td.status === 'approved' ? 'Одобрена' : td.status === 'rejected' ? 'Отклонена' : 'Ожидает'}
+              </span>
+            </td>
+            <td style={{ display: 'flex', gap: '0.3rem' }}>
+              {td.status === 'pending' && (
+                <>
+                  <button className={styles.approveBtn} onClick={() => handleTestDriveStatus(td.id, 'approved')}>Одобрить</button>
+                  <button className={styles.rejectBtn} onClick={() => handleTestDriveStatus(td.id, 'rejected')}>Отклонить</button>
+                </>
+              )}
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+)}
         {/* Кредитные заявки */}
         {activeTab === 'loans' && (
           <div>
@@ -596,7 +618,7 @@ const AdminPanel = () => {
           </motion.div>
         )}
       </AnimatePresence>
-
+        
       {/* Модальное окно выбора модели */}
       <AnimatePresence>
         {showModelModal && (

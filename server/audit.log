@@ -65,3 +65,6 @@
 {"timestamp": "2026-05-19T08:08:30.952776", "event": "CAR_CREATED", "data": {"admin": "admin@luxury.com", "car_id": 9}}
 {"timestamp": "2026-05-19T08:25:00.432114", "event": "USER_LOGIN", "data": {"email": "admin@luxury.com"}}
 {"timestamp": "2026-05-19T08:57:54.857013", "event": "USER_LOGIN", "data": {"email": "admin@luxury.com"}}
+{"timestamp": "2026-05-21T10:34:55.688673", "event": "USER_LOGIN", "data": {"email": "admin@luxury.com"}}
+{"timestamp": "2026-05-21T10:35:38.404920", "event": "TESTDRIVE_REQUESTED", "data": {"user": "admin@luxury.com", "car_id": 9}}
+{"timestamp": "2026-05-21T10:44:33.738246", "event": "TESTDRIVE_REQUESTED", "data": {"user": "admin@luxury.com", "car_id": 9}}

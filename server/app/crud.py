@@ -407,3 +407,18 @@ def get_user_reviews(user_id: int):
     rows = cursor.fetchall()
     conn.close()
     return [dict(row) for row in rows]
+    def update_test_drive_status(td_id: int, new_status: str):
+    conn = get_connection()
+    conn.execute("UPDATE test_drive_requests SET status = ? WHERE id = ?", (new_status, td_id))
+    conn.commit()
+    conn.close()
+    return get_test_drive(td_id)
+    def get_test_drive(req_id: int):
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM test_drive_requests WHERE id = ?", (req_id,))
+    row = cursor.fetchone()
+    conn.close()
+    if row:
+        return dict(row)
+    return None

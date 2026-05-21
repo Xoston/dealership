@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { createTestDrive } from '../services/testDriveService';
 import { useAuth } from '../context/AuthContext';
+import styles from './TestDriveForm.module.css';
 
 const TestDriveForm = ({ carId }) => {
   const { user } = useAuth();
@@ -10,11 +11,36 @@ const TestDriveForm = ({ carId }) => {
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
 
+  const validatePhone = (value) => {
+    // Разрешённые форматы: +79161234567 или 89161234567
+    const cleaned = value.replace(/\D/g, '');
+    if (cleaned.length !== 11) return false;
+    if (cleaned[0] !== '7' && cleaned[0] !== '8') return false;
+    return true;
+  };
+
+  const formatPhone = (value) => {
+    // Автоматически добавляем +7 или 8 при вводе
+    const digits = value.replace(/\D/g, '');
+    if (digits.length === 0) return '';
+    if (digits[0] === '8') return `8${digits.slice(1, 11)}`;
+    return `+7${digits.slice(1, 11)}`;
+  };
+
+  const handlePhoneChange = (e) => {
+    const raw = e.target.value;
+    setPhone(formatPhone(raw));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     if (!user) {
       setError('Войдите, чтобы отправить заявку');
+      return;
+    }
+    if (!validatePhone(phone)) {
+      setError('Некорректный номер телефона. Введите 11 цифр, начиная с +7 или 8.');
       return;
     }
     try {
@@ -26,16 +52,13 @@ const TestDriveForm = ({ carId }) => {
       });
       setSuccess(true);
     } catch (err) {
-      // Извлекаем понятное сообщение из возможного сложного объекта ошибки
       const detail = err.response?.data?.detail;
       if (Array.isArray(detail)) {
-        // Массив ошибок валидации Pydantic
-        const messages = detail.map((e) => e.msg).join('. ');
-        setError(messages || 'Ошибка валидации данных');
+        setError(detail.map(e => e.msg).join('. '));
       } else if (typeof detail === 'string') {
         setError(detail);
       } else {
-        setError('Неизвестная ошибка сервера');
+        setError('Ошибка при отправке заявки');
       }
     }
   };
@@ -49,8 +72,16 @@ const TestDriveForm = ({ carId }) => {
       <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
         <input type="datetime-local" value={date} onChange={(e) => setDate(e.target.value)} required
           style={{ padding: '0.8rem', borderRadius: '12px', border: '2px solid rgba(74,20,140,0.15)', fontFamily: 'inherit' }} />
-        <input type="tel" placeholder="Телефон" value={phone} onChange={(e) => setPhone(e.target.value)} required
-          style={{ padding: '0.8rem', borderRadius: '12px', border: '2px solid rgba(74,20,140,0.15)', fontFamily: 'inherit' }} />
+        <input
+          type="tel"
+          placeholder="Телефон (+79161234567)"
+          value={phone}
+          onChange={handlePhoneChange}
+          required
+          pattern="(\+7|8)\d{10}"
+          title="Введите номер в формате +79161234567 или 89161234567"
+          style={{ padding: '0.8rem', borderRadius: '12px', border: error ? '2px solid #D32F2F' : '2px solid rgba(74,20,140,0.15)', fontFamily: 'inherit' }}
+        />
         <textarea placeholder="Сообщение (необязательно)" value={message} onChange={(e) => setMessage(e.target.value)}
           style={{ padding: '0.8rem', borderRadius: '12px', border: '2px solid rgba(74,20,140,0.15)', fontFamily: 'inherit', resize: 'vertical' }} />
         <button type="submit" style={{
