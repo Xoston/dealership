@@ -1,7 +1,9 @@
+/* ========== Детальная страница автомобиля ========== */
 .container {
   max-width: 1200px;
   margin: 2rem auto;
   padding: 0 2rem;
+  color: var(--text);
 }
 
 .loading {
@@ -11,6 +13,7 @@
   color: var(--primary);
 }
 
+/* Основной контент: галерея + информация */
 .content {
   display: flex;
   gap: 3rem;
@@ -18,20 +21,24 @@
   align-items: flex-start;
 }
 
+/* ---------- Галерея ---------- */
 .galleryWrapper {
   flex: 1 1 500px;
+  min-width: 0;
 }
 
 .mainImage {
   border-radius: 20px;
   overflow: hidden;
   box-shadow: 0 15px 30px rgba(0,0,0,0.15);
+  background: var(--glass-bg);
 }
 
 .image {
   width: 100%;
   height: 400px;
   object-fit: cover;
+  display: block;
 }
 
 .thumbnails {
@@ -48,30 +55,40 @@
   border-radius: 8px;
   cursor: pointer;
   border: 2px solid transparent;
-  transition: border-color 0.3s;
+  transition: border-color 0.3s, transform 0.2s;
+  opacity: 0.85;
 }
 
 .thumb:hover {
   border-color: var(--primary-light);
+  opacity: 1;
+  transform: scale(1.05);
 }
 
 .activeThumb {
   border-color: var(--primary);
+  opacity: 1;
 }
 
+/* ---------- Информация ---------- */
 .info {
   flex: 1 1 400px;
+  min-width: 0;
 }
 
 .title {
   font-family: 'Playfair Display', serif;
   font-size: 2.8rem;
   margin-bottom: 0.5rem;
+  color: var(--text);
+  word-break: break-word;
 }
 
 .year {
-  color: #666;
+  color: var(--text);
+  opacity: 0.7;
   margin-bottom: 1rem;
+  font-size: 1.1rem;
 }
 
 .price {
@@ -82,11 +99,14 @@
 }
 
 .description {
-  color: #555;
+  color: var(--text);
+  opacity: 0.8;
   line-height: 1.6;
   margin-bottom: 2rem;
+  word-wrap: break-word;
 }
 
+/* Кнопки действий */
 .buyButton {
   display: block;
   width: 100%;
@@ -101,9 +121,11 @@
   margin-bottom: 1.5rem;
   box-shadow: 0 8px 20px rgba(74,20,140,0.4);
   transition: all 0.3s ease;
+  letter-spacing: 0.5px;
 }
 
 .buyButton:hover {
+  transform: translateY(-2px);
   box-shadow: 0 12px 30px rgba(74,20,140,0.6);
 }
 
@@ -124,6 +146,8 @@
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s;
+  text-align: center;
+  white-space: nowrap;
 }
 
 .secondaryButton:hover {
@@ -131,38 +155,88 @@
   color: white;
 }
 
-.successMessage {
-  background: #e8f5e9;
-  color: #2e7d32;
-  padding: 1rem;
-  border-radius: 12px;
-  margin-top: 1rem;
-  font-weight: 500;
+/* ---------- Технические характеристики ---------- */
+.specs {
+  margin-top: 2rem;
 }
 
+.specs h3 {
+  font-family: 'Playfair Display', serif;
+  color: var(--primary);
+  margin-bottom: 1rem;
+  font-size: 1.5rem;
+}
+
+.specsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 0.8rem;
+}
+
+.specItem {
+  background: var(--glass-bg);
+  backdrop-filter: blur(10px);
+  padding: 0.8rem 1rem;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid rgba(128,128,128,0.1);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.specItem:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(74,20,140,0.1);
+}
+
+.specItem span {
+  font-size: 0.8rem;
+  opacity: 0.7;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  margin-bottom: 0.3rem;
+}
+
+.specItem strong {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--primary);
+}
+
+/* ---------- Модальные окна ---------- */
 .modalOverlay {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.5);
+  background: rgba(0,0,0,0.6);
   backdrop-filter: blur(5px);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 2000;
+  padding: 1rem;
 }
 
 .modal {
-  background: white;
+  background: var(--bg);
   padding: 2rem;
   border-radius: 20px;
   max-width: 500px;
   width: 90%;
   box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+  color: var(--text);
+  max-height: 90vh;
+  overflow-y: auto;
 }
 
 .modal h3 {
   font-family: 'Playfair Display', serif;
   margin-bottom: 1rem;
+  color: var(--primary);
+}
+
+.modal p {
+  margin-bottom: 0.5rem;
+  line-height: 1.5;
 }
 
 .modalButtons {
@@ -180,20 +254,119 @@
   border-radius: 30px;
   font-weight: 600;
   cursor: pointer;
+  transition: all 0.3s;
+}
+
+.confirmButton:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
 }
 
 .cancelButton {
   flex: 1;
   padding: 0.8rem;
-  background: #f0f0f0;
-  border: none;
+  background: transparent;
+  border: 1.5px solid var(--primary);
+  color: var(--primary);
   border-radius: 30px;
   font-weight: 600;
   cursor: pointer;
-} 
-.specs { margin-top: 2rem; }
-.specs h3 { font-family: 'Playfair Display', serif; color: var(--primary); margin-bottom: 1rem; }
-.specsGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 0.8rem; }
-.specItem { background: var(--glass-bg); padding: 0.8rem; border-radius: 10px; display: flex; flex-direction: column; }
-.specItem span { font-size: 0.85rem; opacity: 0.7; }
-.specItem strong { font-size: 1.1rem; margin-top: 0.2rem; }
+  transition: all 0.3s;
+}
+
+.cancelButton:hover {
+  background: var(--primary);
+  color: white;
+}
+
+/* Сообщение об успешной покупке */
+.successMessage {
+  background: rgba(46,125,50,0.1);
+  color: #2e7d32;
+  padding: 1rem;
+  border-radius: 12px;
+  margin-top: 1rem;
+  font-weight: 500;
+  border: 1px solid rgba(46,125,50,0.2);
+}
+
+/* ---------- Чек (электронный) ---------- */
+.receiptModal {
+  max-width: 420px;
+  background: #fdfdfd;
+  border: 1px solid #e0e0e0;
+  font-family: 'Courier New', monospace;
+}
+
+.receiptHeader {
+  text-align: center;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px dashed #ccc;
+}
+
+.receiptHeader h2 {
+  font-family: 'Playfair Display', serif;
+  color: var(--primary);
+  font-size: 2rem;
+  margin-bottom: 0.2rem;
+}
+
+.receiptHeader p {
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.receiptBody {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  margin-bottom: 1.5rem;
+}
+
+.receiptRow {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.3rem 0;
+  border-bottom: 1px dotted #ddd;
+}
+
+.receiptRow span {
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.receiptRow strong {
+  color: #111;
+  font-size: 0.95rem;
+}
+
+.receiptFooter {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+}
+
+/* ---------- Адаптив ---------- */
+@media (max-width: 768px) {
+  .container {
+    padding: 0 1rem;
+  }
+  
+  .title {
+    font-size: 2rem;
+  }
+  
+  .image {
+    height: 250px;
+  }
+  
+  .buyButton {
+    font-size: 1.1rem;
+    padding: 1rem 0;
+  }
+  
+  .specsGrid {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  }
+}

@@ -80,3 +80,7 @@
 {"timestamp": "2026-05-22T10:46:44.414961", "event": "USER_ROLE_CHANGED", "data": {"admin": "admin@luxury.com", "user_id": 12, "new_role": "admin"}}
 {"timestamp": "2026-05-22T10:48:16.965811", "event": "USER_ROLE_CHANGED", "data": {"admin": "admin@luxury.com", "user_id": 12, "new_role": "manager"}}
 {"timestamp": "2026-05-22T10:48:18.062518", "event": "USER_ROLE_CHANGED", "data": {"admin": "admin@luxury.com", "user_id": 12, "new_role": "admin"}}
+{"timestamp": "2026-05-22T11:19:13.858997", "event": "PURCHASE_MADE", "data": {"user": "admin@luxury.com", "car_id": 9, "price": 123.0}}
+{"timestamp": "2026-05-22T11:22:06.652086", "event": "CAR_CREATED", "data": {"admin": "admin@luxury.com", "car_id": 11}}
+{"timestamp": "2026-05-22T11:26:45.006713", "event": "PURCHASE_MADE", "data": {"user": "admin@luxury.com", "car_id": 9, "price": 123.0}}
+{"timestamp": "2026-05-22T11:26:56.574251", "event": "PURCHASE_MADE", "data": {"user": "admin@luxury.com", "car_id": 9, "price": 123.0}}

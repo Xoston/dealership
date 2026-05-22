@@ -6,35 +6,35 @@
 .clearBtn { background: none; border: 1px solid #D32F2F; color: #D32F2F; padding: 0.5rem 1.5rem; border-radius: 20px; cursor: pointer; font-weight: 600; transition: 0.3s; }
 .clearBtn:hover { background: #D32F2F; color: white; }
 
-.cardsContainer { display: flex; gap: 2rem; flex-wrap: wrap; justify-content: center; }
+/* Горизонтальная лента */
+.cardsContainer { display: flex; gap: 2rem; overflow-x: auto; padding-bottom: 1rem; }
 .carCard {
-  background: var(--glass-bg); backdrop-filter: blur(10px); border-radius: 20px;
-  padding: 1.5rem; width: 300px; flex-shrink: 0;
-  box-shadow: 0 10px 25px rgba(74,20,140,0.15); border: 1px solid rgba(128,128,128,0.15);
-  display: flex; flex-direction: column; align-items: center;
-  transition: transform 0.3s; word-break: break-word;
+  background: var(--glass-bg); backdrop-filter: blur(10px); border-radius: 24px;
+  padding: 1.5rem; min-width: 300px; max-width: 360px; flex-shrink: 0;
+  box-shadow: 0 10px 25px rgba(74,20,140,0.1); border: 1px solid rgba(128,128,128,0.1);
+  display: flex; flex-direction: column; gap: 1rem;
 }
-.carCard:hover { transform: translateY(-5px); }
-.cardHeader { width: 100%; display: flex; justify-content: flex-end; }
+.cardHeader { display: flex; justify-content: flex-end; }
 .removeCarBtn { background: none; border: none; font-size: 1.5rem; color: #888; cursor: pointer; transition: 0.2s; }
 .removeCarBtn:hover { color: #D32F2F; }
-.carImage { width: 100%; height: 180px; object-fit: cover; border-radius: 12px; margin-bottom: 1rem; }
-.carName { font-family: 'Playfair Display', serif; font-size: 1.2rem; font-weight: 700; margin-bottom: 1.5rem; text-align: center; color: var(--primary); }
+.carImage { width: 100%; height: 180px; object-fit: cover; border-radius: 12px; }
+.carName { font-family: 'Playfair Display', serif; font-size: 1.2rem; font-weight: 700; text-align: center; color: var(--primary); }
 
-.attributes { width: 100%; display: flex; flex-direction: column; gap: 0.8rem; }
-.attrRow { display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 0; border-bottom: 1px solid rgba(128,128,128,0.1); }
-.attrLabel { font-weight: 500; color: var(--text); opacity: 0.8; min-width: 80px; }
-.attrValue { font-weight: 600; color: var(--text); margin-left: auto; text-align: right; }
-.different { background: rgba(123,31,162,0.08); border-radius: 8px; padding: 0.3rem 0.6rem; }
-.different .attrValue { color: var(--primary); }
+.group { display: flex; flex-direction: column; gap: 0.4rem; }
+.groupTitle { font-size: 0.9rem; font-weight: 700; color: var(--primary); border-bottom: 1px solid rgba(128,128,128,0.2); padding-bottom: 0.2rem; margin-bottom: 0.2rem; }
 
-/* Описание */
-.descText { display: inline-block; max-width: 180px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; vertical-align: middle; }
-.descText.expanded { white-space: normal; overflow: visible; text-overflow: unset; max-width: none; }
-.moreBtn { background: none; border: none; color: var(--primary); cursor: pointer; font-size: 0.85rem; font-weight: 600; margin-left: 4px; }
+.field { display: flex; justify-content: space-between; align-items: baseline; padding: 0.25rem 0; border-bottom: 1px solid rgba(128,128,128,0.05); }
+.fieldLabel { font-size: 0.85rem; color: var(--text); opacity: 0.8; }
+.fieldValue { font-size: 0.9rem; font-weight: 600; color: var(--text); text-align: right; max-width: 60%; word-break: break-word; }
+
+.diffField { background: rgba(123,31,162,0.06); border-radius: 6px; padding-left: 0.5rem; padding-right: 0.5rem; }
+
+.descriptionBox { font-size: 0.9rem; line-height: 1.4; }
+.descText { white-space: pre-wrap; }
+.moreBtn { background: none; border: none; color: var(--primary); cursor: pointer; font-weight: 600; font-size: 0.85rem; margin-top: 0.3rem; }
 .moreBtn:hover { text-decoration: underline; }
 
 @media (max-width: 768px) {
   .cardsContainer { flex-direction: column; align-items: center; }
-  .carCard { width: 90%; }
+  .carCard { max-width: 100%; min-width: auto; width: 100%; }
 }

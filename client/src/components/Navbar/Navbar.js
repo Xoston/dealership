@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import styles from './Navbar.module.css';
 import NotificationDropdown from './NotificationDropdown';
 
@@ -34,7 +34,6 @@ const Navbar = () => {
     navigate('/');
   };
 
-  // Закрытие дропдауна при клике вне
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (notifRef.current && !notifRef.current.contains(e.target)) {
@@ -52,38 +51,37 @@ const Navbar = () => {
       <div className={styles.logo}>
         <Link to="/">LUXURY DEALER</Link>
       </div>
-     <div className={styles.links}>
-  <Link to="/catalog">Каталог</Link>
-  <Link to="/compare">Сравнение</Link>
-  {user ? (
-    <>
-      <Link to="/dashboard">Личный кабинет</Link>
-      {user.role === 'admin' && <Link to="/admin">Админ-панель</Link>}
-      <div className={styles.notificationWrapper} ref={notifRef}>
-        <button
-          className={`${styles.navBtn} ${styles.notificationBtn}`}
-          title="Уведомления"
-          onClick={() => setShowNotifications(!showNotifications)}
-        >
-          <BellIcon hasNotifications={notifications.length > 0} />
-          {notifications.length > 0 && (
-            <span className={styles.badge}>{notifications.length}</span>
-          )}
+      <div className={styles.links}>
+        <Link to="/catalog">Каталог</Link>
+        {user ? (
+          <>
+            <Link to="/dashboard">Личный кабинет</Link>
+            {user.role === 'admin' && <Link to="/admin">Админ-панель</Link>}
+            <div className={styles.notificationWrapper} ref={notifRef}>
+              <button
+                className={`${styles.navBtn} ${styles.notificationBtn}`}
+                title="Уведомления"
+                onClick={() => setShowNotifications(!showNotifications)}
+              >
+                <BellIcon hasNotifications={notifications.length > 0} />
+                {notifications.length > 0 && (
+                  <span className={styles.badge}>{notifications.length}</span>
+                )}
+              </button>
+              {showNotifications && <NotificationDropdown onClose={() => setShowNotifications(false)} />}
+            </div>
+            <button onClick={handleLogout} className={styles.navBtn}>Выйти</button>
+          </>
+        ) : (
+          <>
+            <Link to="/login">Войти</Link>
+            <Link to="/register">Регистрация</Link>
+          </>
+        )}
+        <button onClick={toggleTheme} className={styles.navBtn} title="Сменить тему">
+          {theme === 'light' ? '☾' : '☼'}
         </button>
-        {showNotifications && <NotificationDropdown onClose={() => setShowNotifications(false)} />}
       </div>
-      <button onClick={handleLogout} className={styles.navBtn}>Выйти</button>
-    </>
-  ) : (
-    <>
-      <Link to="/login">Войти</Link>
-      <Link to="/register">Регистрация</Link>
-    </>
-  )}
-  <button onClick={toggleTheme} className={styles.navBtn} title="Сменить тему">
-    {theme === 'light' ? '☾' : '☼'}
-  </button>
-</div>
     </motion.nav>
   );
 };
