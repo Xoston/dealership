@@ -1,10 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import api, { getImageUrl } from '../services/api';
 import { motion, AnimatePresence } from 'framer-motion';
 import styles from './AdminPanel.module.css';
 
-// Полный список марок и моделей (тот же, что используется в админ-панели)
+// Полный список марок и моделей (расширенный)
 const brandModels = {
   "BMW": ["1 Series", "2 Series Gran Coupe", "2 Series Coupe", "3 Series Sedan", "3 Series Touring",
     "4 Series Gran Coupe", "4 Series Coupe", "5 Series Sedan", "5 Series Touring",
@@ -57,6 +57,9 @@ const bodyTypesRussian = {
   "suv": "Внедорожник", "pickup": "Пикап", "limousine": "Лимузин", "hatchback": "Хэтчбек",
 };
 
+// Доступные роли пользователей (можно расширять)
+const availableRoles = ["user", "admin", "manager"];
+
 const AdminPanel = () => {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -66,12 +69,6 @@ const AdminPanel = () => {
   const [testDrives, setTestDrives] = useState([]);
   const [loans, setLoans] = useState([]);
   const [loading, setLoading] = useState(true);
-  const handleTestDriveStatus = async (tdId, status) => {
-  try {
-    await api.put(`/admin/testdrives/${tdId}/status`, { status });
-    setTestDrives(prev => prev.map(td => td.id === tdId ? { ...td, status } : td));
-  } catch (err) { alert('Ошибка обновления статуса'); }
-};
 
   // ---------- Модальное окно (добавление / редактирование) ----------
   const [showFormModal, setShowFormModal] = useState(false);
@@ -85,14 +82,15 @@ const AdminPanel = () => {
   const [formError, setFormError] = useState('');
   const [fieldErrors, setFieldErrors] = useState({});
 
-  // ---------- Модальное окно выбора модели ----------
+  // ---------- Модальные окна выбора марки и модели ----------
+  const [showBrandModal, setShowBrandModal] = useState(false);
+  const [brandSearch, setBrandSearch] = useState('');
   const [showModelModal, setShowModelModal] = useState(false);
   const [modelSearch, setModelSearch] = useState('');
 
-  // ---------- Управление изображениями (галерея) ----------
-  const [selectedCarId, setSelectedCarId] = useState(null);
-  const [carImages, setCarImages] = useState([]);
-  const [uploadingImages, setUploadingImages] = useState(false);
+  // ---------- Фотографии в модальном окне ----------
+  const [newPhotos, setNewPhotos] = useState([]);
+  const fileInputRef = useRef(null);
 
   // ================= ЗАГРУЗКА ДАННЫХ =================
   const fetchData = async () => {
@@ -121,6 +119,7 @@ const AdminPanel = () => {
     });
     setFieldErrors({});
     setFormError('');
+    setNewPhotos([]);
     setShowFormModal(true);
   };
 
@@ -148,17 +147,21 @@ const AdminPanel = () => {
     });
     setFieldErrors({});
     setFormError('');
+    setNewPhotos([]);
     setShowFormModal(true);
   };
 
   const closeFormModal = () => {
     setShowFormModal(false);
     setEditingCar(null);
+    setNewPhotos([]);
   };
 
-  // ================= ОБРАБОТЧИКИ ФОРМЫ =================
-  const handleBrandChange = (e) => {
-    setCarForm(prev => ({ ...prev, brand: e.target.value, model: '' }));
+  // ================= ОБРАБОТЧИКИ МАРКИ / МОДЕЛИ =================
+  const selectBrand = (brand) => {
+    setCarForm(prev => ({ ...prev, brand, model: '' }));
+    setShowBrandModal(false);
+    setBrandSearch('');
     setFieldErrors(prev => ({ ...prev, brand: '', model: '' }));
   };
 
@@ -169,6 +172,7 @@ const AdminPanel = () => {
     setFieldErrors(prev => ({ ...prev, model: '' }));
   };
 
+  // ================= ВАЛИДАЦИЯ =================
   const validateForm = () => {
     const errors = {};
     if (!carForm.brand) errors.brand = 'Выберите марку';
@@ -181,18 +185,40 @@ const AdminPanel = () => {
     return Object.keys(errors).length === 0;
   };
 
-  const handleMainPhotoUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
+  // ================= ЗАГРУЗКА ФОТО =================
+  const handleMultiplePhotos = async (e) => {
+    const files = Array.from(e.target.files);
+    if (!files.length) return;
     setUploading(true);
-    const formData = new FormData();
-    formData.append('file', file);
-    try {
-      const res = await api.post('/cars/upload_image', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
-      setCarForm(prev => ({ ...prev, image_url: res.data.image_url }));
-    } catch (err) { alert('Ошибка загрузки файла'); } finally { setUploading(false); }
+    const newUrls = [];
+    for (const file of files) {
+      const formData = new FormData();
+      formData.append('file', file);
+      try {
+        const res = await api.post('/cars/upload_image', formData, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        });
+        newUrls.push(res.data.image_url);
+      } catch (err) {
+        console.error('Ошибка загрузки файла', file.name, err);
+      }
+    }
+    if (newUrls.length > 0) {
+      setNewPhotos(prev => [...prev, ...newUrls]);
+      if (!carForm.image_url) {
+        setCarForm(prev => ({ ...prev, image_url: newUrls[0] }));
+      }
+    }
+    setUploading(false);
+    e.target.value = '';
+  };
+
+  const removeNewPhoto = (url) => {
+    const updated = newPhotos.filter(u => u !== url);
+    setNewPhotos(updated);
+    if (carForm.image_url === url) {
+      setCarForm(prev => ({ ...prev, image_url: updated.length > 0 ? updated[0] : '' }));
+    }
   };
 
   // ================= ОТПРАВКА ФОРМЫ =================
@@ -225,9 +251,20 @@ const AdminPanel = () => {
     try {
       if (editingCar) {
         const res = await api.put(`/cars/${editingCar.id}`, payload);
+        if (newPhotos.length > 1) {
+          for (const url of newPhotos.slice(1)) {
+            await api.post(`/cars/${editingCar.id}/images`, { image_url: url });
+          }
+        }
         setCars(prev => prev.map(c => c.id === editingCar.id ? res.data : c));
       } else {
         const res = await api.post('/cars/', payload);
+        const carId = res.data.id;
+        if (newPhotos.length > 1) {
+          for (const url of newPhotos.slice(1)) {
+            await api.post(`/cars/${carId}/images`, { image_url: url });
+          }
+        }
         setCars(prev => [...prev, res.data]);
       }
       closeFormModal();
@@ -259,40 +296,6 @@ const AdminPanel = () => {
     }
   };
 
-  // ---------- Галерея изображений ----------
-  const openImagePanel = (carId) => {
-    setSelectedCarId(carId);
-    const car = cars.find(c => c.id === carId);
-    setCarImages(car?.images || []);
-  };
-
-  const handleMultipleFiles = async (e) => {
-    const files = Array.from(e.target.files);
-    if (!files.length) return;
-    setUploadingImages(true);
-    for (const file of files) {
-      const formData = new FormData();
-      formData.append('file', file);
-      try {
-        const uploadRes = await api.post('/cars/upload_image', formData, {
-          headers: { 'Content-Type': 'multipart/form-data' },
-        });
-        const imageUrl = uploadRes.data.image_url;
-        const addRes = await api.post(`/cars/${selectedCarId}/images`, { image_url: imageUrl });
-        setCarImages(prev => [...prev, addRes.data]);
-      } catch (err) { console.error('Ошибка загрузки файла', file.name, err); }
-    }
-    setUploadingImages(false);
-    e.target.value = '';
-  };
-
-  const handleDeleteImage = async (imageId) => {
-    try {
-      await api.delete(`/cars/images/${imageId}`);
-      setCarImages(prev => prev.filter(img => img.id !== imageId));
-    } catch (err) { alert('Ошибка удаления изображения'); }
-  };
-
   // ================= КРЕДИТНЫЕ ЗАЯВКИ =================
   const handleLoanStatus = async (loanId, status) => {
     try {
@@ -301,8 +304,20 @@ const AdminPanel = () => {
     } catch (err) { alert('Ошибка обновления статуса'); }
   };
 
+  // ================= ЗАЯВКИ НА ТЕСТ-ДРАЙВ =================
+  const handleTestDriveStatus = async (tdId, status) => {
+    try {
+      await api.put(`/admin/testdrives/${tdId}/status`, { status });
+      setTestDrives(prev => prev.map(td => td.id === tdId ? { ...td, status } : td));
+    } catch (err) { alert('Ошибка обновления статуса'); }
+  };
+
   if (loading) return <div className={styles.loading}>Загрузка...</div>;
 
+  const allBrands = Object.keys(brandModels);
+  const filteredBrands = brandSearch
+    ? allBrands.filter(b => b.toLowerCase().includes(brandSearch.toLowerCase()))
+    : allBrands;
   const availableModels = carForm.brand ? (brandModels[carForm.brand] || []) : [];
   const filteredModels = modelSearch ? availableModels.filter(m => m.toLowerCase().includes(modelSearch.toLowerCase())) : availableModels;
 
@@ -336,11 +351,29 @@ const AdminPanel = () => {
               <tbody>
                 {users.map(u => (
                   <tr key={u.id}>
-                    <td>{u.id}</td><td>{u.email}</td><td>{u.full_name}</td>
+                    <td>{u.id}</td>
+                    <td>{u.email}</td>
+                    <td>{u.full_name}</td>
                     <td>
-                      <select value={u.role} onChange={(e) => handleRoleChange(u.id, e.target.value)} disabled={u.id === user.id}>
-                        <option value="user">user</option>
-                        <option value="admin">admin</option>
+                      <select
+                        value={u.role}
+                        onChange={(e) => handleRoleChange(u.id, e.target.value)}
+                        disabled={u.id === user.id}
+                        style={{
+                          padding: '0.4rem 0.8rem',
+                          borderRadius: '20px',
+                          border: '1.5px solid var(--primary)',
+                          background: 'var(--bg)',
+                          color: 'var(--text)',
+                          fontWeight: 600,
+                          fontSize: '0.85rem',
+                          cursor: 'pointer',
+                          transition: 'all 0.3s',
+                        }}
+                      >
+                        {availableRoles.map(role => (
+                          <option key={role} value={role}>{role}</option>
+                        ))}
                       </select>
                     </td>
                     <td>
@@ -364,71 +397,71 @@ const AdminPanel = () => {
                   <tr key={car.id}>
                     <td>{car.id}</td><td>{car.brand}</td><td>{car.model}</td>
                     <td>{car.price.toLocaleString()} ₽</td>
-                    <td style={{ display: 'flex', gap: '0.3rem' }}>
-                      <button className={styles.addBtn} style={{ padding: '0.4rem 0.8rem' }} onClick={() => openEditForm(car)}>Изменить</button>
-                      <button className={styles.addBtn} style={{ padding: '0.4rem 0.8rem' }} onClick={() => openImagePanel(car.id)}>Фото</button>
-                      <button className={styles.deleteBtn} onClick={() => handleDeleteCar(car.id)}>Удалить</button>
+                    <td style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                      <button
+                        onClick={() => openEditForm(car)}
+                        style={{
+                          background: 'transparent', border: '1.5px solid var(--primary)', color: 'var(--primary)',
+                          padding: '0.3rem 0.8rem', borderRadius: '20px', fontWeight: 600, fontSize: '0.85rem',
+                          cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '0.3rem',
+                          transition: 'all 0.2s',
+                        }}
+                        onMouseOver={(e) => { e.currentTarget.style.background = 'var(--primary)'; e.currentTarget.style.color = 'white'; }}
+                        onMouseOut={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--primary)'; }}
+                      >✎ Изменить</button>
+                      <button
+                        onClick={() => handleDeleteCar(car.id)}
+                        style={{
+                          background: 'transparent', border: '1.5px solid #D32F2F', color: '#D32F2F',
+                          padding: '0.3rem 0.8rem', borderRadius: '20px', fontWeight: 600, fontSize: '0.85rem',
+                          cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '0.3rem',
+                          transition: 'all 0.2s',
+                        }}
+                        onMouseOver={(e) => { e.currentTarget.style.background = '#D32F2F'; e.currentTarget.style.color = 'white'; }}
+                        onMouseOut={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#D32F2F'; }}
+                      >✕ Удалить</button>
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
-
-            {selectedCarId && (
-              <div className={styles.imagePanel}>
-                <h3>Управление изображениями (авто ID: {selectedCarId})</h3>
-                <div className={styles.imageControls}>
-                  <label className={styles.uploadLabel}>
-                    <input type="file" multiple accept="image/*" onChange={handleMultipleFiles} disabled={uploadingImages} />
-                    {uploadingImages ? 'Загрузка...' : 'Выбрать файлы'}
-                  </label>
-                </div>
-                <div className={styles.imageGrid}>
-                  {carImages.map(img => (
-                    <div key={img.id} className={styles.thumbnailContainer}>
-                      <img src={getImageUrl(img.image_url)} alt="" />
-                      <button className={styles.deleteThumb} onClick={() => handleDeleteImage(img.id)}>×</button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
           </div>
         )}
 
         {/* Тест-драйвы */}
         {activeTab === 'testdrives' && (
-  <div>
-    <table className={styles.table}>
-      <thead>
-        <tr><th>ID</th><th>Пользователь</th><th>Авто ID</th><th>Дата</th><th>Статус</th><th>Действия</th></tr>
-      </thead>
-      <tbody>
-        {testDrives.map(td => (
-          <tr key={td.id}>
-            <td>{td.id}</td>
-            <td>{td.user_id}</td>
-            <td>{td.car_id}</td>
-            <td>{new Date(td.preferred_date).toLocaleString()}</td>
-            <td>
-              <span className={`${styles.status} ${td.status === 'approved' ? styles.approved : td.status === 'rejected' ? styles.rejected : styles.pending}`}>
-                {td.status === 'approved' ? 'Одобрена' : td.status === 'rejected' ? 'Отклонена' : 'Ожидает'}
-              </span>
-            </td>
-            <td style={{ display: 'flex', gap: '0.3rem' }}>
-              {td.status === 'pending' && (
-                <>
-                  <button className={styles.approveBtn} onClick={() => handleTestDriveStatus(td.id, 'approved')}>Одобрить</button>
-                  <button className={styles.rejectBtn} onClick={() => handleTestDriveStatus(td.id, 'rejected')}>Отклонить</button>
-                </>
-              )}
-            </td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
-  </div>
-)}
+          <div>
+            <table className={styles.table}>
+              <thead>
+                <tr><th>ID</th><th>Пользователь</th><th>Авто ID</th><th>Дата</th><th>Статус</th><th>Действия</th></tr>
+              </thead>
+              <tbody>
+                {testDrives.map(td => (
+                  <tr key={td.id}>
+                    <td>{td.id}</td>
+                    <td>{td.user_id}</td>
+                    <td>{td.car_id}</td>
+                    <td>{new Date(td.preferred_date).toLocaleString()}</td>
+                    <td>
+                      <span className={`${styles.status} ${td.status === 'approved' ? styles.approved : td.status === 'rejected' ? styles.rejected : styles.pending}`}>
+                        {td.status === 'approved' ? 'Одобрена' : td.status === 'rejected' ? 'Отклонена' : 'Ожидает'}
+                      </span>
+                    </td>
+                    <td style={{ display: 'flex', gap: '0.3rem' }}>
+                      {td.status === 'pending' && (
+                        <>
+                          <button className={styles.approveBtn} onClick={() => handleTestDriveStatus(td.id, 'approved')}>Одобрить</button>
+                          <button className={styles.rejectBtn} onClick={() => handleTestDriveStatus(td.id, 'rejected')}>Отклонить</button>
+                        </>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
         {/* Кредитные заявки */}
         {activeTab === 'loans' && (
           <div>
@@ -467,173 +500,308 @@ const AdminPanel = () => {
       {/* Модальное окно формы (добавление / редактирование) */}
       <AnimatePresence>
         {showFormModal && (
-          <motion.div className={styles.modalOverlay} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={closeFormModal}>
-            <motion.div className={styles.modal} initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} onClick={(e) => e.stopPropagation()}>
-              <form onSubmit={handleSubmit} className={styles.addForm}>
-                <div className={styles.modalHeader}>
-                  <h4>{editingCar ? 'Редактировать автомобиль' : 'Новый автомобиль'}</h4>
-                  <button type="button" className={styles.closeBtn} onClick={closeFormModal}>✕</button>
+          <motion.div
+            style={{
+              position: 'fixed', inset: 0,
+              background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(5px)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              zIndex: 2000, padding: '1rem'
+            }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={closeFormModal}
+          >
+            <motion.div
+              style={{
+                background: 'var(--bg)', borderRadius: '24px',
+                width: '100%', maxWidth: '700px', maxHeight: '90vh',
+                display: 'flex', flexDirection: 'column',
+                boxShadow: '0 20px 50px rgba(0,0,0,0.3)'
+              }}
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1.5rem 1.5rem 0.5rem' }}>
+                  <h4 style={{ fontFamily: "'Playfair Display', serif", fontSize: '1.5rem', color: 'var(--primary)' }}>
+                    {editingCar ? 'Редактировать автомобиль' : 'Новый автомобиль'}
+                  </h4>
+                  <button type="button" onClick={closeFormModal} style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: '#888' }}>✕</button>
                 </div>
 
-                <div className={styles.modalBody}>
-                  <div className={styles.formRow}>
-                    <div className={styles.formGroup}>
+                <div style={{ padding: '0 1.5rem 1rem', flex: 1, overflowY: 'auto' }}>
+                  <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
+                    {/* Марка */}
+                    <div style={{ flex: 1 }}>
                       <label>Марка *</label>
-                      <select value={carForm.brand} onChange={handleBrandChange} className={fieldErrors.brand ? styles.inputError : ''}>
-                        <option value="">-- Выберите марку --</option>
-                        {Object.keys(brandModels).map(brand => (
-                          <option key={brand} value={brand}>{brand}</option>
-                        ))}
-                      </select>
-                      {fieldErrors.brand && <span className={styles.errorMsg}>{fieldErrors.brand}</span>}
-                    </div>
-
-                    <div className={styles.formGroup}>
-                      <label>Модель *</label>
-                      <div className={styles.modelSelector}>
-                        <input type="text" value={carForm.model} placeholder="Нажмите «Выбрать модель»" readOnly className={fieldErrors.model ? styles.inputError : ''} />
-                        <button type="button" className={styles.selectModelBtn} disabled={!carForm.brand} onClick={() => setShowModelModal(true)}>Выбрать модель</button>
+                      <div
+                        onClick={() => setShowBrandModal(true)}
+                        style={{
+                          width: '100%', padding: '0.7rem 1rem', borderRadius: '12px',
+                          border: '1.5px solid rgba(128,128,128,0.3)', background: 'var(--bg)',
+                          color: carForm.brand ? 'var(--text)' : '#888', fontFamily: 'inherit',
+                          fontSize: '0.95rem', cursor: 'pointer', position: 'relative',
+                          userSelect: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+                        }}
+                      >
+                        {carForm.brand || '-- Выберите марку --'}
+                        <span style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: '#888' }}>▼</span>
                       </div>
-                      {fieldErrors.model && <span className={styles.errorMsg}>{fieldErrors.model}</span>}
+                    </div>
+                    {/* Модель */}
+                    <div style={{ flex: 1 }}>
+                      <label>Модель *</label>
+                      <div
+                        onClick={() => { if (carForm.brand) setShowModelModal(true); }}
+                        style={{
+                          width: '100%', padding: '0.7rem 1rem', borderRadius: '12px',
+                          border: '1.5px solid rgba(128,128,128,0.3)', background: 'var(--bg)',
+                          color: carForm.model ? 'var(--text)' : '#888', fontFamily: 'inherit',
+                          fontSize: '0.95rem', cursor: carForm.brand ? 'pointer' : 'not-allowed',
+                          position: 'relative', userSelect: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+                        }}
+                      >
+                        {carForm.model || '-- Выберите модель --'}
+                        <span style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: '#888' }}>▼</span>
+                      </div>
                     </div>
                   </div>
 
-                  <div className={styles.formRow}>
-                    <div className={styles.formGroup}>
+                  <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
+                    <div style={{ flex: 1 }}>
                       <label>Год выпуска *</label>
-                      <input type="number" value={carForm.year} onChange={e => setCarForm({...carForm, year: e.target.value})} placeholder="Например, 2024" className={fieldErrors.year ? styles.inputError : ''} />
-                      {fieldErrors.year && <span className={styles.errorMsg}>{fieldErrors.year}</span>}
+                      <input type="number" value={carForm.year} onChange={e => setCarForm({...carForm, year: e.target.value})} placeholder="Например, 2024" style={{ width: '100%', padding: '0.7rem', borderRadius: '12px', border: '1.5px solid rgba(128,128,128,0.3)', background: 'var(--bg)', color: 'var(--text)' }} />
                     </div>
-                    <div className={styles.formGroup}>
+                    <div style={{ flex: 1 }}>
                       <label>Цена (₽) *</label>
-                      <input type="number" value={carForm.price} onChange={e => setCarForm({...carForm, price: e.target.value})} placeholder="Например, 15000000" className={fieldErrors.price ? styles.inputError : ''} />
-                      {fieldErrors.price && <span className={styles.errorMsg}>{fieldErrors.price}</span>}
+                      <input type="number" value={carForm.price} onChange={e => setCarForm({...carForm, price: e.target.value})} placeholder="Например, 15000000" style={{ width: '100%', padding: '0.7rem', borderRadius: '12px', border: '1.5px solid rgba(128,128,128,0.3)', background: 'var(--bg)', color: 'var(--text)' }} />
                     </div>
                   </div>
 
-                  <div className={styles.formGroup}>
+                  <div style={{ marginBottom: '1rem' }}>
                     <label>Описание</label>
-                    <textarea value={carForm.description} onChange={e => setCarForm({...carForm, description: e.target.value})} rows="2" placeholder="Краткое описание" />
+                    <textarea value={carForm.description} onChange={e => setCarForm({...carForm, description: e.target.value})} rows="2" placeholder="Краткое описание" style={{ width: '100%', padding: '0.7rem', borderRadius: '12px', border: '1.5px solid rgba(128,128,128,0.3)', background: 'var(--bg)', color: 'var(--text)' }} />
                   </div>
 
-                  <div className={styles.formRow}>
-                    <div className={styles.formGroup}>
+                  <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
+                    <div style={{ flex: 1 }}>
                       <label>Тип кузова</label>
-                      <select value={carForm.body_type} onChange={e => setCarForm({...carForm, body_type: e.target.value})}>
+                      <select value={carForm.body_type} onChange={e => setCarForm({...carForm, body_type: e.target.value})} style={{ width: '100%', padding: '0.7rem', borderRadius: '12px', border: '1.5px solid rgba(128,128,128,0.3)', background: 'var(--bg)', color: 'var(--text)' }}>
                         {Object.entries(bodyTypesRussian).map(([key, label]) => (
                           <option key={key} value={key}>{label}</option>
                         ))}
                       </select>
                     </div>
-                    <div className={styles.formGroup}>
+                    {/* Рестайлинг – кастомный переключатель */}
+                    <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                       <label>Рестайлинг</label>
-                      <label className={styles.checkboxLabel}>
-                        <input type="checkbox" checked={carForm.restyling} onChange={e => setCarForm({...carForm, restyling: e.target.checked})} />
-                        Есть рестайлинг
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', userSelect: 'none' }}>
+                        <div style={{
+                          position: 'relative',
+                          width: '44px',
+                          height: '24px',
+                          background: carForm.restyling ? 'var(--primary)' : 'rgba(128,128,128,0.3)',
+                          borderRadius: '12px',
+                          transition: 'background 0.3s',
+                        }}>
+                          <div style={{
+                            position: 'absolute',
+                            top: '2px',
+                            left: carForm.restyling ? '22px' : '2px',
+                            width: '20px',
+                            height: '20px',
+                            background: 'white',
+                            borderRadius: '50%',
+                            transition: 'left 0.3s',
+                            boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
+                          }} />
+                        </div>
+                        <input
+                          type="checkbox"
+                          checked={carForm.restyling}
+                          onChange={e => setCarForm({...carForm, restyling: e.target.checked})}
+                          style={{ display: 'none' }}
+                        />
+                        <span style={{ fontWeight: 500 }}>{carForm.restyling ? 'Да' : 'Нет'}</span>
                       </label>
                     </div>
                   </div>
 
-                  {/* Технические характеристики (сеткой) */}
-                  <details className={styles.techDetails}>
-                    <summary>Технические характеристики</summary>
-                    <div className={styles.specsGrid}>
-                      <div className={styles.formGroup}>
-                        <label>Объём двигателя, л</label>
-                        <input type="number" step="0.1" value={carForm.engine_volume || ''} onChange={e => setCarForm({...carForm, engine_volume: e.target.value})} />
-                      </div>
-                      <div className={styles.formGroup}>
-                        <label>Мощность, л.с.</label>
-                        <input type="number" value={carForm.power || ''} onChange={e => setCarForm({...carForm, power: e.target.value})} />
-                      </div>
-                      <div className={styles.formGroup}>
-                        <label>Топливо</label>
-                        <select value={carForm.fuel_type || ''} onChange={e => setCarForm({...carForm, fuel_type: e.target.value})}>
-                          <option value="">—</option>
-                          <option value="petrol">Бензин</option>
-                          <option value="diesel">Дизель</option>
-                          <option value="hybrid">Гибрид</option>
-                          <option value="electric">Электро</option>
-                        </select>
-                      </div>
-                      <div className={styles.formGroup}>
-                        <label>Расход, л/100км</label>
-                        <input type="number" step="0.1" value={carForm.consumption || ''} onChange={e => setCarForm({...carForm, consumption: e.target.value})} />
-                      </div>
-                      <div className={styles.formGroup}>
-                        <label>Привод</label>
-                        <select value={carForm.drive_type || ''} onChange={e => setCarForm({...carForm, drive_type: e.target.value})}>
-                          <option value="">—</option>
-                          <option value="FWD">Передний</option>
-                          <option value="RWD">Задний</option>
-                          <option value="AWD">Полный</option>
-                        </select>
-                      </div>
-                      <div className={styles.formGroup}>
-                        <label>Коробка передач</label>
-                        <select value={carForm.transmission || ''} onChange={e => setCarForm({...carForm, transmission: e.target.value})}>
-                          <option value="">—</option>
-                          <option value="manual">Механика</option>
-                          <option value="automatic">Автомат</option>
-                          <option value="robot">Робот</option>
-                          <option value="variator">Вариатор</option>
-                        </select>
-                      </div>
-                      <div className={styles.formGroup}>
-                        <label>Разгон 0-100 км/ч, с</label>
-                        <input type="number" step="0.1" value={carForm.acceleration || ''} onChange={e => setCarForm({...carForm, acceleration: e.target.value})} />
-                      </div>
-                      <div className={styles.formGroup}>
-                        <label>Макс. скорость, км/ч</label>
-                        <input type="number" value={carForm.max_speed || ''} onChange={e => setCarForm({...carForm, max_speed: e.target.value})} />
-                      </div>
-                      <div className={styles.formGroup}>
-                        <label>Клиренс, мм</label>
-                        <input type="number" value={carForm.clearance || ''} onChange={e => setCarForm({...carForm, clearance: e.target.value})} />
-                      </div>
-                      <div className={styles.formGroup}>
-                        <label>Мест</label>
-                        <input type="number" value={carForm.seats || ''} onChange={e => setCarForm({...carForm, seats: e.target.value})} />
-                      </div>
+                  {/* Технические характеристики */}
+                  <details style={{ marginBottom: '1rem' }}>
+                    <summary style={{ fontWeight: 600, color: 'var(--primary)', cursor: 'pointer', marginBottom: '0.5rem' }}>Технические характеристики</summary>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1rem', marginTop: '0.5rem' }}>
+                      <div><label>Объём двигателя, л</label><input type="number" step="0.1" value={carForm.engine_volume || ''} onChange={e => setCarForm({...carForm, engine_volume: e.target.value})} style={{ width: '100%', padding: '0.7rem', borderRadius: '12px', border: '1.5px solid rgba(128,128,128,0.3)', background: 'var(--bg)', color: 'var(--text)' }} /></div>
+                      <div><label>Мощность, л.с.</label><input type="number" value={carForm.power || ''} onChange={e => setCarForm({...carForm, power: e.target.value})} style={{ width: '100%', padding: '0.7rem', borderRadius: '12px', border: '1.5px solid rgba(128,128,128,0.3)', background: 'var(--bg)', color: 'var(--text)' }} /></div>
+                      <div><label>Топливо</label><select value={carForm.fuel_type || ''} onChange={e => setCarForm({...carForm, fuel_type: e.target.value})} style={{ width: '100%', padding: '0.7rem', borderRadius: '12px', border: '1.5px solid rgba(128,128,128,0.3)', background: 'var(--bg)', color: 'var(--text)' }}><option value="">—</option><option value="petrol">Бензин</option><option value="diesel">Дизель</option><option value="hybrid">Гибрид</option><option value="electric">Электро</option></select></div>
+                      <div><label>Расход, л/100км</label><input type="number" step="0.1" value={carForm.consumption || ''} onChange={e => setCarForm({...carForm, consumption: e.target.value})} style={{ width: '100%', padding: '0.7rem', borderRadius: '12px', border: '1.5px solid rgba(128,128,128,0.3)', background: 'var(--bg)', color: 'var(--text)' }} /></div>
+                      <div><label>Привод</label><select value={carForm.drive_type || ''} onChange={e => setCarForm({...carForm, drive_type: e.target.value})} style={{ width: '100%', padding: '0.7rem', borderRadius: '12px', border: '1.5px solid rgba(128,128,128,0.3)', background: 'var(--bg)', color: 'var(--text)' }}><option value="">—</option><option value="FWD">Передний</option><option value="RWD">Задний</option><option value="AWD">Полный</option></select></div>
+                      <div><label>Коробка передач</label><select value={carForm.transmission || ''} onChange={e => setCarForm({...carForm, transmission: e.target.value})} style={{ width: '100%', padding: '0.7rem', borderRadius: '12px', border: '1.5px solid rgba(128,128,128,0.3)', background: 'var(--bg)', color: 'var(--text)' }}><option value="">—</option><option value="manual">Механика</option><option value="automatic">Автомат</option><option value="robot">Робот</option><option value="variator">Вариатор</option></select></div>
+                      <div><label>Разгон 0-100 км/ч, с</label><input type="number" step="0.1" value={carForm.acceleration || ''} onChange={e => setCarForm({...carForm, acceleration: e.target.value})} style={{ width: '100%', padding: '0.7rem', borderRadius: '12px', border: '1.5px solid rgba(128,128,128,0.3)', background: 'var(--bg)', color: 'var(--text)' }} /></div>
+                      <div><label>Макс. скорость, км/ч</label><input type="number" value={carForm.max_speed || ''} onChange={e => setCarForm({...carForm, max_speed: e.target.value})} style={{ width: '100%', padding: '0.7rem', borderRadius: '12px', border: '1.5px solid rgba(128,128,128,0.3)', background: 'var(--bg)', color: 'var(--text)' }} /></div>
+                      <div><label>Клиренс, мм</label><input type="number" value={carForm.clearance || ''} onChange={e => setCarForm({...carForm, clearance: e.target.value})} style={{ width: '100%', padding: '0.7rem', borderRadius: '12px', border: '1.5px solid rgba(128,128,128,0.3)', background: 'var(--bg)', color: 'var(--text)' }} /></div>
+                      <div><label>Мест</label><input type="number" value={carForm.seats || ''} onChange={e => setCarForm({...carForm, seats: e.target.value})} style={{ width: '100%', padding: '0.7rem', borderRadius: '12px', border: '1.5px solid rgba(128,128,128,0.3)', background: 'var(--bg)', color: 'var(--text)' }} /></div>
                     </div>
                   </details>
 
-                  {/* Основное фото */}
-                  <div className={styles.formRow}>
-                    <div className={styles.formGroup}>
-                      <label>Основное фото</label>
-                      <input type="file" onChange={handleMainPhotoUpload} accept="image/*" />
-                      {uploading && <span> Загрузка...</span>}
+                  {/* Фотографии автомобиля */}
+                  <div style={{ marginBottom: '1rem' }}>
+                    <label>Фотографии автомобиля</label>
+                    <div style={{
+                      border: '2px dashed rgba(128,128,128,0.4)',
+                      borderRadius: '16px',
+                      padding: '1.5rem',
+                      textAlign: 'center',
+                      background: 'var(--glass-bg)',
+                      backdropFilter: 'blur(10px)',
+                      cursor: 'pointer',
+                      transition: 'border-color 0.3s',
+                    }}
+                      onClick={() => fileInputRef.current?.click()}
+                      onMouseOver={(e) => e.currentTarget.style.borderColor = 'var(--primary)'}
+                      onMouseOut={(e) => e.currentTarget.style.borderColor = 'rgba(128,128,128,0.4)'}
+                    >
+                      <input
+                        type="file"
+                        multiple
+                        accept="image/*"
+                        onChange={handleMultiplePhotos}
+                        disabled={uploading}
+                        ref={fileInputRef}
+                        style={{ display: 'none' }}
+                      />
+                      {uploading ? (
+                        <span style={{ color: 'var(--primary)' }}>Загрузка...</span>
+                      ) : (
+                        <>
+                          <div style={{ fontSize: '2rem', color: 'var(--primary-light)', marginBottom: '0.5rem' }}>+</div>
+                          <div style={{ color: 'var(--text)', fontWeight: 500 }}>Нажмите, чтобы выбрать фотографии</div>
+                          <div style={{ color: 'var(--text)', opacity: 0.6, fontSize: '0.85rem' }}>Можно выбрать несколько файлов</div>
+                        </>
+                      )}
                     </div>
+                    {newPhotos.length > 0 && (
+                      <div style={{ display: 'flex', gap: '0.8rem', flexWrap: 'wrap', marginTop: '1rem' }}>
+                        {newPhotos.map((url, idx) => (
+                          <div key={idx} style={{ position: 'relative', width: '100px', height: '80px' }}>
+                            <img src={getImageUrl(url)} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '8px' }} />
+                            <button
+                              type="button"
+                              onClick={() => removeNewPhoto(url)}
+                              style={{
+                                position: 'absolute', top: '-6px', right: '-6px',
+                                background: '#D32F2F', color: 'white', border: 'none',
+                                borderRadius: '50%', width: '22px', height: '22px',
+                                cursor: 'pointer', fontSize: '14px', lineHeight: '1',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                              }}
+                            >×</button>
+                            {url === carForm.image_url && (
+                              <div style={{
+                                position: 'absolute', bottom: '4px', left: '4px',
+                                background: 'var(--primary)', color: 'white',
+                                fontSize: '0.7rem', padding: '0.1rem 0.4rem',
+                                borderRadius: '10px',
+                              }}>Основное</div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
 
-                  {formError && <div className={styles.serverError}>{formError}</div>}
+                  {formError && <div style={{ background: '#fdecea', color: '#D32F2F', padding: '0.8rem 1rem', borderRadius: '10px', marginTop: '0.5rem', fontSize: '0.9rem' }}>{formError}</div>}
                 </div>
 
-                <div className={styles.modalFooter}>
-                  <button type="submit" className={styles.submitBtn}>{editingCar ? 'Сохранить изменения' : 'Добавить автомобиль'}</button>
+                <div style={{ padding: '1rem 1.5rem', borderTop: '1px solid rgba(128,128,128,0.2)', display: 'flex', justifyContent: 'flex-end' }}>
+                  <button type="submit" style={{
+                    background: 'linear-gradient(135deg, var(--primary), var(--primary-light))',
+                    color: 'white', border: 'none', padding: '0.8rem 2.5rem', borderRadius: '30px',
+                    fontWeight: 600, fontSize: '1rem', cursor: 'pointer',
+                    boxShadow: '0 4px 15px rgba(74,20,140,0.3)'
+                  }}>{editingCar ? 'Сохранить изменения' : 'Добавить автомобиль'}</button>
                 </div>
               </form>
             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
-        
+
+      {/* Модальное окно выбора марки */}
+      <AnimatePresence>
+        {showBrandModal && (
+          <motion.div
+            style={{
+              position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(5px)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 3000, padding: '1rem'
+            }}
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            onClick={() => setShowBrandModal(false)}
+          >
+            <motion.div
+              style={{
+                background: 'var(--bg)', borderRadius: '20px', width: '100%', maxWidth: '400px', maxHeight: '70vh',
+                display: 'flex', flexDirection: 'column', boxShadow: '0 20px 50px rgba(0,0,0,0.3)'
+              }}
+              initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1.2rem 1.2rem 0.5rem' }}>
+                <h4 style={{ fontFamily: "'Playfair Display', serif", fontSize: '1.3rem', color: 'var(--primary)' }}>Выберите марку</h4>
+                <button type="button" onClick={() => setShowBrandModal(false)} style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: '#888' }}>✕</button>
+              </div>
+              <input type="text" placeholder="Поиск марки..." value={brandSearch} onChange={(e) => setBrandSearch(e.target.value)} style={{ margin: '0 1.2rem 0.5rem', padding: '0.7rem 1rem', border: '1.5px solid rgba(128,128,128,0.3)', borderRadius: '12px', fontFamily: 'inherit', fontSize: '0.95rem', background: 'var(--bg)', color: 'var(--text)' }} autoFocus />
+              <div style={{ flex: 1, overflowY: 'auto', padding: '0 1.2rem 1rem', display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
+                {filteredBrands.map(brand => (
+                  <button key={brand} type="button" style={{
+                    background: brand === carForm.brand ? 'var(--primary)' : 'var(--glass-bg)',
+                    color: brand === carForm.brand ? 'white' : 'var(--text)',
+                    border: 'none', padding: '0.7rem 1rem', borderRadius: '10px', textAlign: 'left', fontSize: '0.95rem', cursor: 'pointer'
+                  }} onClick={() => selectBrand(brand)}>{brand}</button>
+                ))}
+                {filteredBrands.length === 0 && <p style={{ textAlign: 'center', color: 'var(--text)' }}>Нет подходящих марок</p>}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Модальное окно выбора модели */}
       <AnimatePresence>
         {showModelModal && (
-          <motion.div className={styles.modelOverlay} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowModelModal(false)}>
-            <motion.div className={styles.modelModal} initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} onClick={(e) => e.stopPropagation()}>
-              <div className={styles.modelModalHeader}>
-                <h4>Выберите модель</h4>
-                <button type="button" className={styles.closeBtn} onClick={() => setShowModelModal(false)}>✕</button>
+          <motion.div
+            style={{
+              position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(5px)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 3000, padding: '1rem'
+            }}
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            onClick={() => setShowModelModal(false)}
+          >
+            <motion.div
+              style={{
+                background: 'var(--bg)', borderRadius: '20px', width: '100%', maxWidth: '400px', maxHeight: '70vh',
+                display: 'flex', flexDirection: 'column', boxShadow: '0 20px 50px rgba(0,0,0,0.3)'
+              }}
+              initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1.2rem 1.2rem 0.5rem' }}>
+                <h4 style={{ fontFamily: "'Playfair Display', serif", fontSize: '1.3rem', color: 'var(--primary)' }}>Выберите модель</h4>
+                <button type="button" onClick={() => setShowModelModal(false)} style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: '#888' }}>✕</button>
               </div>
-              <input type="text" placeholder="Поиск модели..." value={modelSearch} onChange={(e) => setModelSearch(e.target.value)} className={styles.modelSearchInput} autoFocus />
-              <div className={styles.modelList}>
+              <input type="text" placeholder="Поиск модели..." value={modelSearch} onChange={(e) => setModelSearch(e.target.value)} style={{ margin: '0 1.2rem 0.5rem', padding: '0.7rem 1rem', border: '1.5px solid rgba(128,128,128,0.3)', borderRadius: '12px', fontFamily: 'inherit', fontSize: '0.95rem', background: 'var(--bg)', color: 'var(--text)' }} autoFocus />
+              <div style={{ flex: 1, overflowY: 'auto', padding: '0 1.2rem 1rem', display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
                 {filteredModels.map(model => (
-                  <button key={model} type="button" className={`${styles.modelItem} ${model === carForm.model ? styles.modelItemActive : ''}`} onClick={() => selectModel(model)}>{model}</button>
+                  <button key={model} type="button" style={{
+                    background: model === carForm.model ? 'var(--primary)' : 'var(--glass-bg)',
+                    color: model === carForm.model ? 'white' : 'var(--text)',
+                    border: 'none', padding: '0.7rem 1rem', borderRadius: '10px', textAlign: 'left', fontSize: '0.95rem', cursor: 'pointer'
+                  }} onClick={() => selectModel(model)}>{model}</button>
                 ))}
-                {filteredModels.length === 0 && <p className={styles.noModels}>Нет подходящих моделей</p>}
+                {filteredModels.length === 0 && <p style={{ textAlign: 'center', color: 'var(--text)' }}>Нет подходящих моделей</p>}
               </div>
             </motion.div>
           </motion.div>

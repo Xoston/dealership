@@ -16,8 +16,13 @@ def list_users(current_user=Depends(get_current_admin)):
 @router.put("/users/{user_id}/role")
 def change_user_role(user_id: int, payload: dict = Body(...), current_user=Depends(get_current_admin)):
     new_role = payload.get("role")
-    if new_role not in ("user", "admin"):
-        raise HTTPException(status_code=400, detail="Invalid role")
+    # Разрешаем любую непустую роль (можете указать конкретные, например ["user", "admin", "manager"])
+    if not new_role or not isinstance(new_role, str) or new_role.strip() == "":
+        raise HTTPException(status_code=400, detail="Role must be a non-empty string")
+    # При необходимости можно добавить список допустимых ролей:
+    # allowed_roles = ["user", "admin", "manager"]
+    # if new_role not in allowed_roles:
+    #     raise HTTPException(status_code=400, detail=f"Role must be one of: {', '.join(allowed_roles)}")
     updated = crud.update_user_role(user_id, new_role)
     if not updated:
         raise HTTPException(status_code=404, detail="User not found")
@@ -34,7 +39,7 @@ def remove_user(user_id: int, current_user=Depends(get_current_admin)):
     event_manager.notify("USER_DELETED", {"admin": current_user["email"], "user_id": user_id})
     return {"message": "User deleted"}
 
-# Кредитные заявки
+# ---------- Кредитные заявки ----------
 @router.get("/loans")
 def get_all_loan_applications(current_user=Depends(get_current_admin)):
     return crud.get_all_loan_applications()
@@ -50,7 +55,7 @@ def update_loan_status(loan_id: int, payload: dict = Body(...), current_user=Dep
     event_manager.notify("LOAN_STATUS_CHANGED", {"admin": current_user["email"], "loan_id": loan_id, "new_status": new_status})
     return updated
 
-# Заявки на тест-драйв
+# ---------- Заявки на тест-драйв ----------
 @router.put("/testdrives/{td_id}/status")
 def update_testdrive_status(td_id: int, payload: dict = Body(...), current_user=Depends(get_current_admin)):
     new_status = payload.get("status")

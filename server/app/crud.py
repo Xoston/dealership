@@ -115,7 +115,7 @@ def create_car(car_data: dict):
     car_id = cursor.lastrowid
     conn.close()
     return get_car(car_id)
-    
+
 def update_car(car_id: int, car_data: dict):
     car = get_car(car_id)
     if not car:
@@ -213,7 +213,6 @@ def get_user_loan_applications(user_id: int):
     conn.close()
     return [dict(row) for row in rows]
 
-# ---------- All Loan Applications (Admin) ----------
 def get_all_loan_applications():
     conn = get_connection()
     cursor = conn.cursor()
@@ -280,14 +279,9 @@ def get_all_test_drives():
     conn.close()
     return [dict(row) for row in rows]
 
-def update_test_drive(td_id: int, data: dict):
+def update_test_drive_status(td_id: int, new_status: str):
     conn = get_connection()
-    cursor = conn.cursor()
-    # Разрешаем менять preferred_date и status
-    cursor.execute(
-        "UPDATE test_drive_requests SET preferred_date = ?, status = ? WHERE id = ?",
-        (data.get("preferred_date"), data.get("status"), td_id)
-    )
+    conn.execute("UPDATE test_drive_requests SET status = ? WHERE id = ?", (new_status, td_id))
     conn.commit()
     conn.close()
     return get_test_drive(td_id)
@@ -407,18 +401,3 @@ def get_user_reviews(user_id: int):
     rows = cursor.fetchall()
     conn.close()
     return [dict(row) for row in rows]
-    def update_test_drive_status(td_id: int, new_status: str):
-    conn = get_connection()
-    conn.execute("UPDATE test_drive_requests SET status = ? WHERE id = ?", (new_status, td_id))
-    conn.commit()
-    conn.close()
-    return get_test_drive(td_id)
-    def get_test_drive(req_id: int):
-    conn = get_connection()
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM test_drive_requests WHERE id = ?", (req_id,))
-    row = cursor.fetchone()
-    conn.close()
-    if row:
-        return dict(row)
-    return None
