@@ -15,7 +15,6 @@ const CarDetailPage = () => {
   const [showLoan, setShowLoan] = useState(false);
   const [showTestDrive, setShowTestDrive] = useState(false);
   const [showPurchaseConfirm, setShowPurchaseConfirm] = useState(false);
-  const [purchaseSuccess, setPurchaseSuccess] = useState(false);
   const [showReceipt, setShowReceipt] = useState(false);
   const [receiptData, setReceiptData] = useState(null);
   const [activeImage, setActiveImage] = useState(null);
@@ -37,7 +36,6 @@ const CarDetailPage = () => {
     try {
       const res = await api.post('/purchases/', { car_id: car.id });
       setReceiptData(res.data.purchase || res.data);
-      setPurchaseSuccess(true);
       setShowPurchaseConfirm(false);
       setShowReceipt(true);
     } catch (err) {
@@ -54,12 +52,12 @@ const CarDetailPage = () => {
       <div className={styles.content}>
         <div className={styles.galleryWrapper}>
           <motion.div className={styles.mainImage} whileHover={{ scale: 1.02 }}>
-            <img src={getImageUrl(activeImage || allImages[0])} alt={car.model} className={styles.image} />
+            <img src={getImageUrl(activeImage || allImages[0])} alt={car.model} className={styles.image} loading="lazy" />
           </motion.div>
           {allImages.length > 1 && (
             <div className={styles.thumbnails}>
               {allImages.map((url, idx) => (
-                <img key={idx} src={getImageUrl(url)} alt={`view ${idx + 1}`} className={`${styles.thumb} ${url === activeImage ? styles.activeThumb : ''}`} onClick={() => setActiveImage(url)} />
+                <img key={idx} src={getImageUrl(url)} alt={`view ${idx + 1}`} className={`${styles.thumb} ${url === activeImage ? styles.activeThumb : ''}`} onClick={() => setActiveImage(url)} loading="lazy" />
               ))}
             </div>
           )}
@@ -80,7 +78,6 @@ const CarDetailPage = () => {
             <button className={styles.secondaryButton} onClick={() => setShowTestDrive(true)}>Записаться на тест-драйв</button>
           </div>
 
-          {/* Характеристики (без горизонтального скролла) */}
           {(car.engine_volume || car.power || car.fuel_type || car.consumption || car.drive_type || car.transmission || car.acceleration || car.max_speed || car.clearance || car.seats) && (
             <div className={styles.specs}>
               <h3>Характеристики</h3>
@@ -101,7 +98,6 @@ const CarDetailPage = () => {
         </div>
       </div>
 
-      {/* Модальное окно подтверждения покупки */}
       <AnimatePresence>
         {showPurchaseConfirm && (
           <motion.div className={styles.modalOverlay} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowPurchaseConfirm(false)}>
@@ -117,9 +113,8 @@ const CarDetailPage = () => {
         )}
       </AnimatePresence>
 
-      {/* Чек */}
-      <AnimatePresence>
-        {showReceipt && receiptData && (
+      {showReceipt && receiptData && (
+        <AnimatePresence>
           <motion.div className={styles.modalOverlay} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowReceipt(false)}>
             <motion.div className={`${styles.modal} ${styles.receiptModal}`} initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.8, opacity: 0 }} onClick={e => e.stopPropagation()}>
               <div className={styles.receiptHeader}>
@@ -139,8 +134,8 @@ const CarDetailPage = () => {
               </div>
             </motion.div>
           </motion.div>
-        )}
-      </AnimatePresence>
+        </AnimatePresence>
+      )}
 
       {showLoan && <LoanModal car={car} onClose={() => setShowLoan(false)} />}
       {showTestDrive && <TestDriveModal carId={car.id} onClose={() => setShowTestDrive(false)} />}

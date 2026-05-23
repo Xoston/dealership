@@ -2,10 +2,12 @@ from fastapi import APIRouter, Depends, HTTPException, Body
 from .. import crud
 from ..dependencies import get_current_admin
 from ..audit import event_manager
+from ..cache import cached
 
 router = APIRouter(prefix="/api/admin", tags=["admin"])
 
 @router.get("/stats")
+@cached(ttl=30)
 def admin_stats(current_user=Depends(get_current_admin)):
     return crud.get_admin_stats()
 
@@ -16,13 +18,8 @@ def list_users(current_user=Depends(get_current_admin)):
 @router.put("/users/{user_id}/role")
 def change_user_role(user_id: int, payload: dict = Body(...), current_user=Depends(get_current_admin)):
     new_role = payload.get("role")
-    # Разрешаем любую непустую роль (можете указать конкретные, например ["user", "admin", "manager"])
     if not new_role or not isinstance(new_role, str) or new_role.strip() == "":
         raise HTTPException(status_code=400, detail="Role must be a non-empty string")
-    # При необходимости можно добавить список допустимых ролей:
-    # allowed_roles = ["user", "admin", "manager"]
-    # if new_role not in allowed_roles:
-    #     raise HTTPException(status_code=400, detail=f"Role must be one of: {', '.join(allowed_roles)}")
     updated = crud.update_user_role(user_id, new_role)
     if not updated:
         raise HTTPException(status_code=404, detail="User not found")

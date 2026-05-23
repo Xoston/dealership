@@ -19,13 +19,40 @@ const RegisterPage = () => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
+  // Фронтовая валидация (дублирует серверную для быстрой обратной связи)
+  const validateForm = () => {
+    const { password } = form;
+    if (password.length < 8) {
+      setError('Пароль должен содержать не менее 8 символов');
+      return false;
+    }
+    if (!/[A-Za-z]/.test(password)) {
+      setError('Пароль должен содержать хотя бы одну букву');
+      return false;
+    }
+    if (!/\d/.test(password)) {
+      setError('Пароль должен содержать хотя бы одну цифру');
+      return false;
+    }
+    return true;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!validateForm()) return;
     try {
       await register(form);
       navigate('/dashboard');
     } catch (err) {
-      setError('Ошибка регистрации. Возможно, email уже занят.');
+      const detail = err.response?.data?.detail;
+      if (Array.isArray(detail)) {
+        // Ошибки валидации Pydantic
+        setError(detail.map(e => e.msg).join('. '));
+      } else if (typeof detail === 'string') {
+        setError(detail);
+      } else {
+        setError('Ошибка регистрации. Возможно, email уже занят.');
+      }
     }
   };
 
@@ -52,7 +79,7 @@ const RegisterPage = () => {
             />
           </div>
           <div className={styles.field}>
-            <label>Пароль</label>
+            <label>Пароль (мин. 8 символов, буква + цифра)</label>
             <input
               type="password"
               name="password"

@@ -1,12 +1,11 @@
-from fastapi import Depends, HTTPException, status
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi import Depends, HTTPException, status, Request
 from . import crud
 from .auth import verify_token
 
-security = HTTPBearer()
-
-def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
-    token = credentials.credentials
+def get_current_user(request: Request):
+    token = request.cookies.get("access_token")
+    if not token:
+        raise HTTPException(status_code=401, detail="Not authenticated")
     payload = verify_token(token)
     if not payload:
         raise HTTPException(status_code=401, detail="Invalid token")
@@ -16,7 +15,7 @@ def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(securit
     user = crud.get_user_by_email(email)
     if not user:
         raise HTTPException(status_code=401, detail="User not found")
-    return user  # словарь
+    return user
 
 def get_current_admin(current_user=Depends(get_current_user)):
     if current_user["role"] != "admin":

@@ -1,6 +1,7 @@
 from pydantic import BaseModel, EmailStr, field_validator
 from typing import Optional
 from datetime import datetime
+import re
 
 # ---------- Auth ----------
 class UserCreate(BaseModel):
@@ -8,6 +9,17 @@ class UserCreate(BaseModel):
     password: str
     full_name: str
     phone: Optional[str] = None
+
+    @field_validator("password")
+    @classmethod
+    def validate_password(cls, v):
+        if len(v) < 8:
+            raise ValueError("Пароль должен содержать не менее 8 символов")
+        if not re.search(r"[A-Za-z]", v):
+            raise ValueError("Пароль должен содержать хотя бы одну букву")
+        if not re.search(r"\d", v):
+            raise ValueError("Пароль должен содержать хотя бы одну цифру")
+        return v
 
 class UserLogin(BaseModel):
     email: EmailStr
@@ -28,7 +40,7 @@ class Token(BaseModel):
     token_type: str = "bearer"
     user: UserOut
 
-# ---------- Cars ----------
+# ---------- Cars (остальное без изменений) ----------
 class CarImageOut(BaseModel):
     id: int
     car_id: int

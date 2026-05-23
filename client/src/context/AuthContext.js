@@ -1,5 +1,5 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
-import * as authService from '../services/authService';
+import api from '../services/api';
 
 const AuthContext = createContext(null);
 
@@ -9,16 +9,12 @@ export const AuthProvider = ({ children }) => {
   const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light');
   const [notifications, setNotifications] = useState([]);
 
+  // При загрузке проверяем сессию – кука уйдёт автоматически
   useEffect(() => {
-    const token = localStorage.getItem('access_token');
-    if (token) {
-      authService.getMe()
-        .then(res => setUser(res.data))
-        .catch(() => logout())
-        .finally(() => setLoading(false));
-    } else {
-      setLoading(false);
-    }
+    api.get('/auth/me')
+      .then(res => setUser(res.data))
+      .catch(() => setUser(null))
+      .finally(() => setLoading(false));
   }, []);
 
   useEffect(() => {
@@ -31,19 +27,17 @@ export const AuthProvider = ({ children }) => {
   };
 
   const login = async (email, password) => {
-    const res = await authService.login(email, password);
-    localStorage.setItem('access_token', res.data.access_token);
+    const res = await api.post('/auth/login', { email, password });
     setUser(res.data.user);
   };
 
   const register = async (data) => {
-    const res = await authService.register(data);
-    localStorage.setItem('access_token', res.data.access_token);
+    const res = await api.post('/auth/register', data);
     setUser(res.data.user);
   };
 
-  const logout = () => {
-    localStorage.removeItem('access_token');
+  const logout = async () => {
+    await api.post('/auth/logout');
     setUser(null);
   };
 

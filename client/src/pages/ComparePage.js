@@ -39,7 +39,6 @@ const ComparePage = () => {
   if (loading) return <div className={styles.loading}>Загрузка...</div>;
   if (!cars.length) return <div className={styles.empty}>Нет автомобилей для сравнения. Добавьте их из каталога.</div>;
 
-  // Форматирование
   const fmt = {
     price: v => v ? `${v.toLocaleString()} ₽` : '—',
     bool: v => v === true ? 'Да' : v === false ? 'Нет' : '—',
@@ -88,7 +87,6 @@ const ComparePage = () => {
     }
   ];
 
-  // Определяем, есть ли в группе хотя бы одно заполненное поле у любого авто
   const groupHasData = (group) => cars.some(car => group.fields.some(f => {
     const v = car[f.key];
     return v !== null && v !== undefined && v !== '';
@@ -108,7 +106,7 @@ const ComparePage = () => {
             <div className={styles.cardHeader}>
               <button className={styles.removeCarBtn} onClick={() => removeCar(car.id)}>✕</button>
             </div>
-            <img src={getImageUrl(car.image_url)} alt={car.model} className={styles.carImage} />
+            <img src={getImageUrl(car.image_url)} alt={car.model} className={styles.carImage} loading="lazy" />
             <h3 className={styles.carName}>{car.brand} {car.model}</h3>
 
             {groups.map(group => groupHasData(group) && (
@@ -127,7 +125,6 @@ const ComparePage = () => {
               </div>
             ))}
 
-            {/* Описание (если есть) */}
             {car.description && (
               <div className={styles.group}>
                 <h4 className={styles.groupTitle}>Описание</h4>

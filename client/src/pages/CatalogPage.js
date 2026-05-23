@@ -1,11 +1,11 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { getCars } from '../services/carService';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { getImageUrl } from '../services/api';
 import styles from './CatalogPage.module.css';
 
-// Полный список марок и моделей (используйте ваш полный)
+// Полный список марок и моделей (тот же, что используется в админ-панели)
 const brandModels = {
   "BMW": ["1 Series", "2 Series Gran Coupe", "2 Series Coupe", "3 Series Sedan", "3 Series Touring",
     "4 Series Gran Coupe", "4 Series Coupe", "5 Series Sedan", "5 Series Touring",
@@ -69,23 +69,70 @@ const CatalogPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [compareList, setCompareList] = useState(JSON.parse(localStorage.getItem('compareList') || '[]'));
   const [favorites, setFavorites] = useState(JSON.parse(localStorage.getItem('favorites') || '[]'));
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const observerRef = useRef(null);
+  const loaderRef = useRef(null);
 
-  const fetchCars = useCallback(async () => {
+  const fetchCars = useCallback(async (reset = false) => {
+    if (reset) {
+      setPage(1);
+      setCars([]);
+      setHasMore(true);
+    }
     setLoading(true);
     try {
-      const params = {};
-      Object.entries(filters).forEach(([key, value]) => {
-        if (value !== '' && value !== null && value !== undefined) params[key] = value;
+      const params = {
+        ...filters,
+        page: reset ? 1 : page,
+        limit: 6, // сколько машин подгружать за раз
+      };
+      Object.keys(params).forEach(key => {
+        if (params[key] === '' || params[key] === null || params[key] === undefined) {
+          delete params[key];
+        }
       });
-      if (searchQuery && !filters.brand && !filters.model) params.brand = searchQuery;
+      if (searchQuery && !filters.brand && !filters.model) {
+        params.brand = searchQuery;
+      }
       const res = await getCars(params);
-      setCars(res.data);
-    } catch (err) { console.error(err); } finally { setLoading(false); }
-  }, [filters, searchQuery]);
+      const newCars = res.data;
+      if (reset) {
+        setCars(newCars);
+      } else {
+        setCars(prev => [...prev, ...newCars]);
+      }
+      setHasMore(newCars.length >= 6); // если пришло меньше limit, значит больше нет
+      if (!reset) setPage(prev => prev + 1);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  }, [filters, searchQuery, page]);
 
-  useEffect(() => { fetchCars(); }, [fetchCars]);
+  // Первоначальная загрузка
+  useEffect(() => {
+    fetchCars(true);
+  }, []);
 
-  // Исправленные обработчики: не используем e.preventDefault, потому что кнопки вне ссылки
+  // Intersection Observer для бесконечной прокрутки
+  useEffect(() => {
+    if (observerRef.current) observerRef.current.disconnect();
+    observerRef.current = new IntersectionObserver(entries => {
+      if (entries[0].isIntersecting && hasMore && !loading) {
+        fetchCars(false);
+      }
+    }, { threshold: 0.1 });
+
+    const currentLoader = loaderRef.current;
+    if (currentLoader) observerRef.current.observe(currentLoader);
+
+    return () => {
+      if (observerRef.current) observerRef.current.disconnect();
+    };
+  }, [hasMore, loading, fetchCars]);
+
   const toggleCompare = (carId) => {
     let newList;
     if (compareList.includes(carId)) {
@@ -117,7 +164,7 @@ const CatalogPage = () => {
   };
 
   const applyFilters = () => {
-    fetchCars();
+    fetchCars(true); // сброс страницы и перезагрузка
     setShowFilters(false);
   };
 
@@ -127,11 +174,13 @@ const CatalogPage = () => {
       year_from: '', year_to: '', body_type: '', restyling: '',
     });
     setSearchQuery('');
+    fetchCars(true);
   };
 
   const removeFilter = (key) => {
     handleFilterChange(key, '');
     if (key === 'brand') handleFilterChange('model', '');
+    fetchCars(true);
   };
 
   const availableModels = filters.brand ? (brandModels[filters.brand] || []) : [];
@@ -157,7 +206,7 @@ const CatalogPage = () => {
             placeholder="Поиск по марке или модели..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && fetchCars()}
+            onKeyDown={(e) => e.key === 'Enter' && fetchCars(true)}
             className={styles.searchInput}
           />
           <button className={styles.filterBtn} onClick={() => setShowFilters(true)}>
@@ -178,7 +227,7 @@ const CatalogPage = () => {
         )}
       </div>
 
-      {loading ? (
+      {loading && cars.length === 0 ? (
         <p className={styles.loading}>Загрузка...</p>
       ) : cars.length === 0 ? (
         <p className={styles.noResults}>По вашему запросу ничего не найдено</p>
@@ -193,28 +242,13 @@ const CatalogPage = () => {
               transition={{ duration: 0.4 }}
               className={styles.cardWrapper}
             >
-              {/* Кнопки сравнения и избранного ПЕРЕД ссылкой, но позиционированы абсолютно */}
-              <button
-                className={`${styles.iconBtn} ${styles.compareBtn} ${compareList.includes(car.id) ? styles.activeIcon : ''}`}
-                onClick={(e) => { e.stopPropagation(); toggleCompare(car.id); }}
-                title={compareList.includes(car.id) ? 'Убрать из сравнения' : 'Добавить к сравнению'}
-              >
-                ⇵
-              </button>
-              <button
-                className={`${styles.iconBtn} ${styles.favBtn} ${favorites.includes(car.id) ? styles.activeFav : ''}`}
-                onClick={(e) => { e.stopPropagation(); toggleFavorite(car.id); }}
-                title={favorites.includes(car.id) ? 'Убрать из избранного' : 'Добавить в избранное'}
-              >
-                ♥
-              </button>
-
               <Link to={`/cars/${car.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
                 <div className={styles.card}>
                   <img
                     src={getImageUrl(car.image_url || '/images/default-car.jpg')}
                     alt={car.model}
                     className={styles.cardImage}
+                    loading="lazy"
                   />
                   <div className={styles.cardBody}>
                     <h3>{car.brand} {car.model}</h3>
@@ -223,10 +257,30 @@ const CatalogPage = () => {
                   </div>
                 </div>
               </Link>
+
+              <button
+                className={`${styles.iconBtn} ${styles.compareBtn} ${compareList.includes(car.id) ? styles.activeIcon : ''}`}
+                onClick={(e) => { e.preventDefault(); toggleCompare(car.id); }}
+                title={compareList.includes(car.id) ? 'Убрать из сравнения' : 'Добавить к сравнению'}
+              >
+                ⇵
+              </button>
+              <button
+                className={`${styles.iconBtn} ${styles.favBtn} ${favorites.includes(car.id) ? styles.activeFav : ''}`}
+                onClick={(e) => { e.preventDefault(); toggleFavorite(car.id); }}
+                title={favorites.includes(car.id) ? 'Убрать из избранного' : 'Добавить в избранное'}
+              >
+                ♥
+              </button>
             </motion.div>
           ))}
         </div>
       )}
+
+      {/* Индикатор загрузки / триггер бесконечной прокрутки */}
+      <div ref={loaderRef} style={{ height: '20px', margin: '2rem 0' }}>
+        {loading && cars.length > 0 && <p className={styles.loading}>Загрузка...</p>}
+      </div>
 
       <AnimatePresence>
         {showFilters && (
