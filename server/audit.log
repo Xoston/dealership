@@ -84,3 +84,6 @@
 {"timestamp": "2026-05-22T11:22:06.652086", "event": "CAR_CREATED", "data": {"admin": "admin@luxury.com", "car_id": 11}}
 {"timestamp": "2026-05-22T11:26:45.006713", "event": "PURCHASE_MADE", "data": {"user": "admin@luxury.com", "car_id": 9, "price": 123.0}}
 {"timestamp": "2026-05-22T11:26:56.574251", "event": "PURCHASE_MADE", "data": {"user": "admin@luxury.com", "car_id": 9, "price": 123.0}}
+{"timestamp": "2026-05-22T11:36:22.415415", "event": "USER_LOGIN", "data": {"email": "admin@luxury.com"}}
+{"timestamp": "2026-05-22T11:39:39.309238", "event": "USER_LOGIN", "data": {"email": "admin@luxury.com"}}
+{"timestamp": "2026-05-23T07:00:42.507973", "event": "USER_LOGIN", "data": {"email": "admin@luxury.com"}}

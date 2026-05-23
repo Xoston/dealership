@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import api, { getImageUrl } from '../services/api';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
+import ComparePage from './ComparePage';
 import styles from './UserDashboard.module.css';
 
 const UserDashboard = () => {
@@ -12,16 +13,13 @@ const UserDashboard = () => {
   const [testDrives, setTestDrives] = useState([]);
   const [loans, setLoans] = useState([]);
   const [favorites, setFavorites] = useState([]);
-  const [compareCars, setCompareCars] = useState([]);
   const [loading, setLoading] = useState(true);
   const [profileForm, setProfileForm] = useState({
     full_name: user?.full_name || '',
     phone: user?.phone || '',
   });
   const [updateStatus, setUpdateStatus] = useState(null);
-  const [expandedDesc, setExpandedDesc] = useState(null);
 
-  // Загрузка всех данных
   const fetchData = useCallback(async () => {
     try {
       const [pRes, tRes, lRes] = await Promise.all([
@@ -41,38 +39,14 @@ const UserDashboard = () => {
           try {
             const carRes = await api.get(`/cars/${id}`);
             favCars.push(carRes.data);
-          } catch (err) {
-            // игнорируем несуществующие авто
-          }
+          } catch (err) { /* автомобиль удалён */ }
         }
         setFavorites(favCars);
       } else {
         setFavorites([]);
       }
 
-      // Сравнение
-      const compareIds = JSON.parse(localStorage.getItem('compareList') || '[]');
-      if (compareIds.length) {
-        const cars = [];
-        const invalid = [];
-        for (const id of compareIds) {
-          try {
-            const carRes = await api.get(`/cars/${id}`);
-            cars.push(carRes.data);
-          } catch (err) {
-            invalid.push(id);
-          }
-        }
-        if (invalid.length) {
-          const newList = compareIds.filter(id => !invalid.includes(id));
-          localStorage.setItem('compareList', JSON.stringify(newList));
-        }
-        setCompareCars(cars);
-      } else {
-        setCompareCars([]);
-      }
-
-      // Проверка статусов для уведомлений (как раньше)
+      // Проверка статусов для уведомлений (без изменений)
       const savedLoanStatuses = JSON.parse(localStorage.getItem('loanStatuses') || '{}');
       const newNotifications = [];
       lRes.data.forEach(loan => {
@@ -92,7 +66,6 @@ const UserDashboard = () => {
       });
       newNotifications.forEach(msg => addNotification(msg));
 
-      // Обновляем сохранённые статусы
       const newLoanStatuses = {};
       lRes.data.forEach(l => { newLoanStatuses[l.id] = l.status; });
       localStorage.setItem('loanStatuses', JSON.stringify(newLoanStatuses));
@@ -110,7 +83,6 @@ const UserDashboard = () => {
     if (user) fetchData();
   }, [user, fetchData]);
 
-  // Обновление данных при переключении на вкладки
   useEffect(() => {
     if (['loans', 'testdrives', 'favorites', 'compare'].includes(activeTab)) fetchData();
   }, [activeTab, fetchData]);
@@ -128,35 +100,10 @@ const UserDashboard = () => {
     }
   };
 
-  // Удаление из избранного
   const removeFavorite = (carId) => {
     const newFav = favorites.filter(car => car.id !== carId);
     setFavorites(newFav);
     localStorage.setItem('favorites', JSON.stringify(newFav.map(car => car.id)));
-  };
-
-  // Удаление из сравнения
-  const removeCompareCar = (carId) => {
-    const newIds = JSON.parse(localStorage.getItem('compareList') || '[]').filter(id => id !== carId);
-    localStorage.setItem('compareList', JSON.stringify(newIds));
-    setCompareCars(prev => prev.filter(car => car.id !== carId));
-  };
-
-  const clearCompare = () => {
-    localStorage.removeItem('compareList');
-    setCompareCars([]);
-  };
-
-  // Форматирование для сравнения
-  const formatValue = (car, key) => {
-    const val = car[key];
-    if (val === null || val === undefined || val === '') return '—';
-    return String(val);
-  };
-
-  const isDifferent = (key) => {
-    const vals = compareCars.map(car => formatValue(car, key));
-    return new Set(vals).size > 1;
   };
 
   const tabs = [
@@ -226,96 +173,8 @@ const UserDashboard = () => {
           </div>
         ) : <p className={styles.empty}>Нет избранных автомобилей.</p>;
       case 'compare':
-        return compareCars.length ? (
-          <div>
-            <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1rem' }}>
-              <button className={styles.clearBtn} onClick={clearCompare}>Очистить список</button>
-            </div>
-            <div className={styles.compareGrid}>
-              {compareCars.map(car => (
-                <div key={car.id} className={styles.compareCard}>
-                  <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                    <button className={styles.removeCarBtn} onClick={() => removeCompareCar(car.id)}>✕</button>
-                  </div>
-                  <img src={getImageUrl(car.image_url)} alt={car.model} className={styles.compareImage} />
-                  <h4 className={styles.compareName}>{car.brand} {car.model}</h4>
-
-                  <div className={styles.compareGroup}>
-                    <h5 className={styles.groupTitle}>Основные</h5>
-                    {['year', 'price', 'body_type', 'restyling'].map(key => {
-                      const value = key === 'price' ? `${car.price?.toLocaleString()} ₽` : key === 'body_type' ? bodyTypesRussian[car.body_type] || car.body_type : key === 'restyling' ? (car.restyling ? 'Да' : 'Нет') : formatValue(car, key);
-                      const diff = isDifferent(key);
-                      return (
-                        <div key={key} className={`${styles.compareField} ${diff ? styles.diffField : ''}`}>
-                          <span className={styles.fieldLabel}>{key === 'year' ? 'Год' : key === 'price' ? 'Цена' : key === 'body_type' ? 'Кузов' : 'Рестайлинг'}</span>
-                          <span className={styles.fieldValue}>{value}</span>
-                        </div>
-                      );
-                    })}
-                  </div>
-
-                  <div className={styles.compareGroup}>
-                    <h5 className={styles.groupTitle}>Двигатель и топливо</h5>
-                    {['engine_volume', 'power', 'fuel_type', 'consumption'].map(key => {
-                      const value = key === 'fuel_type' ? fuelTypesRussian[car.fuel_type] || formatValue(car, key) : formatValue(car, key);
-                      const diff = isDifferent(key);
-                      return (
-                        <div key={key} className={`${styles.compareField} ${diff ? styles.diffField : ''}`}>
-                          <span className={styles.fieldLabel}>{key === 'engine_volume' ? 'Объём, л' : key === 'power' ? 'Мощность, л.с.' : key === 'fuel_type' ? 'Топливо' : 'Расход, л/100км'}</span>
-                          <span className={styles.fieldValue}>{value}</span>
-                        </div>
-                      );
-                    })}
-                  </div>
-
-                  <div className={styles.compareGroup}>
-                    <h5 className={styles.groupTitle}>Трансмиссия и динамика</h5>
-                    {['drive_type', 'transmission', 'acceleration', 'max_speed'].map(key => {
-                      const value = key === 'drive_type' ? driveTypesRussian[car.drive_type] || formatValue(car, key) : key === 'transmission' ? transmissionTypesRussian[car.transmission] || formatValue(car, key) : formatValue(car, key);
-                      const diff = isDifferent(key);
-                      return (
-                        <div key={key} className={`${styles.compareField} ${diff ? styles.diffField : ''}`}>
-                          <span className={styles.fieldLabel}>{key === 'drive_type' ? 'Привод' : key === 'transmission' ? 'КПП' : key === 'acceleration' ? '0-100 км/ч, с' : 'Макс. скорость'}</span>
-                          <span className={styles.fieldValue}>{value}</span>
-                        </div>
-                      );
-                    })}
-                  </div>
-
-                  <div className={styles.compareGroup}>
-                    <h5 className={styles.groupTitle}>Размеры</h5>
-                    {['clearance', 'seats'].map(key => {
-                      const value = formatValue(car, key);
-                      const diff = isDifferent(key);
-                      return (
-                        <div key={key} className={`${styles.compareField} ${diff ? styles.diffField : ''}`}>
-                          <span className={styles.fieldLabel}>{key === 'clearance' ? 'Клиренс, мм' : 'Мест'}</span>
-                          <span className={styles.fieldValue}>{value}</span>
-                        </div>
-                      );
-                    })}
-                  </div>
-
-                  {car.description && (
-                    <div className={styles.compareGroup}>
-                      <h5 className={styles.groupTitle}>Описание</h5>
-                      <div className={styles.descriptionBox}>
-                        <span className={`${styles.descText} ${expandedDesc === car.id ? styles.expanded : ''}`}>
-                          {car.description}
-                        </span>
-                        {car.description.length > 80 && (
-                          <button className={styles.moreBtn} onClick={() => setExpandedDesc(expandedDesc === car.id ? null : car.id)}>
-                            {expandedDesc === car.id ? 'Свернуть' : 'Ещё'}
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        ) : <p className={styles.empty}>Нет автомобилей для сравнения. Добавьте их из каталога.</p>;
+        // Используем готовый компонент ComparePage
+        return <ComparePage />;
       case 'testdrives':
         return testDrives.length ? (
           <div className={styles.cardsGrid}>
@@ -386,24 +245,6 @@ const UserDashboard = () => {
       </div>
     </motion.div>
   );
-};
-
-// Вспомогательные словари (должны быть глобально или импортированы)
-const bodyTypesRussian = {
-  "sedan": "Седан", "coupe": "Купе", "cabriolet": "Кабриолет", "wagon": "Универсал",
-  "suv": "Внедорожник", "pickup": "Пикап", "limousine": "Лимузин", "hatchback": "Хэтчбек",
-};
-
-const fuelTypesRussian = {
-  "petrol": "Бензин", "diesel": "Дизель", "hybrid": "Гибрид", "electric": "Электро",
-};
-
-const driveTypesRussian = {
-  "FWD": "Передний", "RWD": "Задний", "AWD": "Полный",
-};
-
-const transmissionTypesRussian = {
-  "manual": "Механика", "automatic": "Автомат", "robot": "Робот", "variator": "Вариатор",
 };
 
 export default UserDashboard;
