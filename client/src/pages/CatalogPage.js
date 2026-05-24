@@ -85,7 +85,7 @@ const CatalogPage = () => {
       const params = {
         ...filters,
         page: reset ? 1 : page,
-        limit: 6, // сколько машин подгружать за раз
+        limit: 6,
       };
       Object.keys(params).forEach(key => {
         if (params[key] === '' || params[key] === null || params[key] === undefined) {
@@ -102,7 +102,7 @@ const CatalogPage = () => {
       } else {
         setCars(prev => [...prev, ...newCars]);
       }
-      setHasMore(newCars.length >= 6); // если пришло меньше limit, значит больше нет
+      setHasMore(newCars.length >= 6);
       if (!reset) setPage(prev => prev + 1);
     } catch (err) {
       console.error(err);
@@ -111,12 +111,8 @@ const CatalogPage = () => {
     }
   }, [filters, searchQuery, page]);
 
-  // Первоначальная загрузка
-  useEffect(() => {
-    fetchCars(true);
-  }, []);
+  useEffect(() => { fetchCars(true); }, []);
 
-  // Intersection Observer для бесконечной прокрутки
   useEffect(() => {
     if (observerRef.current) observerRef.current.disconnect();
     observerRef.current = new IntersectionObserver(entries => {
@@ -164,7 +160,7 @@ const CatalogPage = () => {
   };
 
   const applyFilters = () => {
-    fetchCars(true); // сброс страницы и перезагрузка
+    fetchCars(true);
     setShowFilters(false);
   };
 
@@ -242,6 +238,7 @@ const CatalogPage = () => {
               transition={{ duration: 0.4 }}
               className={styles.cardWrapper}
             >
+              {/* Прямой переход на детальную страницу */}
               <Link to={`/cars/${car.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
                 <div className={styles.card}>
                   <img
@@ -277,7 +274,6 @@ const CatalogPage = () => {
         </div>
       )}
 
-      {/* Индикатор загрузки / триггер бесконечной прокрутки */}
       <div ref={loaderRef} style={{ height: '20px', margin: '2rem 0' }}>
         {loading && cars.length > 0 && <p className={styles.loading}>Загрузка...</p>}
       </div>

@@ -90,3 +90,4 @@
 {"timestamp": "2026-05-23T07:07:20.555061", "event": "CAR_CREATED", "data": {"admin": "admin@luxury.com", "car_id": 1}}
 {"timestamp": "2026-05-23T07:15:56.602134", "event": "USER_LOGIN", "data": {"email": "admin@luxury.com"}}
 {"timestamp": "2026-05-23T07:22:22.597029", "event": "USER_LOGIN", "data": {"email": "admin@luxury.com"}}
+{"timestamp": "2026-05-24T08:44:07.523956", "event": "USER_LOGIN", "data": {"email": "admin@luxury.com"}}
