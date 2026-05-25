@@ -176,7 +176,7 @@ const CarDetailPage = () => {
                 </label>
                 <label className={`${styles.paymentOption} ${paymentMethod === 'cash' ? styles.activePayment : ''}`}>
                   <input type="radio" name="payment" value="cash" checked={paymentMethod === 'cash'} onChange={() => setPaymentMethod('cash')} />
-                  <span>💵 Наличные</span>
+                  <span>💸 Наличные</span>
                 </label>
                 <label className={`${styles.paymentOption} ${paymentMethod === 'credit' ? styles.activePayment : ''}`}>
                   <input type="radio" name="payment" value="credit" checked={paymentMethod === 'credit'} onChange={() => setPaymentMethod('credit')} />

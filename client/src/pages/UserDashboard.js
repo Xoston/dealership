@@ -271,7 +271,15 @@ const UserDashboard = () => {
                 <div className={styles.cardBody}>
                   <span>Авто ID: {td.car_id}</span>
                   <span>Дата: {new Date(td.preferred_date).toLocaleString()}</span>
-                  <span className={styles.status}>Статус: {td.status}</span>
+                  {/* Статус на русском */}
+                  <span className={styles.status}>
+                    Статус: {
+                      td.status === 'pending' ? 'Ожидает' :
+                      td.status === 'approved' ? 'Одобрена' :
+                      td.status === 'rejected' ? 'Отклонена' :
+                      td.status
+                    }
+                  </span>
                 </div>
               </div>
             ))}

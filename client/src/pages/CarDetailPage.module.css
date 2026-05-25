@@ -443,3 +443,9 @@
   margin: 0.2rem 0;
   font-size: 0.9rem;
 }
+.paymentOption input {
+  accent-color: var(--primary);
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+}

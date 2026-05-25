@@ -28,7 +28,6 @@ const LoanCalculator = ({ carId, carPrice }) => {
 
   return (
     <motion.div className={styles.container} initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-      <h3>Кредитный калькулятор</h3>
       <form onSubmit={handleCalculate}>
         <div className={styles.field}>
           <label htmlFor="amount">Сумма кредита</label>

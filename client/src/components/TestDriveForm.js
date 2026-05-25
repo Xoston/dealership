@@ -67,7 +67,6 @@ const TestDriveForm = ({ carId }) => {
 
   return (
     <div style={{ marginTop: '2rem' }}>
-      <h3 style={{ fontFamily: "'Playfair Display', serif", marginBottom: '1rem' }}>Запись на тест-драйв</h3>
       {success && <p style={{ color: 'green' }}>✔ Заявка отправлена!</p>}
       <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
         <input type="datetime-local" value={date} onChange={(e) => setDate(e.target.value)} required
