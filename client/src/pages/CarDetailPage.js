@@ -24,8 +24,13 @@ const CarDetailPage = () => {
     amount: '',
     term: 36,
     rate: 12,
+    downPayment: '',
   });
   const [creditCalculated, setCreditCalculated] = useState(null);
+  const [creditForm, setCreditForm] = useState({
+    fullName: user?.full_name || '',
+    phone: user?.phone || '',
+  });
 
   useEffect(() => {
     getCar(id).then(res => {
@@ -36,19 +41,24 @@ const CarDetailPage = () => {
     }).catch(console.error);
   }, [id]);
 
-  // Когда открывается модалка покупки и выбрана оплата в кредит, предзаполняем сумму кредита ценой авто
+  // Автоматический расчёт при изменении параметров кредита
   useEffect(() => {
-    if (showPurchaseModal && paymentMethod === 'credit' && car) {
-      setCreditParams(prev => ({ ...prev, amount: car.price.toString() }));
-      setCreditCalculated(null);
+    if (paymentMethod === 'credit') {
+      calculateCredit();
     }
-  }, [showPurchaseModal, paymentMethod, car]);
+  }, [creditParams.amount, creditParams.term, creditParams.rate, creditParams.downPayment, paymentMethod]);
 
   const calculateCredit = () => {
-    const principal = parseFloat(creditParams.amount);
+    const price = car?.price || 0;
+    const down = parseFloat(creditParams.downPayment) || 0;
+    const principal = parseFloat(creditParams.amount) || (price - down);
     const months = parseInt(creditParams.term);
     const annualRate = parseFloat(creditParams.rate);
-    if (isNaN(principal) || isNaN(months) || isNaN(annualRate)) return;
+
+    if (isNaN(principal) || isNaN(months) || isNaN(annualRate) || principal <= 0) {
+      setCreditCalculated(null);
+      return;
+    }
 
     const monthlyRate = annualRate / 12 / 100;
     let monthlyPayment;
@@ -85,6 +95,7 @@ const CarDetailPage = () => {
         credit: paymentMethod === 'credit' ? {
           ...creditParams,
           ...creditCalculated,
+          ...creditForm,
         } : null,
       };
       const savedReceipts = JSON.parse(localStorage.getItem('purchaseReceipts') || '[]');
@@ -153,7 +164,9 @@ const CarDetailPage = () => {
 
           {purchaseSuccess && (
             <motion.div className={styles.successMessage} initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-              ✅ Покупка оформлена! Чек доступен в личном кабинете.
+              {paymentMethod === 'credit'
+                ? '✅ Заявка на кредит отправлена! Ожидайте решения банка.'
+                : '✅ Покупка оформлена! Чек доступен в личном кабинете.'}
             </motion.div>
           )}
         </div>
@@ -176,7 +189,7 @@ const CarDetailPage = () => {
                 </label>
                 <label className={`${styles.paymentOption} ${paymentMethod === 'cash' ? styles.activePayment : ''}`}>
                   <input type="radio" name="payment" value="cash" checked={paymentMethod === 'cash'} onChange={() => setPaymentMethod('cash')} />
-                  <span>💸 Наличные</span>
+                  <span>💵 Наличные</span>
                 </label>
                 <label className={`${styles.paymentOption} ${paymentMethod === 'credit' ? styles.activePayment : ''}`}>
                   <input type="radio" name="payment" value="credit" checked={paymentMethod === 'credit'} onChange={() => setPaymentMethod('credit')} />
@@ -192,8 +205,9 @@ const CarDetailPage = () => {
                     <label>Сумма кредита (₽)</label>
                     <input
                       type="number"
-                      value={creditParams.amount}
+                      value={creditParams.amount || (car.price - (parseFloat(creditParams.downPayment) || 0))}
                       onChange={(e) => setCreditParams(prev => ({ ...prev, amount: e.target.value }))}
+                      placeholder="Сумма кредита"
                     />
                   </div>
                   <div className={styles.creditField}>
@@ -213,19 +227,48 @@ const CarDetailPage = () => {
                       onChange={(e) => setCreditParams(prev => ({ ...prev, rate: e.target.value }))}
                     />
                   </div>
-                  <button className={styles.calcCreditBtn} onClick={calculateCredit}>Рассчитать</button>
+                  <div className={styles.creditField}>
+                    <label>Первоначальный взнос (₽)</label>
+                    <input
+                      type="number"
+                      value={creditParams.downPayment}
+                      onChange={(e) => setCreditParams(prev => ({ ...prev, downPayment: e.target.value }))}
+                    />
+                  </div>
+                  {/* Анкета */}
+                  <div className={styles.creditField}>
+                    <label>ФИО</label>
+                    <input
+                      type="text"
+                      value={creditForm.fullName}
+                      onChange={(e) => setCreditForm(prev => ({ ...prev, fullName: e.target.value }))}
+                      placeholder="Иванов Иван Иванович"
+                    />
+                  </div>
+                  <div className={styles.creditField}>
+                    <label>Телефон</label>
+                    <input
+                      type="tel"
+                      value={creditForm.phone}
+                      onChange={(e) => setCreditForm(prev => ({ ...prev, phone: e.target.value }))}
+                      placeholder="+7 (999) 123-45-67"
+                    />
+                  </div>
+
                   {creditCalculated && (
                     <div className={styles.creditResult}>
-                      <p>Ежемесячный платёж: <strong>{creditCalculated.monthly_payment} ₽</strong></p>
-                      <p>Общая сумма: {creditCalculated.total_payment} ₽</p>
-                      <p>Переплата: {creditCalculated.overpayment} ₽</p>
+                      <p>Ежемесячный платёж: <strong>{creditCalculated.monthly_payment.toLocaleString()} ₽</strong></p>
+                      <p>Общая сумма: {creditCalculated.total_payment.toLocaleString()} ₽</p>
+                      <p>Переплата: {creditCalculated.overpayment.toLocaleString()} ₽</p>
                     </div>
                   )}
                 </div>
               )}
 
               <div className={styles.modalButtons}>
-                <button className={styles.confirmButton} onClick={handlePurchase}>Оплатить</button>
+                <button className={styles.confirmButton} onClick={handlePurchase}>
+                  {paymentMethod === 'credit' ? 'Отправить заявку' : 'Оплатить'}
+                </button>
                 <button className={styles.cancelButton} onClick={() => setShowPurchaseModal(false)}>Отмена</button>
               </div>
             </motion.div>

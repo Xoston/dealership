@@ -219,14 +219,17 @@ const UserDashboard = () => {
 
       case 'purchases':
         const allReceipts = JSON.parse(localStorage.getItem('purchaseReceipts') || '[]');
-        const allPurchases = [...purchases, ...allReceipts];
+        // Объединяем и сортируем по дате (сначала новые)
+        const allPurchases = [...purchases, ...allReceipts].sort(
+          (a, b) => new Date(b.purchase_date) - new Date(a.purchase_date)
+        );
         return allPurchases.length ? (
           <div className={styles.cardsGrid}>
             {allPurchases.map((p, idx) => (
               <motion.div key={idx} className={`${styles.card} ${styles.receiptCard}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
                 <div className={styles.receiptHeader}>
                   <h4>Luxury Dealer</h4>
-                  <span>Чек #{p.id}</span>
+                  <span>Чек #{idx + 1}</span>
                 </div>
                 <div className={styles.receiptBody}>
                   <div className={styles.receiptRow}><span>Автомобиль</span><strong>{p.brand} {p.model}</strong></div>
@@ -271,15 +274,12 @@ const UserDashboard = () => {
                 <div className={styles.cardBody}>
                   <span>Авто ID: {td.car_id}</span>
                   <span>Дата: {new Date(td.preferred_date).toLocaleString()}</span>
-                  {/* Статус на русском */}
-                  <span className={styles.status}>
-                    Статус: {
-                      td.status === 'pending' ? 'Ожидает' :
-                      td.status === 'approved' ? 'Одобрена' :
-                      td.status === 'rejected' ? 'Отклонена' :
-                      td.status
-                    }
-                  </span>
+                  <span className={styles.status}>Статус: {
+                    td.status === 'pending' ? 'Ожидает' :
+                    td.status === 'approved' ? 'Одобрена' :
+                    td.status === 'rejected' ? 'Отклонена' :
+                    td.status
+                  }</span>
                 </div>
               </div>
             ))}
@@ -326,7 +326,7 @@ const UserDashboard = () => {
 
   return (
     <motion.div className={styles.container} initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-      <h2 className={styles.title}>Личный кабинет - {user.full_name}</h2>
+      <h2 className={styles.title}>Личный кабинет – {user.full_name}</h2>
       <div className={styles.tabs}>
         {tabs.map(tab => (
           <button
