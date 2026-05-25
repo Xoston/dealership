@@ -224,14 +224,14 @@ const CatalogPage = () => {
                 onClick={(e) => { e.preventDefault(); toggleCompare(car.id); }}
                 title={compareList.includes(car.id) ? 'Убрать из сравнения' : 'Добавить к сравнению'}
               >
-                ⇵
+                ↓↑
               </button>
               <button
                 className={`${styles.iconBtn} ${styles.favBtn} ${favorites.includes(car.id) ? styles.activeFav : ''}`}
                 onClick={(e) => { e.preventDefault(); toggleFavorite(car.id); }}
                 title={favorites.includes(car.id) ? 'Убрать из избранного' : 'Добавить в избранное'}
               >
-                ♥
+                🤍
               </button>
             </motion.div>
           ))}

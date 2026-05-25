@@ -364,7 +364,7 @@ const AdminPanel = () => {
                     <td style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
                       <button onClick={() => openEditForm(car)} style={{ background: 'transparent', border: '1.5px solid var(--primary)', color: 'var(--primary)', padding: '0.3rem 0.8rem', borderRadius: '20px', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer', transition: 'all 0.2s' }}
                         onMouseOver={(e) => { e.currentTarget.style.background = 'var(--primary)'; e.currentTarget.style.color = 'white'; }}
-                        onMouseOut={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--primary)'; }}>✎ Изменить</button>
+                        onMouseOut={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--primary)'; }}>🖊 Изменить</button>
                       <button onClick={() => handleDeleteCar(car.id)} style={{ background: 'transparent', border: '1.5px solid #D32F2F', color: '#D32F2F', padding: '0.3rem 0.8rem', borderRadius: '20px', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer', transition: 'all 0.2s' }}
                         onMouseOver={(e) => { e.currentTarget.style.background = '#D32F2F'; e.currentTarget.style.color = 'white'; }}
                         onMouseOut={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#D32F2F'; }}>✕ Удалить</button>
@@ -490,7 +490,7 @@ const AdminPanel = () => {
                         {newPhotos.map((url, idx) => (
                           <div key={idx} style={{ position: 'relative', width: '100px', height: '80px' }}>
                             <img src={getImageUrl(url)} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '8px' }} />
-                            <button type="button" onClick={() => removeNewPhoto(url)} style={{ position: 'absolute', top: '-6px', right: '-6px', background: '#D32F2F', color: 'white', border: 'none', borderRadius: '50%', width: '22px', height: '22px', cursor: 'pointer', fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×</button>
+                            <button type="button" onClick={() => removeNewPhoto(url)} style={{ position: 'absolute', top: '-6px', right: '-6px', background: '#D32F2F', color: 'white', border: 'none', borderRadius: '50%', width: '22px', height: '22px', cursor: 'pointer', fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>x</button>
                             {url === carForm.image_url && <div style={{ position: 'absolute', bottom: '4px', left: '4px', background: 'var(--primary)', color: 'white', fontSize: '0.7rem', padding: '0.1rem 0.4rem', borderRadius: '10px' }}>Основное</div>}
                           </div>
                         ))}

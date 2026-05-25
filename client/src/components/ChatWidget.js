@@ -38,7 +38,7 @@ const ChatWidget = () => {
   return (
     <div className={styles.widget}>
       <button className={styles.toggle} onClick={() => setOpen(!open)}>
-        {open ? '✕' : '💬'}
+        {open ? 'X' : '✉'}
       </button>
       <AnimatePresence>
         {open && (

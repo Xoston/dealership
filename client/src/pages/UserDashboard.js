@@ -318,7 +318,7 @@ const UserDashboard = () => {
 
   return (
     <motion.div className={styles.container} initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-      <h2 className={styles.title}>Личный кабинет – {user.full_name}</h2>
+      <h2 className={styles.title}>Личный кабинет - {user.full_name}</h2>
       <div className={styles.tabs}>
         {tabs.map(tab => (
           <button
