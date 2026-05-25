@@ -143,6 +143,7 @@ const AdminPanel = () => {
   const [uploading, setUploading] = useState(false);
   const [formError, setFormError] = useState('');
   const [fieldErrors, setFieldErrors] = useState({});
+  const [submitting, setSubmitting] = useState(false); // <-- флаг блокировки
 
   const [showBrandModal, setShowBrandModal] = useState(false);
   const [brandSearch, setBrandSearch] = useState('');
@@ -255,8 +256,10 @@ const AdminPanel = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!validateForm()) return;
+    if (!validateForm() || submitting) return;   // <-- защита от двойного клика
     setFormError('');
+    setSubmitting(true);                          // <-- блокируем
+
     const payload = {
       brand: carForm.brand, model: carForm.model, year: parseInt(carForm.year),
       price: parseFloat(carForm.price), description: carForm.description, image_url: carForm.image_url,
@@ -287,6 +290,8 @@ const AdminPanel = () => {
       if (Array.isArray(detail)) setFormError(detail.map(e => e.msg).join('. '));
       else if (typeof detail === 'string') setFormError(detail);
       else setFormError('Ошибка сервера');
+    } finally {
+      setSubmitting(false);                       // <-- разблокируем
     }
   };
 
@@ -421,6 +426,7 @@ const AdminPanel = () => {
                   <button type="button" onClick={closeFormModal} style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: '#888' }}>✕</button>
                 </div>
                 <div style={{ padding: '0 1.5rem 1rem', flex: 1, overflowY: 'auto' }}>
+                  {/* Поля формы: марка, модель, год, цена, описание, кузов, рестайлинг */}
                   <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
                     <div style={{ flex: 1 }}>
                       <label>Марка *</label>
@@ -494,7 +500,9 @@ const AdminPanel = () => {
                   {formError && <div style={{ background: '#fdecea', color: '#D32F2F', padding: '0.8rem 1rem', borderRadius: '10px', marginTop: '0.5rem', fontSize: '0.9rem' }}>{formError}</div>}
                 </div>
                 <div style={{ padding: '1rem 1.5rem', borderTop: '1px solid rgba(128,128,128,0.2)', display: 'flex', justifyContent: 'flex-end' }}>
-                  <button type="submit" style={{ background: 'linear-gradient(135deg, var(--primary), var(--primary-light))', color: 'white', border: 'none', padding: '0.8rem 2.5rem', borderRadius: '30px', fontWeight: 600, fontSize: '1rem', cursor: 'pointer', boxShadow: '0 4px 15px rgba(74,20,140,0.3)' }}>{editingCar ? 'Сохранить изменения' : 'Добавить автомобиль'}</button>
+                  <button type="submit" disabled={submitting} style={{ background: 'linear-gradient(135deg, var(--primary), var(--primary-light))', color: 'white', border: 'none', padding: '0.8rem 2.5rem', borderRadius: '30px', fontWeight: 600, fontSize: '1rem', cursor: 'pointer', boxShadow: '0 4px 15px rgba(74,20,140,0.3)' }}>
+                    {editingCar ? 'Сохранить изменения' : 'Добавить автомобиль'}
+                  </button>
                 </div>
               </form>
             </motion.div>

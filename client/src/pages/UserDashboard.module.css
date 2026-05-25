@@ -42,7 +42,7 @@
 .removeFav { background: none; border: 1px solid #D32F2F; color: #D32F2F; padding: 0.5rem 1.5rem; border-radius: 25px; cursor: pointer; font-size: 0.9rem; font-weight: 600; transition: 0.3s; margin-top: auto; width: fit-content; }
 .removeFav:hover { background: #D32F2F; color: white; }
 
-/* Сравнение в личном кабинете */
+/* Сравнение в личном кабинете (стили, используемые ComparePage, если он встроен) */
 .compareGrid {
   display: flex;
   gap: 2rem;
@@ -144,3 +144,73 @@
 .descText { white-space: pre-wrap; }
 .moreBtn { background: none; border: none; color: var(--primary); cursor: pointer; font-weight: 600; font-size: 0.85rem; margin-top: 0.3rem; }
 .moreBtn:hover { text-decoration: underline; }
+
+/* ---------- Стили для чеков (Мои покупки) ---------- */
+.receiptCard {
+  background: #fdfdfd;
+  border: 1px solid #e0e0e0;
+  font-family: 'Courier New', monospace;
+  padding: 1.2rem;
+}
+
+.receiptHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 2px dashed #ccc;
+  padding-bottom: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.receiptHeader h4 {
+  font-family: 'Playfair Display', serif;
+  color: var(--primary);
+  margin: 0;
+}
+
+.receiptHeader span {
+  font-size: 0.85rem;
+  color: #666;
+}
+
+.receiptBody {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-bottom: 0.8rem;
+}
+
+.receiptRow {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.2rem 0;
+  border-bottom: 1px dotted #ddd;
+}
+
+.receiptRow span {
+  color: #666;
+  font-size: 0.85rem;
+}
+
+.receiptRow strong {
+  color: #111;
+  font-size: 0.9rem;
+}
+
+.printBtn {
+  background: none;
+  border: 1px solid var(--primary);
+  color: var(--primary);
+  padding: 0.3rem 1rem;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 600;
+  transition: all 0.3s;
+  align-self: flex-start;
+}
+
+.printBtn:hover {
+  background: var(--primary);
+  color: white;
+}

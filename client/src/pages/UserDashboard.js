@@ -20,6 +20,7 @@ const UserDashboard = () => {
   });
   const [updateStatus, setUpdateStatus] = useState(null);
 
+  // ================= ЗАГРУЗКА ДАННЫХ =================
   const fetchData = useCallback(async () => {
     try {
       const [pRes, tRes, lRes] = await Promise.all([
@@ -46,7 +47,7 @@ const UserDashboard = () => {
         setFavorites([]);
       }
 
-      // Проверка статусов для уведомлений (без изменений)
+      // Проверка статусов для уведомлений
       const savedLoanStatuses = JSON.parse(localStorage.getItem('loanStatuses') || '{}');
       const newNotifications = [];
       lRes.data.forEach(loan => {
@@ -106,6 +107,80 @@ const UserDashboard = () => {
     localStorage.setItem('favorites', JSON.stringify(newFav.map(car => car.id)));
   };
 
+  // ================= ПЕЧАТЬ ОДНОГО ЧЕКА =================
+  const printSingleReceipt = (receipt) => {
+    const dateStr = new Date(receipt.purchase_date).toLocaleString('ru-RU');
+    const paymentStr =
+      receipt.paymentMethod === 'card'
+        ? 'Банковская карта'
+        : receipt.paymentMethod === 'cash'
+        ? 'Наличные'
+        : 'Кредит';
+
+    const printContent = `
+      <html>
+        <head>
+          <title>Чек #${receipt.id}</title>
+          <style>
+            body {
+              font-family: 'Courier New', monospace;
+              padding: 2rem;
+              color: #111;
+              background: white;
+            }
+            .header {
+              text-align: center;
+              border-bottom: 2px dashed #ccc;
+              padding-bottom: 1rem;
+              margin-bottom: 1.5rem;
+            }
+            .header h1 {
+              font-family: 'Playfair Display', serif;
+              color: #4A148C;
+              font-size: 2rem;
+              margin: 0 0 0.3rem 0;
+            }
+            .row {
+              display: flex;
+              justify-content: space-between;
+              padding: 0.4rem 0;
+              border-bottom: 1px dotted #ddd;
+            }
+            .row span { color: #555; font-size: 0.95rem; }
+            .row strong { color: #111; font-size: 0.95rem; }
+            .footer {
+              margin-top: 2rem;
+              text-align: center;
+              color: #888;
+              font-size: 0.9rem;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h1>Luxury Dealer</h1>
+            <p>Чек #${receipt.id}</p>
+          </div>
+          <div class="row"><span>Автомобиль</span><strong>${receipt.brand} ${receipt.model}</strong></div>
+          <div class="row"><span>Год выпуска</span><strong>${receipt.year}</strong></div>
+          <div class="row"><span>Цена</span><strong>${receipt.price?.toLocaleString('ru-RU')} ₽</strong></div>
+          <div class="row"><span>Дата покупки</span><strong>${dateStr}</strong></div>
+          <div class="row"><span>Способ оплаты</span><strong>${paymentStr}</strong></div>
+          <div class="footer">Спасибо за покупку!</div>
+        </body>
+      </html>
+    `;
+
+    const printWindow = window.open('', '_blank', 'width=600,height=500');
+    if (printWindow) {
+      printWindow.document.write(printContent);
+      printWindow.document.close();
+      printWindow.focus();
+      printWindow.print();
+      printWindow.close();
+    }
+  };
+
   const tabs = [
     { key: 'profile', label: 'Профиль' },
     { key: 'purchases', label: 'Мои покупки' },
@@ -141,20 +216,31 @@ const UserDashboard = () => {
             </form>
           </div>
         );
+
       case 'purchases':
-        return purchases.length ? (
+        const allReceipts = JSON.parse(localStorage.getItem('purchaseReceipts') || '[]');
+        const allPurchases = [...purchases, ...allReceipts];
+        return allPurchases.length ? (
           <div className={styles.cardsGrid}>
-            {purchases.map((p, idx) => (
-              <div key={idx} className={styles.card}>
-                <div className={styles.cardHeader}><strong>{p.brand} {p.model}</strong> ({p.year})</div>
-                <div className={styles.cardBody}>
-                  <span>Дата: {new Date(p.purchase_date).toLocaleDateString()}</span>
-                  <span className={styles.price}>{p.price.toLocaleString()} ₽</span>
+            {allPurchases.map((p, idx) => (
+              <motion.div key={idx} className={`${styles.card} ${styles.receiptCard}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                <div className={styles.receiptHeader}>
+                  <h4>Luxury Dealer</h4>
+                  <span>Чек #{p.id}</span>
                 </div>
-              </div>
+                <div className={styles.receiptBody}>
+                  <div className={styles.receiptRow}><span>Автомобиль</span><strong>{p.brand} {p.model}</strong></div>
+                  <div className={styles.receiptRow}><span>Год</span><strong>{p.year}</strong></div>
+                  <div className={styles.receiptRow}><span>Цена</span><strong>{p.price?.toLocaleString()} ₽</strong></div>
+                  <div className={styles.receiptRow}><span>Дата</span><strong>{new Date(p.purchase_date).toLocaleString()}</strong></div>
+                  {p.paymentMethod && <div className={styles.receiptRow}><span>Оплата</span><strong>{p.paymentMethod === 'card' ? 'Карта' : p.paymentMethod === 'cash' ? 'Наличные' : 'Кредит'}</strong></div>}
+                </div>
+                <button className={styles.printBtn} onClick={() => printSingleReceipt(p)}>🖨 Распечатать</button>
+              </motion.div>
             ))}
           </div>
         ) : <p className={styles.empty}>У вас ещё нет покупок.</p>;
+
       case 'favorites':
         return favorites.length ? (
           <div className={styles.favoritesGrid}>
@@ -172,9 +258,10 @@ const UserDashboard = () => {
             ))}
           </div>
         ) : <p className={styles.empty}>Нет избранных автомобилей.</p>;
+
       case 'compare':
-        // Используем готовый компонент ComparePage
         return <ComparePage />;
+
       case 'testdrives':
         return testDrives.length ? (
           <div className={styles.cardsGrid}>
@@ -190,6 +277,7 @@ const UserDashboard = () => {
             ))}
           </div>
         ) : <p className={styles.empty}>Нет заявок на тест-драйв.</p>;
+
       case 'loans':
         return loans.length ? (
           <div className={styles.cardsGrid}>
@@ -208,6 +296,7 @@ const UserDashboard = () => {
             ))}
           </div>
         ) : <p className={styles.empty}>Кредитных заявок пока нет.</p>;
+
       case 'notifications':
         return notifications.length ? (
           <div className={styles.cardsGrid}>
@@ -219,6 +308,7 @@ const UserDashboard = () => {
             <button className={styles.clearBtn} onClick={clearNotifications}>Очистить все</button>
           </div>
         ) : <p className={styles.empty}>Нет новых уведомлений.</p>;
+
       default:
         return null;
     }

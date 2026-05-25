@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef, useCallback } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { getCars } from '../services/carService';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
@@ -69,24 +69,12 @@ const CatalogPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [compareList, setCompareList] = useState(JSON.parse(localStorage.getItem('compareList') || '[]'));
   const [favorites, setFavorites] = useState(JSON.parse(localStorage.getItem('favorites') || '[]'));
-  const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true);
-  const observerRef = useRef(null);
-  const loaderRef = useRef(null);
 
-  const fetchCars = useCallback(async (reset = false) => {
-    if (reset) {
-      setPage(1);
-      setCars([]);
-      setHasMore(true);
-    }
+  // Загрузка всех автомобилей (без пагинации)
+  const fetchCars = useCallback(async () => {
     setLoading(true);
     try {
-      const params = {
-        ...filters,
-        page: reset ? 1 : page,
-        limit: 6,
-      };
+      const params = { ...filters };
       Object.keys(params).forEach(key => {
         if (params[key] === '' || params[key] === null || params[key] === undefined) {
           delete params[key];
@@ -96,38 +84,17 @@ const CatalogPage = () => {
         params.brand = searchQuery;
       }
       const res = await getCars(params);
-      const newCars = res.data;
-      if (reset) {
-        setCars(newCars);
-      } else {
-        setCars(prev => [...prev, ...newCars]);
-      }
-      setHasMore(newCars.length >= 6);
-      if (!reset) setPage(prev => prev + 1);
+      setCars(res.data);
     } catch (err) {
       console.error(err);
     } finally {
       setLoading(false);
     }
-  }, [filters, searchQuery, page]);
-
-  useEffect(() => { fetchCars(true); }, []);
+  }, [filters, searchQuery]);
 
   useEffect(() => {
-    if (observerRef.current) observerRef.current.disconnect();
-    observerRef.current = new IntersectionObserver(entries => {
-      if (entries[0].isIntersecting && hasMore && !loading) {
-        fetchCars(false);
-      }
-    }, { threshold: 0.1 });
-
-    const currentLoader = loaderRef.current;
-    if (currentLoader) observerRef.current.observe(currentLoader);
-
-    return () => {
-      if (observerRef.current) observerRef.current.disconnect();
-    };
-  }, [hasMore, loading, fetchCars]);
+    fetchCars();
+  }, [fetchCars]);
 
   const toggleCompare = (carId) => {
     let newList;
@@ -160,7 +127,7 @@ const CatalogPage = () => {
   };
 
   const applyFilters = () => {
-    fetchCars(true);
+    fetchCars();
     setShowFilters(false);
   };
 
@@ -170,13 +137,11 @@ const CatalogPage = () => {
       year_from: '', year_to: '', body_type: '', restyling: '',
     });
     setSearchQuery('');
-    fetchCars(true);
   };
 
   const removeFilter = (key) => {
     handleFilterChange(key, '');
     if (key === 'brand') handleFilterChange('model', '');
-    fetchCars(true);
   };
 
   const availableModels = filters.brand ? (brandModels[filters.brand] || []) : [];
@@ -202,7 +167,7 @@ const CatalogPage = () => {
             placeholder="Поиск по марке или модели..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && fetchCars(true)}
+            onKeyDown={(e) => e.key === 'Enter' && fetchCars()}
             className={styles.searchInput}
           />
           <button className={styles.filterBtn} onClick={() => setShowFilters(true)}>
@@ -223,7 +188,7 @@ const CatalogPage = () => {
         )}
       </div>
 
-      {loading && cars.length === 0 ? (
+      {loading ? (
         <p className={styles.loading}>Загрузка...</p>
       ) : cars.length === 0 ? (
         <p className={styles.noResults}>По вашему запросу ничего не найдено</p>
@@ -238,7 +203,6 @@ const CatalogPage = () => {
               transition={{ duration: 0.4 }}
               className={styles.cardWrapper}
             >
-              {/* Прямой переход на детальную страницу */}
               <Link to={`/cars/${car.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
                 <div className={styles.card}>
                   <img
@@ -273,10 +237,6 @@ const CatalogPage = () => {
           ))}
         </div>
       )}
-
-      <div ref={loaderRef} style={{ height: '20px', margin: '2rem 0' }}>
-        {loading && cars.length > 0 && <p className={styles.loading}>Загрузка...</p>}
-      </div>
 
       <AnimatePresence>
         {showFilters && (

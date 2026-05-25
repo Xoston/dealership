@@ -91,3 +91,19 @@
 {"timestamp": "2026-05-23T07:15:56.602134", "event": "USER_LOGIN", "data": {"email": "admin@luxury.com"}}
 {"timestamp": "2026-05-23T07:22:22.597029", "event": "USER_LOGIN", "data": {"email": "admin@luxury.com"}}
 {"timestamp": "2026-05-24T08:44:07.523956", "event": "USER_LOGIN", "data": {"email": "admin@luxury.com"}}
+{"timestamp": "2026-05-25T09:49:42.286086", "event": "USER_LOGIN", "data": {"email": "admin@luxury.com"}}
+{"timestamp": "2026-05-25T09:52:29.382897", "event": "USER_LOGIN", "data": {"email": "admin@luxury.com"}}
+{"timestamp": "2026-05-25T09:57:45.986919", "event": "PURCHASE_MADE", "data": {"user": "admin@luxury.com", "car_id": 1, "price": 321321312.0}}
+{"timestamp": "2026-05-25T09:57:54.881799", "event": "PURCHASE_MADE", "data": {"user": "admin@luxury.com", "car_id": 1, "price": 321321312.0}}
+{"timestamp": "2026-05-25T09:59:38.605639", "event": "PURCHASE_MADE", "data": {"user": "admin@luxury.com", "car_id": 1, "price": 321321312.0}}
+{"timestamp": "2026-05-25T10:09:02.988469", "event": "PURCHASE_MADE", "data": {"user": "admin@luxury.com", "car_id": 1, "price": 321321312.0}}
+{"timestamp": "2026-05-25T10:18:46.125363", "event": "CAR_CREATED", "data": {"admin": "admin@luxury.com", "car_id": 2}}
+{"timestamp": "2026-05-25T10:18:46.193104", "event": "CAR_CREATED", "data": {"admin": "admin@luxury.com", "car_id": 3}}
+{"timestamp": "2026-05-25T10:19:06.679901", "event": "CAR_CREATED", "data": {"admin": "admin@luxury.com", "car_id": 4}}
+{"timestamp": "2026-05-25T10:19:06.706595", "event": "CAR_CREATED", "data": {"admin": "admin@luxury.com", "car_id": 5}}
+{"timestamp": "2026-05-25T10:19:06.733109", "event": "CAR_CREATED", "data": {"admin": "admin@luxury.com", "car_id": 6}}
+{"timestamp": "2026-05-25T10:19:16.432188", "event": "CAR_CREATED", "data": {"admin": "admin@luxury.com", "car_id": 7}}
+{"timestamp": "2026-05-25T10:27:50.807997", "event": "LOAN_CALCULATED", "data": {"user": "admin@luxury.com", "car_id": 1, "amount": 321321312.0}}
+{"timestamp": "2026-05-25T10:28:11.542899", "event": "PURCHASE_MADE", "data": {"user": "admin@luxury.com", "car_id": 1, "price": 321321312.0}}
+{"timestamp": "2026-05-25T10:28:30.781950", "event": "TESTDRIVE_REQUESTED", "data": {"user": "admin@luxury.com", "car_id": 1}}
+{"timestamp": "2026-05-25T10:36:34.465635", "event": "CAR_CREATED", "data": {"admin": "admin@luxury.com", "car_id": 8}}
