@@ -119,3 +119,4 @@
 {"timestamp": "2026-05-25T15:13:12.752209", "event": "USER_LOGIN", "data": {"email": "admin@luxury.com"}}
 {"timestamp": "2026-05-25T16:00:55.812355", "event": "LOAN_CALCULATED", "data": {"user": "admin@luxury.com", "car_id": 1, "amount": 321321312.0}}
 {"timestamp": "2026-05-25T16:14:10.063651", "event": "USER_LOGIN", "data": {"email": "admin@luxury.com"}}
+{"timestamp": "2026-05-26T06:12:56.946856", "event": "USER_LOGIN", "data": {"email": "admin@luxury.com"}}

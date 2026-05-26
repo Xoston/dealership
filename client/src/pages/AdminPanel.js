@@ -423,23 +423,6 @@ const AdminPanel = () => {
   const availableModels = carForm.brand ? (brandModels[carForm.brand] || []) : [];
   const filteredModels = modelSearch ? availableModels.filter(m => m.toLowerCase().includes(modelSearch.toLowerCase())) : availableModels;
 
-  // Вспомогательный компонент для статус-бара в дашборде
-  const StatusBar = ({ label, count, color }) => {
-    const total = dashboardMetrics.statusCounts.calculated + dashboardMetrics.statusCounts.approved + dashboardMetrics.statusCounts.rejected;
-    const percent = total > 0 ? (count / total) * 100 : 0;
-    return (
-      <div className={styles.statusBarItem}>
-        <div className={styles.statusBarLabel}>
-          <span>{label}</span>
-          <span>{count}</span>
-        </div>
-        <div className={styles.statusBarTrack}>
-          <div className={styles.statusBarFill} style={{ width: `${percent}%`, background: color }} />
-        </div>
-      </div>
-    );
-  };
-
   return (
     <motion.div className={styles.container} initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
       <h2 className={styles.title}>Админ-панель</h2>
@@ -454,88 +437,143 @@ const AdminPanel = () => {
       <div className={styles.content}>
         {/* ---------- ДАШБОРД ---------- */}
         {activeTab === 'dashboard' && stats && (
-          <div className={styles.dashboard}>
-            <div className={styles.statCard}><h3>Выручка</h3><p>{dashboardMetrics.totalRevenue.toLocaleString()} ₽</p><small>{dashboardMetrics.approvedCount} сделок</small></div>
-            <div className={styles.statCard}><h3>Средний чек</h3><p>{Math.round(dashboardMetrics.avgAmount).toLocaleString()} ₽</p></div>
-            <div className={styles.statCard}><h3>Пользователи</h3><p>{stats.total_users}</p></div>
-            <div className={styles.statCard}><h3>Автомобили</h3><p>{stats.total_cars}</p></div>
-            <div className={styles.statCard}><h3>Тест-драйвы</h3><p>{stats.total_testdrives}</p></div>
-            <div className={styles.statCard}><h3>Покупки</h3><p>{stats.total_purchases}</p></div>
-
-            {/* Топ продаж */}
-            <div className={`${styles.dashboardBlock} ${styles.span2}`}>
-              <h3 className={styles.blockTitle}>🏆 Топ‑5 продаваемых автомобилей</h3>
-              {dashboardMetrics.topSelling.length === 0 ? (
-                <p className={styles.emptyText}>Нет данных о продажах</p>
-              ) : (
-                dashboardMetrics.topSelling.map((item, i) => {
-                  const maxCount = dashboardMetrics.topSelling[0]?.count || 1;
-                  const percent = (item.count / maxCount) * 100;
-                  return (
-                    <div key={i} className={styles.topSalesItem}>
-                      <div className={styles.topSalesHeader}>
-                        <span>{item.name}</span>
-                        <span>{item.count} продаж · {item.totalAmount.toLocaleString()} ₽</span>
-                      </div>
-                      <div className={styles.topSalesBar}>
-                        <div className={styles.topSalesFill} style={{ width: `${percent}%` }} />
-                      </div>
-                    </div>
-                  );
-                })
-              )}
+          <>
+            {/* Первый ряд: ключевые метрики */}
+            <div className={styles.dashboard}>
+              <div className={styles.statCard}>
+                <h3>Выручка</h3>
+                <p className={styles.revenueAmount}>
+                  {dashboardMetrics.totalRevenue >= 1_000_000
+                    ? `${(dashboardMetrics.totalRevenue / 1_000_000).toFixed(1)} млн ₽`
+                    : dashboardMetrics.totalRevenue.toLocaleString() + ' ₽'}
+                </p>
+                <small>{dashboardMetrics.approvedCount} сделок</small>
+              </div>
+              <div className={styles.statCard}><h3>Пользователи</h3><p>{stats.total_users}</p></div>
+              <div className={styles.statCard}><h3>Автомобили</h3><p>{stats.total_cars}</p></div>
+              <div className={styles.statCard}><h3>Тест‑драйвы</h3><p>{stats.total_testdrives}</p></div>
+              <div className={styles.statCard}><h3>Покупки</h3><p>{stats.total_purchases}</p></div>
             </div>
 
-            {/* Статусы кредитов */}
-            <div className={styles.dashboardBlock}>
-              <h3 className={styles.blockTitle}>📊 Статусы кредитов</h3>
-              <StatusBar label="Рассчитана" count={dashboardMetrics.statusCounts.calculated} color="#FFA726" />
-              <StatusBar label="Одобрена" count={dashboardMetrics.statusCounts.approved} color="#66BB6A" />
-              <StatusBar label="Отклонена" count={dashboardMetrics.statusCounts.rejected} color="#EF5350" />
-            </div>
-
-            {/* Последние заявки */}
-            <div className={styles.dashboardBlock}>
-              <h3 className={styles.blockTitle}>🕒 Последние заявки</h3>
-              <ul className={styles.recentList}>
-                {dashboardMetrics.recentLoans.map(loan => (
-                  <li key={loan.id} className={styles.recentItem}>
-                    <div className={styles.recentRow}>
-                      <span>{loan.brand} {loan.model}</span>
-                      <span className={styles.recentAmount}>{loan.amount?.toLocaleString()} ₽</span>
-                    </div>
-                    <div className={styles.recentMeta}>
-                      {loan.user_email} · {loan.status === 'calculated' ? 'Рассчитана' : loan.status === 'approved' ? 'Одобрена' : 'Отклонена'}
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            {/* Распределение автомобилей по маркам */}
-            <div className={styles.dashboardBlock}>
-              <h3 className={styles.blockTitle}>🚗 Автомобили по маркам</h3>
-              {dashboardMetrics.carsByBrand.slice(0, 6).map(({ brand, count }) => {
-                const maxCars = dashboardMetrics.carsByBrand[0]?.count || 1;
-                const percent = (count / maxCars) * 100;
-                return (
-                  <div key={brand} className={styles.brandRow}>
-                    <span className={styles.brandName}>{brand}</span>
-                    <div className={styles.brandBar}>
-                      <div className={styles.brandFill} style={{ width: `${percent}%` }} />
-                    </div>
-                    <span className={styles.brandCount}>{count}</span>
+            {/* Второй ряд: расширенная аналитика */}
+            <div className={styles.analyticsGrid}>
+              {/* Топ‑5 продаваемых автомобилей (без медалей) */}
+              <div className={styles.analyticsBlock}>
+                <h3 className={styles.blockTitle}>Топ‑5 продаваемых автомобилей</h3>
+                {dashboardMetrics.topSelling.length === 0 ? (
+                  <p className={styles.emptyText}>Нет данных о продажах</p>
+                ) : (
+                  <div className={styles.topSalesList}>
+                    {dashboardMetrics.topSelling.map((item, i) => {
+                      const maxCount = dashboardMetrics.topSelling[0]?.count || 1;
+                      const percent = (item.count / maxCount) * 100;
+                      return (
+                        <div key={i} className={styles.topSalesCard}>
+                          <div className={styles.topSalesHeader}>
+                            <span className={styles.topSalesName}>#{i + 1} {item.name}</span>
+                            <span className={styles.topSalesStats}>{item.count} продаж · {item.totalAmount.toLocaleString()} ₽</span>
+                          </div>
+                          <div className={styles.topSalesBar}>
+                            <div className={styles.topSalesFill} style={{ width: `${percent}%` }} />
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
-                );
-              })}
-            </div>
+                )}
+              </div>
 
-            {/* Тест-драйвы в ожидании */}
-            <div className={styles.dashboardBlock}>
-              <h3 className={styles.blockTitle}>⏳ Тест‑драйвы (ожидают)</h3>
-              <p className={styles.pendingTdCount}>{testDrives.filter(td => td.status === 'pending').length}</p>
+              {/* Статусы кредитов – модная панель */}
+              <div className={styles.analyticsBlock}>
+                <h3 className={styles.blockTitle}>Статусы кредитов</h3>
+                <div className={styles.statusPanel}>
+                  {[
+                    { label: 'Рассчитана', count: dashboardMetrics.statusCounts.calculated, color: '#FFA726' },
+                    { label: 'Одобрена', count: dashboardMetrics.statusCounts.approved, color: '#66BB6A' },
+                    { label: 'Отклонена', count: dashboardMetrics.statusCounts.rejected, color: '#EF5350' }
+                  ].map((status) => {
+                    const total = dashboardMetrics.statusCounts.calculated + dashboardMetrics.statusCounts.approved + dashboardMetrics.statusCounts.rejected;
+                    const percent = total > 0 ? Math.round((status.count / total) * 100) : 0;
+                    return (
+                      <div key={status.label} className={styles.statusPanelItem}>
+                        <div className={styles.statusPanelInfo}>
+                          <span className={styles.statusPanelDot} style={{ background: status.color }}></span>
+                          <span className={styles.statusPanelLabel}>{status.label}</span>
+                          <span className={styles.statusPanelCount}>{status.count} <small>({percent}%)</small></span>
+                        </div>
+                        <div className={styles.statusPanelBar}>
+                          <div
+                            className={styles.statusPanelFill}
+                            style={{
+                              width: `${percent}%`,
+                              background: `linear-gradient(90deg, ${status.color}, ${status.color}dd)`
+                            }}
+                          ></div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Последние заявки */}
+              <div className={styles.analyticsBlock}>
+                <h3 className={styles.blockTitle}>Последние заявки</h3>
+                <ul className={styles.recentList}>
+                  {dashboardMetrics.recentLoans.map(loan => (
+                    <li key={loan.id} className={styles.recentItem}>
+                      <div className={styles.recentRow}>
+                        <span>{loan.brand} {loan.model}</span>
+                        <span className={styles.recentAmount}>{loan.amount?.toLocaleString()} ₽</span>
+                      </div>
+                      <div className={styles.recentMeta}>
+                        {loan.user_email} · {loan.status === 'calculated' ? 'Рассчитана' : loan.status === 'approved' ? 'Одобрена' : 'Отклонена'}
+                        {loan.created_at && <span> · {new Date(loan.created_at).toLocaleDateString()}</span>}
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              {/* Гистограмма: автомобили по маркам */}
+              <div className={styles.analyticsBlock}>
+                <h3 className={styles.blockTitle}>Автомобили по маркам</h3>
+                <div className={styles.histogramContainer}>
+                  {dashboardMetrics.carsByBrand.slice(0, 10).map(({ brand, count }, i) => {
+                    const maxCars = dashboardMetrics.carsByBrand[0]?.count || 1;
+                    const percent = (count / maxCars) * 100;
+                    const hue = (i * 45) % 360;
+                    return (
+                      <div key={brand} className={styles.histogramBar}>
+                        <span className={styles.histogramLabel}>{brand}</span>
+                        <div className={styles.histogramTrack}>
+                          <div
+                            className={styles.histogramFill}
+                            style={{
+                              width: `${percent}%`,
+                              background: `linear-gradient(90deg, hsl(${hue}, 70%, 60%), hsl(${hue}, 80%, 45%))`,
+                            }}
+                          />
+                        </div>
+                        <span className={styles.histogramValue}>{count}</span>
+                      </div>
+                    );
+                  })}
+                  {dashboardMetrics.carsByBrand.length > 10 && (
+                    <p className={styles.moreBrands}>+ ещё {dashboardMetrics.carsByBrand.length - 10} марок</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Ожидающие тест-драйвы */}
+              <div className={styles.analyticsBlock}>
+                <h3 className={styles.blockTitle}>Тест‑драйвы (ожидают)</h3>
+                <p className={styles.pendingTdCount}>
+                  {testDrives.filter(td => td.status === 'pending').length}
+                </p>
+              </div>
             </div>
-          </div>
+          </>
         )}
 
         {/* ---------- ПОЛЬЗОВАТЕЛИ ---------- */}
@@ -548,12 +586,20 @@ const AdminPanel = () => {
                   <tr key={u.id}>
                     <td>{u.id}</td><td>{u.email}</td><td>{u.full_name}</td>
                     <td>
-                      <select value={u.role} onChange={(e) => handleRoleChange(u.id, e.target.value)} disabled={u.id === user.id}
-                        className={styles.roleSelect}>
+                      <select
+                        value={u.role}
+                        onChange={(e) => handleRoleChange(u.id, e.target.value)}
+                        disabled={u.id === user.id}
+                        className={styles.roleSelect}
+                      >
                         {availableRoles.map(role => <option key={role} value={role}>{role}</option>)}
                       </select>
                     </td>
-                    <td><button onClick={() => handleDeleteUser(u.id)} disabled={u.id === user.id || u.role === 'admin'} className={styles.deleteBtn}>Удалить</button></td>
+                    <td>
+                      <button onClick={() => handleDeleteUser(u.id)} disabled={u.id === user.id || u.role === 'admin'} className={styles.deleteBtn}>
+                        Удалить
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -578,10 +624,18 @@ const AdminPanel = () => {
             <table className={styles.table}>
               <thead>
                 <tr>
-                  <th className={styles.sortable} onClick={() => handleSort('id')}>ID {carSortKey === 'id' ? (carSortDir === 'asc' ? '▲' : '▼') : ''}</th>
-                  <th className={styles.sortable} onClick={() => handleSort('brand')}>Марка {carSortKey === 'brand' ? (carSortDir === 'asc' ? '▲' : '▼') : ''}</th>
-                  <th className={styles.sortable} onClick={() => handleSort('model')}>Модель {carSortKey === 'model' ? (carSortDir === 'asc' ? '▲' : '▼') : ''}</th>
-                  <th className={styles.sortable} onClick={() => handleSort('price')}>Цена {carSortKey === 'price' ? (carSortDir === 'asc' ? '▲' : '▼') : ''}</th>
+                  <th className={styles.sortable} onClick={() => handleSort('id')}>
+                    ID {carSortKey === 'id' ? (carSortDir === 'asc' ? '▲' : '▼') : ''}
+                  </th>
+                  <th className={styles.sortable} onClick={() => handleSort('brand')}>
+                    Марка {carSortKey === 'brand' ? (carSortDir === 'asc' ? '▲' : '▼') : ''}
+                  </th>
+                  <th className={styles.sortable} onClick={() => handleSort('model')}>
+                    Модель {carSortKey === 'model' ? (carSortDir === 'asc' ? '▲' : '▼') : ''}
+                  </th>
+                  <th className={styles.sortable} onClick={() => handleSort('price')}>
+                    Цена {carSortKey === 'price' ? (carSortDir === 'asc' ? '▲' : '▼') : ''}
+                  </th>
                   <th>Действия</th>
                 </tr>
               </thead>
