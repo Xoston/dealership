@@ -163,16 +163,46 @@ const AdminPanel = () => {
   const [newPhotos, setNewPhotos] = useState([]);
   const fileInputRef = useRef(null);
 
-  // ================= ЗАГРУЗКА ДАННЫХ =================
+  // ================= ЗАГРУЗКА ДАННЫХ (строгая зависимость от роли) =================
   const fetchData = async () => {
+    setLoading(true);
     try {
-      const [statsRes, usersRes, carsRes, tdRes, loansRes] = await Promise.all([
-        api.get('/admin/stats'), api.get('/admin/users'), api.get('/cars/'),
-        api.get('/testdrives/all'), api.get('/admin/loans')
-      ]);
-      setStats(statsRes.data); setUsers(usersRes.data); setCars(carsRes.data);
-      setTestDrives(tdRes.data); setLoans(loansRes.data);
-    } catch (err) { console.error(err); } finally { setLoading(false); }
+      const requests = [];
+      // Автомобили доступны всем
+      requests.push(api.get('/cars/'));
+
+      if (user.role === 'admin') {
+        // Администратор получает всё
+        requests.push(api.get('/admin/stats'));
+        requests.push(api.get('/admin/users'));
+        requests.push(api.get('/testdrives/all'));
+        requests.push(api.get('/admin/loans'));
+      } else if (user.role === 'manager') {
+        // Менеджер получает только разрешённое (без /admin/users)
+        requests.push(api.get('/admin/stats'));
+        requests.push(api.get('/testdrives/all'));
+        requests.push(api.get('/admin/loans'));
+      }
+
+      const results = await Promise.all(requests);
+      let idx = 0;
+      setCars(results[idx++].data);
+
+      if (user.role === 'admin') {
+        setStats(results[idx++].data);
+        setUsers(results[idx++].data);
+        setTestDrives(results[idx++].data);
+        setLoans(results[idx++].data);
+      } else if (user.role === 'manager') {
+        setStats(results[idx++].data);
+        setTestDrives(results[idx++].data);
+        setLoans(results[idx++].data);
+      }
+    } catch (err) {
+      console.error('Ошибка загрузки данных админ-панели', err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => { fetchData(); }, []);
@@ -348,7 +378,7 @@ const AdminPanel = () => {
     }
   };
 
-  // ================= ПОЛЬЗОВАТЕЛИ =================
+  // ================= ПОЛЬЗОВАТЕЛИ (только для админа) =================
   const handleDeleteUser = async (userId) => { if (window.confirm('Удалить пользователя?')) { await api.delete(`/admin/users/${userId}`); setUsers(prev => prev.filter(u => u.id !== userId)); } };
   const handleRoleChange = async (userId, newRole) => { await api.put(`/admin/users/${userId}/role`, { role: newRole }); setUsers(prev => prev.map(u => u.id === userId ? { ...u, role: newRole } : u)); };
 
@@ -423,13 +453,26 @@ const AdminPanel = () => {
   const availableModels = carForm.brand ? (brandModels[carForm.brand] || []) : [];
   const filteredModels = modelSearch ? availableModels.filter(m => m.toLowerCase().includes(modelSearch.toLowerCase())) : availableModels;
 
+  // ================= НАСТРОЙКА ВКЛАДОК ПО РОЛИ =================
+  const tabs = [
+    { key: 'dashboard', label: 'Дашборд' },
+    { key: 'users', label: 'Пользователи', adminOnly: true },
+    { key: 'cars', label: 'Автомобили' },
+    { key: 'testdrives', label: 'Тест-драйвы' },
+    { key: 'loans', label: 'Кредиты' },
+  ].filter(tab => !tab.adminOnly || user.role === 'admin');
+
   return (
     <motion.div className={styles.container} initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
       <h2 className={styles.title}>Админ-панель</h2>
       <div className={styles.tabs}>
-        {['dashboard', 'users', 'cars', 'testdrives', 'loans'].map(tab => (
-          <button key={tab} className={`${styles.tab} ${activeTab === tab ? styles.active : ''}`} onClick={() => setActiveTab(tab)}>
-            {tab === 'testdrives' ? 'Тест-драйвы' : tab === 'cars' ? 'Автомобили' : tab === 'users' ? 'Пользователи' : tab === 'loans' ? 'Кредиты' : 'Дашборд'}
+        {tabs.map(tab => (
+          <button
+            key={tab.key}
+            className={`${styles.tab} ${activeTab === tab.key ? styles.active : ''}`}
+            onClick={() => setActiveTab(tab.key)}
+          >
+            {tab.label}
           </button>
         ))}
       </div>
@@ -438,7 +481,6 @@ const AdminPanel = () => {
         {/* ---------- ДАШБОРД ---------- */}
         {activeTab === 'dashboard' && stats && (
           <>
-            {/* Первый ряд: ключевые метрики */}
             <div className={styles.dashboard}>
               <div className={styles.statCard}>
                 <h3>Выручка</h3>
@@ -455,9 +497,8 @@ const AdminPanel = () => {
               <div className={styles.statCard}><h3>Покупки</h3><p>{stats.total_purchases}</p></div>
             </div>
 
-            {/* Второй ряд: расширенная аналитика */}
             <div className={styles.analyticsGrid}>
-              {/* Топ‑5 продаваемых автомобилей */}
+              {/* Топ‑5 */}
               <div className={styles.analyticsBlock}>
                 <h3 className={styles.blockTitle}>Топ‑5 продаваемых автомобилей</h3>
                 {dashboardMetrics.topSelling.length === 0 ? (
@@ -532,7 +573,7 @@ const AdminPanel = () => {
                 </ul>
               </div>
 
-              {/* Гистограмма: автомобили по маркам */}
+              {/* Автомобили по маркам */}
               <div className={styles.analyticsBlock}>
                 <h3 className={styles.blockTitle}>Автомобили по маркам</h3>
                 <div className={styles.histogramContainer}>
@@ -573,8 +614,8 @@ const AdminPanel = () => {
           </>
         )}
 
-        {/* ---------- ПОЛЬЗОВАТЕЛИ ---------- */}
-        {activeTab === 'users' && (
+        {/* ---------- ПОЛЬЗОВАТЕЛИ (только admin) ---------- */}
+        {activeTab === 'users' && user.role === 'admin' && (
           <div>
             <table className={styles.table}>
               <thead><tr><th>ID</th><th>Email</th><th>Имя</th><th>Роль</th><th>Действия</th></tr></thead>
@@ -701,7 +742,7 @@ const AdminPanel = () => {
         )}
       </div>
 
-      {/* ================== НОВОЕ МОДАЛЬНОЕ ОКНО ФОРМЫ ================== */}
+      {/* Модальное окно формы (добавление / редактирование) */}
       <AnimatePresence>
         {showFormModal && (
           <motion.div className={styles.modalOverlay} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={closeFormModal}>
@@ -712,13 +753,10 @@ const AdminPanel = () => {
               exit={{ scale: 0.9, opacity: 0 }}
               onClick={(e) => e.stopPropagation()}
             >
-              {/* Заголовок модального окна */}
               <div className={styles.modalHeader}>
                 <h4>{editingCar ? 'Редактировать автомобиль' : 'Новый автомобиль'}</h4>
                 <button type="button" onClick={closeFormModal} className={styles.closeBtn}>✕</button>
               </div>
-
-              {/* Скроллируемое содержимое */}
               <div className={styles.modalBody}>
                 <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                   {/* Марка и модель */}
@@ -929,7 +967,6 @@ const AdminPanel = () => {
 
                   {formError && <div className={styles.serverError}>{formError}</div>}
 
-                  {/* Кнопка отправки (дублируем, чтобы была внутри скролла, но можно и в футере) */}
                   <div className={styles.modalFooter}>
                     <button type="submit" disabled={submitting} className={styles.submitBtn}>
                       {editingCar ? 'Сохранить изменения' : 'Добавить автомобиль'}

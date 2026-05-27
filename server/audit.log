@@ -126,3 +126,24 @@
 {"timestamp": "2026-05-27T06:05:11.834364", "event": "CAR_CREATED", "data": {"admin": "admin@luxury.com", "car_id": 11}}
 {"timestamp": "2026-05-27T06:05:19.683556", "event": "CAR_CREATED", "data": {"admin": "admin@luxury.com", "car_id": 12}}
 {"timestamp": "2026-05-27T06:05:28.177425", "event": "CAR_CREATED", "data": {"admin": "admin@luxury.com", "car_id": 13}}
+{"timestamp": "2026-05-27T06:17:58.298855", "event": "USER_REGISTERED", "data": {"email": "manager@mail.ru"}}
+{"timestamp": "2026-05-27T06:18:06.583462", "event": "USER_LOGIN", "data": {"email": "admin@luxury.com"}}
+{"timestamp": "2026-05-27T06:18:23.684568", "event": "USER_ROLE_CHANGED", "data": {"admin": "admin@luxury.com", "user_id": 8, "new_role": "manager"}}
+{"timestamp": "2026-05-27T06:18:29.680371", "event": "USER_LOGIN", "data": {"email": "manager@mail.ru"}}
+{"timestamp": "2026-05-27T06:19:13.386243", "event": "USER_LOGIN", "data": {"email": "admin@luxury.com"}}
+{"timestamp": "2026-05-27T06:23:40.978694", "event": "USER_LOGIN", "data": {"email": "manager@mail.ru"}}
+{"timestamp": "2026-05-27T06:23:52.643360", "event": "USER_LOGIN", "data": {"email": "admin@luxury.com"}}
+{"timestamp": "2026-05-27T06:24:07.312600", "event": "USER_LOGIN", "data": {"email": "manager@mail.ru"}}
+{"timestamp": "2026-05-27T06:29:47.961648", "event": "USER_LOGIN", "data": {"email": "admin@luxury.com"}}
+{"timestamp": "2026-05-27T06:29:55.738832", "event": "USER_ROLE_CHANGED", "data": {"admin": "admin@luxury.com", "user_id": 8, "new_role": "user"}}
+{"timestamp": "2026-05-27T06:29:56.935290", "event": "USER_ROLE_CHANGED", "data": {"admin": "admin@luxury.com", "user_id": 8, "new_role": "manager"}}
+{"timestamp": "2026-05-27T06:30:01.852575", "event": "USER_LOGIN", "data": {"email": "manager@mail.ru"}}
+{"timestamp": "2026-05-27T06:33:25.948209", "event": "USER_LOGIN", "data": {"email": "admin@luxury.com"}}
+{"timestamp": "2026-05-27T06:33:36.768315", "event": "USER_LOGIN", "data": {"email": "manager@mail.ru"}}
+{"timestamp": "2026-05-27T06:58:03.568023", "event": "USER_LOGIN", "data": {"email": "manager@mail.ru"}}
+{"timestamp": "2026-05-27T07:03:59.602815", "event": "USER_LOGIN", "data": {"email": "admin@luxury.com"}}
+{"timestamp": "2026-05-27T07:04:23.917396", "event": "USER_LOGIN", "data": {"email": "test@mail.ru"}}
+{"timestamp": "2026-05-27T07:04:34.319870", "event": "USER_LOGIN", "data": {"email": "manager@mail.ru"}}
+{"timestamp": "2026-05-27T07:04:51.796590", "event": "USER_LOGIN", "data": {"email": "manager@mail.ru"}}
+{"timestamp": "2026-05-27T07:05:01.658717", "event": "USER_LOGIN", "data": {"email": "admin@luxury.com"}}
+{"timestamp": "2026-05-27T07:16:23.697292", "event": "USER_LOGIN", "data": {"email": "manager@mail.ru"}}

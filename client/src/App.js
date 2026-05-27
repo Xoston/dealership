@@ -33,7 +33,9 @@ function App() {
             <ProtectedRoute><UserDashboard /></ProtectedRoute>
           } />
           <Route path="/admin" element={
-            <ProtectedRoute requiredRole="admin"><AdminPanel /></ProtectedRoute>
+            <ProtectedRoute requiredRoles={['admin', 'manager']}>
+              <AdminPanel />
+            </ProtectedRoute>
           } />
           <Route path="*" element={<NotFoundPage />} />
         </Routes>

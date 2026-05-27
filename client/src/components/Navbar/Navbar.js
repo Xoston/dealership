@@ -56,7 +56,10 @@ const Navbar = () => {
         {user ? (
           <>
             <Link to="/dashboard">Личный кабинет</Link>
-            {user.role === 'admin' && <Link to="/admin">Админ-панель</Link>}
+            {/* Админ‑панель доступна администратору и менеджеру */}
+            {(user.role === 'admin' || user.role === 'manager') && (
+              <Link to="/admin">Админ-панель</Link>
+            )}
             <div className={styles.notificationWrapper} ref={notifRef}>
               <button
                 className={`${styles.navBtn} ${styles.notificationBtn}`}
@@ -86,4 +89,4 @@ const Navbar = () => {
   );
 };
 
-export default Navbar;
+export default Navbar;  

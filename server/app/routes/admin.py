@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Body
 from .. import crud
-from ..dependencies import get_current_admin
+from ..dependencies import get_current_admin, get_current_admin_or_manager
 from ..audit import event_manager
 from ..cache import cached
 
@@ -8,7 +8,7 @@ router = APIRouter(prefix="/api/admin", tags=["admin"])
 
 @router.get("/stats")
 @cached(ttl=30)
-def admin_stats(current_user=Depends(get_current_admin)):
+def admin_stats(current_user=Depends(get_current_admin_or_manager)):
     return crud.get_admin_stats()
 
 @router.get("/users")
@@ -38,15 +38,16 @@ def remove_user(user_id: int, current_user=Depends(get_current_admin)):
 
 # ---------- Кредитные заявки ----------
 @router.get("/loans")
-def get_all_loan_applications(current_user=Depends(get_current_admin)):
+def get_all_loan_applications(current_user=Depends(get_current_admin_or_manager)):
     return crud.get_all_loan_applications()
 
 @router.put("/loans/{loan_id}/status")
-def update_loan_status(loan_id: int, payload: dict = Body(...), current_user=Depends(get_current_admin)):
+def update_loan_status(loan_id: int, payload: dict = Body(...), current_user=Depends(get_current_admin_or_manager)):
     new_status = payload.get("status")
     if new_status not in ("approved", "rejected"):
         raise HTTPException(status_code=400, detail="Status must be 'approved' or 'rejected'")
-    updated = crud.update_loan_application_status(loan_id, new_status)
+    comment = payload.get("comment", "")
+    updated = crud.update_loan_application_status(loan_id, new_status, comment)
     if not updated:
         raise HTTPException(status_code=404, detail="Loan application not found")
     event_manager.notify("LOAN_STATUS_CHANGED", {"admin": current_user["email"], "loan_id": loan_id, "new_status": new_status})
@@ -54,7 +55,7 @@ def update_loan_status(loan_id: int, payload: dict = Body(...), current_user=Dep
 
 # ---------- Заявки на тест-драйв ----------
 @router.put("/testdrives/{td_id}/status")
-def update_testdrive_status(td_id: int, payload: dict = Body(...), current_user=Depends(get_current_admin)):
+def update_testdrive_status(td_id: int, payload: dict = Body(...), current_user=Depends(get_current_admin_or_manager)):
     new_status = payload.get("status")
     if new_status not in ("approved", "rejected"):
         raise HTTPException(status_code=400, detail="Status must be 'approved' or 'rejected'")

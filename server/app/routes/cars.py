@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File, 
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 from .. import crud, schemas
-from ..dependencies import get_current_admin
+from ..dependencies import get_current_admin_or_manager
 from ..audit import event_manager
 from ..cache import cached, invalidate_cache
 from typing import Optional, List
@@ -42,7 +42,7 @@ def read_car(car_id: int):
 
 @router.post("/", response_model=schemas.CarOut)
 @limiter.limit("10/minute")
-def create_car(request: Request, car_data: schemas.CarCreate, current_user=Depends(get_current_admin)):
+def create_car(request: Request, car_data: schemas.CarCreate, current_user=Depends(get_current_admin_or_manager)):
     new_car = crud.create_car(car_data.dict())
     invalidate_cache()
     event_manager.notify("CAR_CREATED", {"admin": current_user["email"], "car_id": new_car["id"]})
@@ -50,7 +50,7 @@ def create_car(request: Request, car_data: schemas.CarCreate, current_user=Depen
 
 @router.put("/{car_id}", response_model=schemas.CarOut)
 @limiter.limit("10/minute")
-def update_car(request: Request, car_id: int, car_data: schemas.CarUpdate, current_user=Depends(get_current_admin)):
+def update_car(request: Request, car_id: int, car_data: schemas.CarUpdate, current_user=Depends(get_current_admin_or_manager)):
     updated = crud.update_car(car_id, car_data.dict(exclude_unset=True))
     if not updated:
         raise HTTPException(status_code=404, detail="Car not found")
@@ -60,7 +60,7 @@ def update_car(request: Request, car_id: int, car_data: schemas.CarUpdate, curre
 
 @router.delete("/{car_id}")
 @limiter.limit("10/minute")
-def delete_car(request: Request, car_id: int, current_user=Depends(get_current_admin)):
+def delete_car(request: Request, car_id: int, current_user=Depends(get_current_admin_or_manager)):
     car = crud.delete_car(car_id)
     if not car:
         raise HTTPException(status_code=404, detail="Car not found")
@@ -69,7 +69,7 @@ def delete_car(request: Request, car_id: int, current_user=Depends(get_current_a
     return {"message": "Car deleted successfully"}
 
 @router.post("/upload_image")
-def upload_image(file: UploadFile = File(...), current_user=Depends(get_current_admin)):
+def upload_image(file: UploadFile = File(...), current_user=Depends(get_current_admin_or_manager)):
     filename = f"{current_user['id']}_{file.filename}"
     file_path = os.path.join(UPLOAD_DIR, filename)
     with open(file_path, "wb") as buffer:
@@ -77,7 +77,7 @@ def upload_image(file: UploadFile = File(...), current_user=Depends(get_current_
     return {"image_url": f"/uploads/{filename}"}
 
 @router.post("/{car_id}/images", response_model=schemas.CarImageOut)
-def add_image(car_id: int, payload: dict, current_user=Depends(get_current_admin)):
+def add_image(car_id: int, payload: dict, current_user=Depends(get_current_admin_or_manager)):
     car = crud.get_car(car_id)
     if not car:
         raise HTTPException(status_code=404, detail="Car not found")
@@ -90,7 +90,7 @@ def add_image(car_id: int, payload: dict, current_user=Depends(get_current_admin
     return new_img
 
 @router.delete("/images/{image_id}")
-def delete_image(image_id: int, current_user=Depends(get_current_admin)):
+def delete_image(image_id: int, current_user=Depends(get_current_admin_or_manager)):
     crud.delete_car_image(image_id)
     invalidate_cache()
     return {"message": "Image deleted"}

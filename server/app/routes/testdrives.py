@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Body
 from .. import crud, schemas
-from ..dependencies import get_current_user, get_current_admin
+from ..dependencies import get_current_user, get_current_admin_or_manager
 from ..audit import event_manager
 from typing import List
 
@@ -20,7 +20,7 @@ def my_testdrives(current_user=Depends(get_current_user)):
     return crud.get_user_test_drives(current_user["id"])
 
 @router.get("/all", response_model=List[schemas.TestDriveRequestOut])
-def all_testdrives(current_user=Depends(get_current_admin)):
+def all_testdrives(current_user=Depends(get_current_admin_or_manager)):
     return crud.get_all_test_drives()
 
 # ---------- Отзыв после тест-драйва ----------
@@ -33,7 +33,6 @@ def submit_review(payload: dict = Body(...), current_user=Depends(get_current_us
         raise HTTPException(status_code=400, detail="test_drive_id and rating are required")
     if not 1 <= rating <= 5:
         raise HTTPException(status_code=400, detail="Rating must be between 1 and 5")
-    # Можно проверить, что test_drive принадлежит пользователю
     review = crud.create_review(current_user["id"], test_drive_id, rating, comment)
     event_manager.notify("REVIEW_SUBMITTED", {"user": current_user["email"], "test_drive_id": test_drive_id})
     return review
