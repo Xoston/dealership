@@ -457,7 +457,7 @@ const AdminPanel = () => {
 
             {/* Второй ряд: расширенная аналитика */}
             <div className={styles.analyticsGrid}>
-              {/* Топ‑5 продаваемых автомобилей (без медалей) */}
+              {/* Топ‑5 продаваемых автомобилей */}
               <div className={styles.analyticsBlock}>
                 <h3 className={styles.blockTitle}>Топ‑5 продаваемых автомобилей</h3>
                 {dashboardMetrics.topSelling.length === 0 ? (
@@ -483,7 +483,7 @@ const AdminPanel = () => {
                 )}
               </div>
 
-              {/* Статусы кредитов – модная панель */}
+              {/* Статусы кредитов */}
               <div className={styles.analyticsBlock}>
                 <h3 className={styles.blockTitle}>Статусы кредитов</h3>
                 <div className={styles.statusPanel}>
@@ -504,11 +504,8 @@ const AdminPanel = () => {
                         <div className={styles.statusPanelBar}>
                           <div
                             className={styles.statusPanelFill}
-                            style={{
-                              width: `${percent}%`,
-                              background: `linear-gradient(90deg, ${status.color}, ${status.color}dd)`
-                            }}
-                          ></div>
+                            style={{ width: `${percent}%`, background: `linear-gradient(90deg, ${status.color}, ${status.color}dd)` }}
+                          />
                         </div>
                       </div>
                     );
@@ -595,11 +592,7 @@ const AdminPanel = () => {
                         {availableRoles.map(role => <option key={role} value={role}>{role}</option>)}
                       </select>
                     </td>
-                    <td>
-                      <button onClick={() => handleDeleteUser(u.id)} disabled={u.id === user.id || u.role === 'admin'} className={styles.deleteBtn}>
-                        Удалить
-                      </button>
-                    </td>
+                    <td><button onClick={() => handleDeleteUser(u.id)} disabled={u.id === user.id || u.role === 'admin'} className={styles.deleteBtn}>Удалить</button></td>
                   </tr>
                 ))}
               </tbody>
@@ -624,18 +617,10 @@ const AdminPanel = () => {
             <table className={styles.table}>
               <thead>
                 <tr>
-                  <th className={styles.sortable} onClick={() => handleSort('id')}>
-                    ID {carSortKey === 'id' ? (carSortDir === 'asc' ? '▲' : '▼') : ''}
-                  </th>
-                  <th className={styles.sortable} onClick={() => handleSort('brand')}>
-                    Марка {carSortKey === 'brand' ? (carSortDir === 'asc' ? '▲' : '▼') : ''}
-                  </th>
-                  <th className={styles.sortable} onClick={() => handleSort('model')}>
-                    Модель {carSortKey === 'model' ? (carSortDir === 'asc' ? '▲' : '▼') : ''}
-                  </th>
-                  <th className={styles.sortable} onClick={() => handleSort('price')}>
-                    Цена {carSortKey === 'price' ? (carSortDir === 'asc' ? '▲' : '▼') : ''}
-                  </th>
+                  <th className={styles.sortable} onClick={() => handleSort('id')}>ID {carSortKey === 'id' ? (carSortDir === 'asc' ? '▲' : '▼') : ''}</th>
+                  <th className={styles.sortable} onClick={() => handleSort('brand')}>Марка {carSortKey === 'brand' ? (carSortDir === 'asc' ? '▲' : '▼') : ''}</th>
+                  <th className={styles.sortable} onClick={() => handleSort('model')}>Модель {carSortKey === 'model' ? (carSortDir === 'asc' ? '▲' : '▼') : ''}</th>
+                  <th className={styles.sortable} onClick={() => handleSort('price')}>Цена {carSortKey === 'price' ? (carSortDir === 'asc' ? '▲' : '▼') : ''}</th>
                   <th>Действия</th>
                 </tr>
               </thead>
@@ -716,87 +701,212 @@ const AdminPanel = () => {
         )}
       </div>
 
-      {/* Модальное окно формы (добавление / редактирование) */}
+      {/* ================== НОВОЕ МОДАЛЬНОЕ ОКНО ФОРМЫ ================== */}
       <AnimatePresence>
         {showFormModal && (
           <motion.div className={styles.modalOverlay} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={closeFormModal}>
-            <motion.div className={styles.modal} initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} onClick={(e) => e.stopPropagation()}>
-              <form onSubmit={handleSubmit} className={styles.modalForm}>
-                <div className={styles.modalHeader}>
-                  <h4>{editingCar ? 'Редактировать автомобиль' : 'Новый автомобиль'}</h4>
-                  <button type="button" onClick={closeFormModal} className={styles.closeBtn}>✕</button>
-                </div>
-                <div className={styles.modalBody}>
+            <motion.div
+              className={styles.modal}
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Заголовок модального окна */}
+              <div className={styles.modalHeader}>
+                <h4>{editingCar ? 'Редактировать автомобиль' : 'Новый автомобиль'}</h4>
+                <button type="button" onClick={closeFormModal} className={styles.closeBtn}>✕</button>
+              </div>
+
+              {/* Скроллируемое содержимое */}
+              <div className={styles.modalBody}>
+                <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                  {/* Марка и модель */}
                   <div className={styles.formRow}>
                     <div className={styles.formGroup}>
                       <label>Марка *</label>
-                      <div onClick={() => setShowBrandModal(true)} className={`${styles.selectField} ${!carForm.brand ? styles.placeholder : ''}`}>
+                      <div
+                        className={`${styles.selectField} ${!carForm.brand ? styles.placeholder : ''}`}
+                        onClick={() => setShowBrandModal(true)}
+                        tabIndex={0}
+                        role="button"
+                      >
                         {carForm.brand || '-- Выберите марку --'}
                       </div>
                     </div>
                     <div className={styles.formGroup}>
                       <label>Модель *</label>
-                      <div onClick={() => { if (carForm.brand) setShowModelModal(true); }} className={`${styles.selectField} ${!carForm.model ? styles.placeholder : ''} ${!carForm.brand ? styles.disabled : ''}`}>
+                      <div
+                        className={`${styles.selectField} ${!carForm.model ? styles.placeholder : ''} ${!carForm.brand ? styles.disabled : ''}`}
+                        onClick={() => carForm.brand && setShowModelModal(true)}
+                        tabIndex={0}
+                        role="button"
+                      >
                         {carForm.model || '-- Выберите модель --'}
                       </div>
                     </div>
                   </div>
+
+                  {/* Год и цена */}
                   <div className={styles.formRow}>
                     <div className={styles.formGroup}>
                       <label>Год выпуска *</label>
-                      <input type="number" value={carForm.year} onChange={e => setCarForm({...carForm, year: e.target.value})} placeholder="Например, 2024" className={fieldErrors.year ? styles.inputError : ''} />
+                      <input
+                        type="number"
+                        value={carForm.year}
+                        onChange={e => setCarForm({...carForm, year: e.target.value})}
+                        placeholder="Например, 2024"
+                        className={fieldErrors.year ? styles.inputError : ''}
+                      />
                       {fieldErrors.year && <span className={styles.errorMsg}>{fieldErrors.year}</span>}
                     </div>
                     <div className={styles.formGroup}>
                       <label>Цена (₽) *</label>
-                      <input type="number" value={carForm.price} onChange={e => setCarForm({...carForm, price: e.target.value})} placeholder="Например, 15000000" className={fieldErrors.price ? styles.inputError : ''} />
+                      <input
+                        type="number"
+                        value={carForm.price}
+                        onChange={e => setCarForm({...carForm, price: e.target.value})}
+                        placeholder="Например, 15000000"
+                        className={fieldErrors.price ? styles.inputError : ''}
+                      />
                       {fieldErrors.price && <span className={styles.errorMsg}>{fieldErrors.price}</span>}
                     </div>
                   </div>
+
+                  {/* Описание */}
                   <div className={styles.formGroup}>
                     <label>Описание</label>
-                    <textarea value={carForm.description} onChange={e => setCarForm({...carForm, description: e.target.value})} rows="2" placeholder="Краткое описание" />
+                    <textarea
+                      value={carForm.description}
+                      onChange={e => setCarForm({...carForm, description: e.target.value})}
+                      rows="2"
+                      placeholder="Краткое описание"
+                    />
                   </div>
+
+                  {/* Тип кузова и рестайлинг */}
                   <div className={styles.formRow}>
                     <div className={styles.formGroup}>
                       <label>Тип кузова</label>
                       <select value={carForm.body_type} onChange={e => setCarForm({...carForm, body_type: e.target.value})}>
-                        {Object.entries(bodyTypesRussian).map(([key, label]) => (<option key={key} value={key}>{label}</option>))}
+                        {Object.entries(bodyTypesRussian).map(([key, label]) => (
+                          <option key={key} value={key}>{label}</option>
+                        ))}
                       </select>
                     </div>
                     <div className={styles.formGroup}>
                       <label>Рестайлинг</label>
                       <label className={styles.checkboxLabel}>
-                        <div className={`${styles.toggleSwitch} ${carForm.restyling ? styles.toggleActive : ''}`} onClick={() => setCarForm({...carForm, restyling: !carForm.restyling})}>
+                        <div
+                          className={`${styles.toggleSwitch} ${carForm.restyling ? styles.toggleActive : ''}`}
+                          onClick={() => setCarForm({...carForm, restyling: !carForm.restyling})}
+                        >
                           <div className={styles.toggleKnob} />
                         </div>
-                        <input type="checkbox" checked={carForm.restyling} onChange={e => setCarForm({...carForm, restyling: e.target.checked})} style={{ display: 'none' }} />
+                        <input
+                          type="checkbox"
+                          checked={carForm.restyling}
+                          onChange={e => setCarForm({...carForm, restyling: e.target.checked})}
+                          style={{ display: 'none' }}
+                        />
                         <span>{carForm.restyling ? 'Да' : 'Нет'}</span>
                       </label>
                     </div>
                   </div>
 
+                  {/* Технические характеристики */}
                   <details className={styles.techDetails}>
                     <summary>Технические характеристики</summary>
                     <div className={styles.specsGrid}>
-                      <div className={styles.formGroup}><label>Объём двигателя, л</label><select value={carForm.engine_volume || ''} onChange={e => setCarForm({...carForm, engine_volume: e.target.value})}><option value="">—</option>{engineVolumes.map(v => <option key={v} value={v}>{v}</option>)}</select></div>
-                      <div className={styles.formGroup}><label>Мощность, л.с.</label><select value={carForm.power || ''} onChange={e => setCarForm({...carForm, power: e.target.value})}><option value="">—</option>{powers.map(v => <option key={v} value={v}>{v}</option>)}</select></div>
-                      <div className={styles.formGroup}><label>Топливо</label><select value={carForm.fuel_type || ''} onChange={e => setCarForm({...carForm, fuel_type: e.target.value})}><option value="">—</option>{fuelTypes.map(v => <option key={v} value={v}>{{ petrol:'Бензин', diesel:'Дизель', hybrid:'Гибрид', electric:'Электро' }[v] || v}</option>)}</select></div>
-                      <div className={styles.formGroup}><label>Расход, л/100км</label><select value={carForm.consumption || ''} onChange={e => setCarForm({...carForm, consumption: e.target.value})}><option value="">—</option>{[5.0,6.0,7.0,8.0,9.0,10.0,12.0,15.0].map(v => <option key={v} value={v}>{v}</option>)}</select></div>
-                      <div className={styles.formGroup}><label>Привод</label><select value={carForm.drive_type || ''} onChange={e => setCarForm({...carForm, drive_type: e.target.value})}><option value="">—</option>{driveTypes.map(v => <option key={v} value={v}>{{ FWD:'Передний', RWD:'Задний', AWD:'Полный' }[v] || v}</option>)}</select></div>
-                      <div className={styles.formGroup}><label>Коробка передач</label><select value={carForm.transmission || ''} onChange={e => setCarForm({...carForm, transmission: e.target.value})}><option value="">—</option>{transmissions.map(v => <option key={v} value={v}>{{ manual:'Механика', automatic:'Автомат', robot:'Робот', variator:'Вариатор' }[v] || v}</option>)}</select></div>
-                      <div className={styles.formGroup}><label>Разгон 0-100 км/ч, с</label><select value={carForm.acceleration || ''} onChange={e => setCarForm({...carForm, acceleration: e.target.value})}><option value="">—</option>{accelerations.map(v => <option key={v} value={v}>{v}</option>)}</select></div>
-                      <div className={styles.formGroup}><label>Макс. скорость, км/ч</label><select value={carForm.max_speed || ''} onChange={e => setCarForm({...carForm, max_speed: e.target.value})}><option value="">—</option>{maxSpeeds.map(v => <option key={v} value={v}>{v}</option>)}</select></div>
-                      <div className={styles.formGroup}><label>Клиренс, мм</label><select value={carForm.clearance || ''} onChange={e => setCarForm({...carForm, clearance: e.target.value})}><option value="">—</option>{clearances.map(v => <option key={v} value={v}>{v}</option>)}</select></div>
-                      <div className={styles.formGroup}><label>Мест</label><select value={carForm.seats || ''} onChange={e => setCarForm({...carForm, seats: e.target.value})}><option value="">—</option>{seatOptions.map(v => <option key={v} value={v}>{v}</option>)}</select></div>
+                      <div className={styles.formGroup}>
+                        <label>Объём двигателя, л</label>
+                        <select value={carForm.engine_volume || ''} onChange={e => setCarForm({...carForm, engine_volume: e.target.value})}>
+                          <option value="">—</option>
+                          {engineVolumes.map(v => <option key={v} value={v}>{v}</option>)}
+                        </select>
+                      </div>
+                      <div className={styles.formGroup}>
+                        <label>Мощность, л.с.</label>
+                        <select value={carForm.power || ''} onChange={e => setCarForm({...carForm, power: e.target.value})}>
+                          <option value="">—</option>
+                          {powers.map(v => <option key={v} value={v}>{v}</option>)}
+                        </select>
+                      </div>
+                      <div className={styles.formGroup}>
+                        <label>Топливо</label>
+                        <select value={carForm.fuel_type || ''} onChange={e => setCarForm({...carForm, fuel_type: e.target.value})}>
+                          <option value="">—</option>
+                          {fuelTypes.map(v => <option key={v} value={v}>{{ petrol:'Бензин', diesel:'Дизель', hybrid:'Гибрид', electric:'Электро' }[v] || v}</option>)}
+                        </select>
+                      </div>
+                      <div className={styles.formGroup}>
+                        <label>Расход, л/100км</label>
+                        <select value={carForm.consumption || ''} onChange={e => setCarForm({...carForm, consumption: e.target.value})}>
+                          <option value="">—</option>
+                          {[5.0,6.0,7.0,8.0,9.0,10.0,12.0,15.0].map(v => <option key={v} value={v}>{v}</option>)}
+                        </select>
+                      </div>
+                      <div className={styles.formGroup}>
+                        <label>Привод</label>
+                        <select value={carForm.drive_type || ''} onChange={e => setCarForm({...carForm, drive_type: e.target.value})}>
+                          <option value="">—</option>
+                          {driveTypes.map(v => <option key={v} value={v}>{{ FWD:'Передний', RWD:'Задний', AWD:'Полный' }[v] || v}</option>)}
+                        </select>
+                      </div>
+                      <div className={styles.formGroup}>
+                        <label>Коробка передач</label>
+                        <select value={carForm.transmission || ''} onChange={e => setCarForm({...carForm, transmission: e.target.value})}>
+                          <option value="">—</option>
+                          {transmissions.map(v => <option key={v} value={v}>{{ manual:'Механика', automatic:'Автомат', robot:'Робот', variator:'Вариатор' }[v] || v}</option>)}
+                        </select>
+                      </div>
+                      <div className={styles.formGroup}>
+                        <label>Разгон 0-100 км/ч, с</label>
+                        <select value={carForm.acceleration || ''} onChange={e => setCarForm({...carForm, acceleration: e.target.value})}>
+                          <option value="">—</option>
+                          {accelerations.map(v => <option key={v} value={v}>{v}</option>)}
+                        </select>
+                      </div>
+                      <div className={styles.formGroup}>
+                        <label>Макс. скорость, км/ч</label>
+                        <select value={carForm.max_speed || ''} onChange={e => setCarForm({...carForm, max_speed: e.target.value})}>
+                          <option value="">—</option>
+                          {maxSpeeds.map(v => <option key={v} value={v}>{v}</option>)}
+                        </select>
+                      </div>
+                      <div className={styles.formGroup}>
+                        <label>Клиренс, мм</label>
+                        <select value={carForm.clearance || ''} onChange={e => setCarForm({...carForm, clearance: e.target.value})}>
+                          <option value="">—</option>
+                          {clearances.map(v => <option key={v} value={v}>{v}</option>)}
+                        </select>
+                      </div>
+                      <div className={styles.formGroup}>
+                        <label>Мест</label>
+                        <select value={carForm.seats || ''} onChange={e => setCarForm({...carForm, seats: e.target.value})}>
+                          <option value="">—</option>
+                          {seatOptions.map(v => <option key={v} value={v}>{v}</option>)}
+                        </select>
+                      </div>
                     </div>
                   </details>
 
+                  {/* Загрузка фотографий */}
                   <div className={styles.imagePanel}>
                     <label>Фотографии автомобиля</label>
                     <div className={styles.uploadArea} onClick={() => fileInputRef.current?.click()}>
-                      <input type="file" multiple accept="image/*" onChange={handleMultiplePhotos} disabled={uploading} ref={fileInputRef} style={{ display: 'none' }} />
-                      {uploading ? <span className={styles.uploadingText}>Загрузка...</span> : (
+                      <input
+                        type="file"
+                        multiple
+                        accept="image/*"
+                        onChange={handleMultiplePhotos}
+                        disabled={uploading}
+                        ref={fileInputRef}
+                        style={{ display: 'none' }}
+                      />
+                      {uploading ? (
+                        <span className={styles.uploadingText}>Загрузка...</span>
+                      ) : (
                         <>
                           <div className={styles.uploadIcon}>+</div>
                           <div className={styles.uploadTitle}>Нажмите, чтобы выбрать фотографии</div>
@@ -816,12 +926,17 @@ const AdminPanel = () => {
                       </div>
                     )}
                   </div>
+
                   {formError && <div className={styles.serverError}>{formError}</div>}
-                </div>
-                <div className={styles.modalFooter}>
-                  <button type="submit" disabled={submitting} className={styles.submitBtn}>{editingCar ? 'Сохранить изменения' : 'Добавить автомобиль'}</button>
-                </div>
-              </form>
+
+                  {/* Кнопка отправки (дублируем, чтобы была внутри скролла, но можно и в футере) */}
+                  <div className={styles.modalFooter}>
+                    <button type="submit" disabled={submitting} className={styles.submitBtn}>
+                      {editingCar ? 'Сохранить изменения' : 'Добавить автомобиль'}
+                    </button>
+                  </div>
+                </form>
+              </div>
             </motion.div>
           </motion.div>
         )}

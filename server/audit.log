@@ -120,3 +120,9 @@
 {"timestamp": "2026-05-25T16:00:55.812355", "event": "LOAN_CALCULATED", "data": {"user": "admin@luxury.com", "car_id": 1, "amount": 321321312.0}}
 {"timestamp": "2026-05-25T16:14:10.063651", "event": "USER_LOGIN", "data": {"email": "admin@luxury.com"}}
 {"timestamp": "2026-05-26T06:12:56.946856", "event": "USER_LOGIN", "data": {"email": "admin@luxury.com"}}
+{"timestamp": "2026-05-27T05:58:42.413510", "event": "USER_LOGIN", "data": {"email": "admin@luxury.com"}}
+{"timestamp": "2026-05-27T06:04:39.896669", "event": "CAR_CREATED", "data": {"admin": "admin@luxury.com", "car_id": 9}}
+{"timestamp": "2026-05-27T06:04:56.968425", "event": "CAR_CREATED", "data": {"admin": "admin@luxury.com", "car_id": 10}}
+{"timestamp": "2026-05-27T06:05:11.834364", "event": "CAR_CREATED", "data": {"admin": "admin@luxury.com", "car_id": 11}}
+{"timestamp": "2026-05-27T06:05:19.683556", "event": "CAR_CREATED", "data": {"admin": "admin@luxury.com", "car_id": 12}}
+{"timestamp": "2026-05-27T06:05:28.177425", "event": "CAR_CREATED", "data": {"admin": "admin@luxury.com", "car_id": 13}}

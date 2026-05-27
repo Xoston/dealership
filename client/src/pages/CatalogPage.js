@@ -58,6 +58,8 @@ const bodyTypesRussian = {
   "suv": "Внедорожник", "pickup": "Пикап", "limousine": "Лимузин", "hatchback": "Хэтчбек",
 };
 
+const ITEMS_PER_PAGE = 12;
+
 const CatalogPage = () => {
   const [cars, setCars] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -69,8 +71,9 @@ const CatalogPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [compareList, setCompareList] = useState(JSON.parse(localStorage.getItem('compareList') || '[]'));
   const [favorites, setFavorites] = useState(JSON.parse(localStorage.getItem('favorites') || '[]'));
+  const [currentPage, setCurrentPage] = useState(1);
 
-  // Загрузка всех автомобилей (без пагинации)
+  // Загрузка автомобилей (фильтрация на сервере)
   const fetchCars = useCallback(async () => {
     setLoading(true);
     try {
@@ -85,6 +88,7 @@ const CatalogPage = () => {
       }
       const res = await getCars(params);
       setCars(res.data);
+      setCurrentPage(1); // при изменении фильтров/поиска сбрасываем на первую страницу
     } catch (err) {
       console.error(err);
     } finally {
@@ -95,6 +99,20 @@ const CatalogPage = () => {
   useEffect(() => {
     fetchCars();
   }, [fetchCars]);
+
+  // Пагинация
+  const totalPages = Math.ceil(cars.length / ITEMS_PER_PAGE);
+  const paginatedCars = cars.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
+
+  // Сброс страницы при изменении набора автомобилей (если вдруг не сбросили)
+  useEffect(() => {
+    if (currentPage > totalPages && totalPages > 0) {
+      setCurrentPage(1);
+    }
+  }, [cars, currentPage, totalPages]);
 
   const toggleCompare = (carId) => {
     let newList;
@@ -156,6 +174,23 @@ const CatalogPage = () => {
   if (filters.body_type) activeFilters.push({ key: 'body_type', label: `Кузов: ${bodyTypesRussian[filters.body_type] || filters.body_type}` });
   if (filters.restyling) activeFilters.push({ key: 'restyling', label: `Рестайлинг: ${filters.restyling === 'true' ? 'Да' : 'Нет'}` });
 
+  // Генерация массива страниц для пагинатора
+  const getPageNumbers = () => {
+    const pages = [];
+    if (totalPages <= 7) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+    } else {
+      pages.push(1);
+      if (currentPage > 3) pages.push('...');
+      const start = Math.max(2, currentPage - 1);
+      const end = Math.min(totalPages - 1, currentPage + 1);
+      for (let i = start; i <= end; i++) pages.push(i);
+      if (currentPage < totalPages - 2) pages.push('...');
+      pages.push(totalPages);
+    }
+    return pages;
+  };
+
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className={styles.page}>
       <h1 className={styles.title}>Каталог</h1>
@@ -193,49 +228,81 @@ const CatalogPage = () => {
       ) : cars.length === 0 ? (
         <p className={styles.noResults}>По вашему запросу ничего не найдено</p>
       ) : (
-        <div className={styles.grid}>
-          {cars.map((car) => (
-            <motion.div
-              key={car.id}
-              whileHover={{ scale: 1.03 }}
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4 }}
-              className={styles.cardWrapper}
-            >
-              <Link to={`/cars/${car.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-                <div className={styles.card}>
-                  <img
-                    src={getImageUrl(car.image_url || '/images/default-car.jpg')}
-                    alt={car.model}
-                    className={styles.cardImage}
-                    loading="lazy"
-                  />
-                  <div className={styles.cardBody}>
-                    <h3>{car.brand} {car.model}</h3>
-                    <p className={styles.carYear}>{car.year} год</p>
-                    <p className={styles.carPrice}>{car.price.toLocaleString()} ₽</p>
+        <>
+          <div className={styles.grid}>
+            {paginatedCars.map((car) => (
+              <motion.div
+                key={car.id}
+                whileHover={{ scale: 1.03 }}
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4 }}
+                className={styles.cardWrapper}
+              >
+                <Link to={`/cars/${car.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+                  <div className={styles.card}>
+                    <img
+                      src={getImageUrl(car.image_url || '/images/default-car.jpg')}
+                      alt={car.model}
+                      className={styles.cardImage}
+                      loading="lazy"
+                    />
+                    <div className={styles.cardBody}>
+                      <h3>{car.brand} {car.model}</h3>
+                      <p className={styles.carYear}>{car.year} год</p>
+                      <p className={styles.carPrice}>{car.price.toLocaleString()} ₽</p>
+                    </div>
                   </div>
-                </div>
-              </Link>
+                </Link>
 
+                <button
+                  className={`${styles.iconBtn} ${styles.compareBtn} ${compareList.includes(car.id) ? styles.activeIcon : ''}`}
+                  onClick={(e) => { e.preventDefault(); toggleCompare(car.id); }}
+                  title={compareList.includes(car.id) ? 'Убрать из сравнения' : 'Добавить к сравнению'}
+                >
+                  ↓↑
+                </button>
+                <button
+                  className={`${styles.iconBtn} ${styles.favBtn} ${favorites.includes(car.id) ? styles.activeFav : ''}`}
+                  onClick={(e) => { e.preventDefault(); toggleFavorite(car.id); }}
+                  title={favorites.includes(car.id) ? 'Убрать из избранного' : 'Добавить в избранное'}
+                >
+                  🤍
+                </button>
+              </motion.div>
+            ))}
+          </div>
+
+          {/* Пагинатор */}
+          {totalPages > 1 && (
+            <div className={styles.pagination}>
               <button
-                className={`${styles.iconBtn} ${styles.compareBtn} ${compareList.includes(car.id) ? styles.activeIcon : ''}`}
-                onClick={(e) => { e.preventDefault(); toggleCompare(car.id); }}
-                title={compareList.includes(car.id) ? 'Убрать из сравнения' : 'Добавить к сравнению'}
+                className={styles.pageBtn}
+                disabled={currentPage === 1}
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
               >
-                ↓↑
+                ‹
               </button>
+              {getPageNumbers().map((page, idx) => (
+                <button
+                  key={idx}
+                  className={`${styles.pageBtn} ${page === currentPage ? styles.activePage : ''} ${page === '...' ? styles.dots : ''}`}
+                  onClick={() => typeof page === 'number' && setCurrentPage(page)}
+                  disabled={page === '...'}
+                >
+                  {page}
+                </button>
+              ))}
               <button
-                className={`${styles.iconBtn} ${styles.favBtn} ${favorites.includes(car.id) ? styles.activeFav : ''}`}
-                onClick={(e) => { e.preventDefault(); toggleFavorite(car.id); }}
-                title={favorites.includes(car.id) ? 'Убрать из избранного' : 'Добавить в избранное'}
+                className={styles.pageBtn}
+                disabled={currentPage === totalPages}
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
               >
-                🤍
+                ›
               </button>
-            </motion.div>
-          ))}
-        </div>
+            </div>
+          )}
+        </>
       )}
 
       <AnimatePresence>
