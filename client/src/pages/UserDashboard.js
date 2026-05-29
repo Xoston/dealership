@@ -218,14 +218,13 @@ const UserDashboard = () => {
         );
 
       case 'purchases':
-        const allReceipts = JSON.parse(localStorage.getItem('purchaseReceipts') || '[]');
-        // Объединяем и сортируем по дате (сначала новые)
-        const allPurchases = [...purchases, ...allReceipts].sort(
+        // ТОЛЬКО ДАННЫЕ С СЕРВЕРА
+        const sortedPurchases = [...purchases].sort(
           (a, b) => new Date(b.purchase_date) - new Date(a.purchase_date)
         );
-        return allPurchases.length ? (
+        return sortedPurchases.length ? (
           <div className={styles.cardsGrid}>
-            {allPurchases.map((p, idx) => (
+            {sortedPurchases.map((p, idx) => (
               <motion.div key={idx} className={`${styles.card} ${styles.receiptCard}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
                 <div className={styles.receiptHeader}>
                   <h4>Luxury Dealer</h4>

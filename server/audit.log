@@ -147,3 +147,13 @@
 {"timestamp": "2026-05-27T07:04:51.796590", "event": "USER_LOGIN", "data": {"email": "manager@mail.ru"}}
 {"timestamp": "2026-05-27T07:05:01.658717", "event": "USER_LOGIN", "data": {"email": "admin@luxury.com"}}
 {"timestamp": "2026-05-27T07:16:23.697292", "event": "USER_LOGIN", "data": {"email": "manager@mail.ru"}}
+{"timestamp": "2026-05-27T07:24:28.346924", "event": "USER_LOGIN", "data": {"email": "manager@mail.ru"}}
+{"timestamp": "2026-05-27T07:24:38.597060", "event": "USER_LOGIN", "data": {"email": "test@mail.ru"}}
+{"timestamp": "2026-05-27T07:25:15.198991", "event": "USER_LOGIN", "data": {"email": "manager@mail.ru"}}
+{"timestamp": "2026-05-27T07:44:06.992131", "event": "USER_LOGIN", "data": {"email": "test@mail.ru"}}
+{"timestamp": "2026-05-27T07:44:11.569318", "event": "PURCHASE_MADE", "data": {"user": "test@mail.ru", "car_id": 1, "price": 321321312.0}}
+{"timestamp": "2026-05-27T07:44:19.789495", "event": "USER_LOGIN", "data": {"email": "manager@mail.ru"}}
+{"timestamp": "2026-05-27T07:44:25.882114", "event": "USER_LOGIN", "data": {"email": "admin@luxury.com"}}
+{"timestamp": "2026-05-27T08:04:53.397269", "event": "TESTDRIVE_STATUS_CHANGED", "data": {"admin": "admin@luxury.com", "td_id": 1, "new_status": "rejected"}}
+{"timestamp": "2026-05-29T06:24:21.528909", "event": "USER_LOGIN", "data": {"email": "admin@luxury.com"}}
+{"timestamp": "2026-05-29T08:40:49.233392", "event": "USER_LOGIN", "data": {"email": "admin@luxury.com"}}

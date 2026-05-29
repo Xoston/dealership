@@ -452,3 +452,97 @@
     border-radius: 10px;
   }
 }
+/* Панель сортировки */
+.sortPanel {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1.2rem;
+  padding: 0.6rem 1rem;
+  background: rgba(255,255,255,0.6);
+  backdrop-filter: blur(8px);
+  border-radius: 16px;
+  border: 1px solid rgba(128,128,128,0.15);
+}
+
+.sortLabel {
+  font-weight: 600;
+  color: var(--text);
+  margin-right: 0.4rem;
+}
+
+.sortBtn {
+  background: transparent;
+  border: 1.5px solid rgba(128,128,128,0.3);
+  border-radius: 20px;
+  padding: 0.35rem 0.9rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.sortBtn:hover {
+  background: var(--accent);
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.activeSort {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+  font-weight: 600;
+}
+
+.resetSortBtn {
+  margin-left: auto;
+  background: transparent;
+  border: 1px solid #D32F2F;
+  color: #D32F2F;
+  border-radius: 20px;
+  padding: 0.35rem 0.9rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.resetSortBtn:hover {
+  background: #D32F2F;
+  color: white;
+}
+
+.countInfo {
+  margin-bottom: 0.8rem;
+  font-size: 0.9rem;
+  color: var(--text);
+  opacity: 0.8;
+}
+
+/* Технические фильтры */
+.techDetails {
+  margin-top: 0.5rem;
+}
+
+.techDetails summary {
+  font-weight: 600;
+  color: var(--primary);
+  cursor: pointer;
+  margin-bottom: 0.5rem;
+  font-size: 0.95rem;
+}
+
+/* Адаптация */
+@media (max-width: 600px) {
+  .sortPanel {
+    gap: 0.3rem;
+    padding: 0.5rem;
+  }
+  .sortBtn {
+    padding: 0.3rem 0.6rem;
+    font-size: 0.8rem;
+  }
+}

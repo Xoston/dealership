@@ -185,15 +185,15 @@ const CarDetailPage = () => {
               <div className={styles.paymentMethods}>
                 <label className={`${styles.paymentOption} ${paymentMethod === 'card' ? styles.activePayment : ''}`}>
                   <input type="radio" name="payment" value="card" checked={paymentMethod === 'card'} onChange={() => setPaymentMethod('card')} />
-                  <span>💳 Банковская карта</span>
+                  <span>Банковская карта</span>
                 </label>
                 <label className={`${styles.paymentOption} ${paymentMethod === 'cash' ? styles.activePayment : ''}`}>
                   <input type="radio" name="payment" value="cash" checked={paymentMethod === 'cash'} onChange={() => setPaymentMethod('cash')} />
-                  <span>💵 Наличные</span>
+                  <span>Наличные</span>
                 </label>
                 <label className={`${styles.paymentOption} ${paymentMethod === 'credit' ? styles.activePayment : ''}`}>
                   <input type="radio" name="payment" value="credit" checked={paymentMethod === 'credit'} onChange={() => setPaymentMethod('credit')} />
-                  <span>🏦 В кредит</span>
+                  <span>В кредит</span>
                 </label>
               </div>
 

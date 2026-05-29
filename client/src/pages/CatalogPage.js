@@ -1,11 +1,11 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { getCars } from '../services/carService';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { getImageUrl } from '../services/api';
 import styles from './CatalogPage.module.css';
 
-// Полный список марок и моделей (тот же, что используется в админ-панели)
+/* ================= ПОЛНЫЙ СПИСОК МАРОК И МОДЕЛЕЙ ================= */
 const brandModels = {
   "BMW": ["1 Series", "2 Series Gran Coupe", "2 Series Coupe", "3 Series Sedan", "3 Series Touring",
     "4 Series Gran Coupe", "4 Series Coupe", "5 Series Sedan", "5 Series Touring",
@@ -60,20 +60,71 @@ const bodyTypesRussian = {
 
 const ITEMS_PER_PAGE = 12;
 
+const fuelTypes = [
+  { value: '', label: 'Любое' },
+  { value: 'petrol', label: 'Бензин' },
+  { value: 'diesel', label: 'Дизель' },
+  { value: 'hybrid', label: 'Гибрид' },
+  { value: 'electric', label: 'Электро' },
+];
+
+const driveTypes = [
+  { value: '', label: 'Любой' },
+  { value: 'FWD', label: 'Передний' },
+  { value: 'RWD', label: 'Задний' },
+  { value: 'AWD', label: 'Полный' },
+];
+
+const transmissions = [
+  { value: '', label: 'Любая' },
+  { value: 'manual', label: 'Механика' },
+  { value: 'automatic', label: 'Автомат' },
+  { value: 'robot', label: 'Робот' },
+  { value: 'variator', label: 'Вариатор' },
+];
+
 const CatalogPage = () => {
   const [cars, setCars] = useState([]);
   const [loading, setLoading] = useState(true);
+  // Базовые фильтры (отправляются на сервер)
   const [filters, setFilters] = useState({
     brand: '', model: '', min_price: '', max_price: '',
     year_from: '', year_to: '', body_type: '', restyling: '',
+  });
+  // Расширенные технические фильтры (клиентская фильтрация)
+  const [techFilters, setTechFilters] = useState({
+    engine_volume_min: '', engine_volume_max: '',
+    power_min: '', power_max: '',
+    fuel_type: '',
+    drive_type: '',
+    transmission: '',
   });
   const [showFilters, setShowFilters] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [compareList, setCompareList] = useState(JSON.parse(localStorage.getItem('compareList') || '[]'));
   const [favorites, setFavorites] = useState(JSON.parse(localStorage.getItem('favorites') || '[]'));
   const [currentPage, setCurrentPage] = useState(1);
+  // Сортировка
+  const [sortBy, setSortBy] = useState('');
+  const [sortDir, setSortDir] = useState('asc');
 
-  // Загрузка автомобилей (фильтрация на сервере)
+  const resetAll = () => {
+    setFilters({
+      brand: '', model: '', min_price: '', max_price: '',
+      year_from: '', year_to: '', body_type: '', restyling: '',
+    });
+    setTechFilters({
+      engine_volume_min: '', engine_volume_max: '',
+      power_min: '', power_max: '',
+      fuel_type: '',
+      drive_type: '',
+      transmission: '',
+    });
+    setSearchQuery('');
+    setSortBy('');
+    setSortDir('asc');
+  };
+
   const fetchCars = useCallback(async () => {
     setLoading(true);
     try {
@@ -84,11 +135,12 @@ const CatalogPage = () => {
         }
       });
       if (searchQuery && !filters.brand && !filters.model) {
-        params.brand = searchQuery;
+        // поиск по марке, модели или году
+        params.brand = searchQuery;   // сервер сам найдёт совпадения по бренду
       }
       const res = await getCars(params);
       setCars(res.data);
-      setCurrentPage(1); // при изменении фильтров/поиска сбрасываем на первую страницу
+      setCurrentPage(1);
     } catch (err) {
       console.error(err);
     } finally {
@@ -100,19 +152,58 @@ const CatalogPage = () => {
     fetchCars();
   }, [fetchCars]);
 
+  // Клиентская фильтрация по тех. характеристикам + поиск по году
+  const filteredByTech = useMemo(() => {
+    return cars.filter(car => {
+      // Поиск по тексту (марка, модель, год)
+      if (searchQuery && !filters.brand && !filters.model) {
+        const q = searchQuery.toLowerCase();
+        const matches = (
+          (car.brand?.toLowerCase().includes(q)) ||
+          (car.model?.toLowerCase().includes(q)) ||
+          (String(car.year).includes(q))
+        );
+        if (!matches) return false;
+      }
+      // Технические фильтры
+      if (techFilters.engine_volume_min && (car.engine_volume || 0) < parseFloat(techFilters.engine_volume_min)) return false;
+      if (techFilters.engine_volume_max && (car.engine_volume || 0) > parseFloat(techFilters.engine_volume_max)) return false;
+      if (techFilters.power_min && (car.power || 0) < parseInt(techFilters.power_min)) return false;
+      if (techFilters.power_max && (car.power || 0) > parseInt(techFilters.power_max)) return false;
+      if (techFilters.fuel_type && car.fuel_type !== techFilters.fuel_type) return false;
+      if (techFilters.drive_type && car.drive_type !== techFilters.drive_type) return false;
+      if (techFilters.transmission && car.transmission !== techFilters.transmission) return false;
+      return true;
+    });
+  }, [cars, techFilters, searchQuery, filters]);
+
+  // Сортировка
+  const sortedCars = useMemo(() => {
+    if (!sortBy) return filteredByTech;
+    const dir = sortDir === 'asc' ? 1 : -1;
+    return [...filteredByTech].sort((a, b) => {
+      let valA = a[sortBy];
+      let valB = b[sortBy];
+      if (typeof valA === 'string') valA = valA.toLowerCase();
+      if (typeof valB === 'string') valB = valB.toLowerCase();
+      if (valA < valB) return -1 * dir;
+      if (valA > valB) return 1 * dir;
+      return 0;
+    });
+  }, [filteredByTech, sortBy, sortDir]);
+
   // Пагинация
-  const totalPages = Math.ceil(cars.length / ITEMS_PER_PAGE);
-  const paginatedCars = cars.slice(
+  const totalPages = Math.ceil(sortedCars.length / ITEMS_PER_PAGE);
+  const paginatedCars = sortedCars.slice(
     (currentPage - 1) * ITEMS_PER_PAGE,
     currentPage * ITEMS_PER_PAGE
   );
 
-  // Сброс страницы при изменении набора автомобилей (если вдруг не сбросили)
   useEffect(() => {
     if (currentPage > totalPages && totalPages > 0) {
       setCurrentPage(1);
     }
-  }, [cars, currentPage, totalPages]);
+  }, [sortedCars, currentPage, totalPages]);
 
   const toggleCompare = (carId) => {
     let newList;
@@ -144,6 +235,10 @@ const CatalogPage = () => {
     setFilters(prev => ({ ...prev, [field]: value }));
   };
 
+  const handleTechFilterChange = (field, value) => {
+    setTechFilters(prev => ({ ...prev, [field]: value }));
+  };
+
   const applyFilters = () => {
     fetchCars();
     setShowFilters(false);
@@ -154,7 +249,16 @@ const CatalogPage = () => {
       brand: '', model: '', min_price: '', max_price: '',
       year_from: '', year_to: '', body_type: '', restyling: '',
     });
+    setTechFilters({
+      engine_volume_min: '', engine_volume_max: '',
+      power_min: '', power_max: '',
+      fuel_type: '',
+      drive_type: '',
+      transmission: '',
+    });
     setSearchQuery('');
+    setSortBy('');
+    setSortDir('asc');
   };
 
   const removeFilter = (key) => {
@@ -174,7 +278,6 @@ const CatalogPage = () => {
   if (filters.body_type) activeFilters.push({ key: 'body_type', label: `Кузов: ${bodyTypesRussian[filters.body_type] || filters.body_type}` });
   if (filters.restyling) activeFilters.push({ key: 'restyling', label: `Рестайлинг: ${filters.restyling === 'true' ? 'Да' : 'Нет'}` });
 
-  // Генерация массива страниц для пагинатора
   const getPageNumbers = () => {
     const pages = [];
     if (totalPages <= 7) {
@@ -191,6 +294,15 @@ const CatalogPage = () => {
     return pages;
   };
 
+  const handleSort = (key) => {
+    if (sortBy === key) {
+      setSortDir(prev => prev === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortBy(key);
+      setSortDir('asc');
+    }
+  };
+
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className={styles.page}>
       <h1 className={styles.title}>Каталог</h1>
@@ -199,7 +311,7 @@ const CatalogPage = () => {
         <div className={styles.searchBar}>
           <input
             type="text"
-            placeholder="Поиск по марке или модели..."
+            placeholder="Поиск по марке, модели или году..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && fetchCars()}
@@ -223,12 +335,53 @@ const CatalogPage = () => {
         )}
       </div>
 
+      {/* Панель сортировки */}
+      <div className={styles.sortPanel}>
+        <span className={styles.sortLabel}>Сортировать:</span>
+        <button
+          className={`${styles.sortBtn} ${sortBy === 'price' ? styles.activeSort : ''}`}
+          onClick={() => handleSort('price')}
+        >
+          По цене {sortBy === 'price' ? (sortDir === 'asc' ? '↑' : '↓') : ''}
+        </button>
+        <button
+          className={`${styles.sortBtn} ${sortBy === 'year' ? styles.activeSort : ''}`}
+          onClick={() => handleSort('year')}
+        >
+          По году {sortBy === 'year' ? (sortDir === 'asc' ? '↑' : '↓') : ''}
+        </button>
+        <button
+          className={`${styles.sortBtn} ${sortBy === 'power' ? styles.activeSort : ''}`}
+          onClick={() => handleSort('power')}
+        >
+          По мощности {sortBy === 'power' ? (sortDir === 'asc' ? '↑' : '↓') : ''}
+        </button>
+        <button
+          className={`${styles.sortBtn} ${sortBy === 'brand' ? styles.activeSort : ''}`}
+          onClick={() => handleSort('brand')}
+        >
+          По марке {sortBy === 'brand' ? (sortDir === 'asc' ? '↑' : '↓') : ''}
+        </button>
+        <button
+          className={`${styles.sortBtn} ${sortBy === 'model' ? styles.activeSort : ''}`}
+          onClick={() => handleSort('model')}
+        >
+          По модели {sortBy === 'model' ? (sortDir === 'asc' ? '↑' : '↓') : ''}
+        </button>
+        {(sortBy || techFilters.engine_volume_min || techFilters.engine_volume_max) && (
+          <button className={styles.resetSortBtn} onClick={() => { setSortBy(''); setSortDir('asc'); }}>
+            Сбросить сортировку
+          </button>
+        )}
+      </div>
+
       {loading ? (
         <p className={styles.loading}>Загрузка...</p>
-      ) : cars.length === 0 ? (
+      ) : sortedCars.length === 0 ? (
         <p className={styles.noResults}>По вашему запросу ничего не найдено</p>
       ) : (
         <>
+          {/* Счётчик найденных машин – убран */}
           <div className={styles.grid}>
             {paginatedCars.map((car) => (
               <motion.div
@@ -273,7 +426,6 @@ const CatalogPage = () => {
             ))}
           </div>
 
-          {/* Пагинатор */}
           {totalPages > 1 && (
             <div className={styles.pagination}>
               <button
@@ -305,6 +457,7 @@ const CatalogPage = () => {
         </>
       )}
 
+      {/* Модальное окно с расширенными фильтрами */}
       <AnimatePresence>
         {showFilters && (
           <motion.div
@@ -322,7 +475,7 @@ const CatalogPage = () => {
               onClick={(e) => e.stopPropagation()}
             >
               <div className={styles.modalHeader}>
-                <h3>Фильтры</h3>
+                <h3>Расширенные фильтры</h3>
                 <button className={styles.closeBtn} onClick={() => setShowFilters(false)}>✕</button>
               </div>
 
@@ -387,6 +540,56 @@ const CatalogPage = () => {
                     </select>
                   </div>
                 </div>
+
+                {/* Технические характеристики */}
+                <details className={styles.techDetails}>
+                  <summary>Технические характеристики</summary>
+                  <div className={styles.filterRow}>
+                    <div className={styles.filterGroup}>
+                      <label>Объём двигателя, л</label>
+                      <div className={styles.twoInputs}>
+                        <input type="number" placeholder="от" value={techFilters.engine_volume_min} onChange={(e) => handleTechFilterChange('engine_volume_min', e.target.value)} />
+                        <input type="number" placeholder="до" value={techFilters.engine_volume_max} onChange={(e) => handleTechFilterChange('engine_volume_max', e.target.value)} />
+                      </div>
+                    </div>
+                    <div className={styles.filterGroup}>
+                      <label>Мощность, л.с.</label>
+                      <div className={styles.twoInputs}>
+                        <input type="number" placeholder="от" value={techFilters.power_min} onChange={(e) => handleTechFilterChange('power_min', e.target.value)} />
+                        <input type="number" placeholder="до" value={techFilters.power_max} onChange={(e) => handleTechFilterChange('power_max', e.target.value)} />
+                      </div>
+                    </div>
+                  </div>
+                  <div className={styles.filterRow}>
+                    <div className={styles.filterGroup}>
+                      <label>Топливо</label>
+                      <select value={techFilters.fuel_type} onChange={(e) => handleTechFilterChange('fuel_type', e.target.value)}>
+                        {fuelTypes.map(ft => (
+                          <option key={ft.value} value={ft.value}>{ft.label}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className={styles.filterGroup}>
+                      <label>Привод</label>
+                      <select value={techFilters.drive_type} onChange={(e) => handleTechFilterChange('drive_type', e.target.value)}>
+                        {driveTypes.map(dt => (
+                          <option key={dt.value} value={dt.value}>{dt.label}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                  <div className={styles.filterRow}>
+                    <div className={styles.filterGroup}>
+                      <label>Коробка передач</label>
+                      <select value={techFilters.transmission} onChange={(e) => handleTechFilterChange('transmission', e.target.value)}>
+                        {transmissions.map(tr => (
+                          <option key={tr.value} value={tr.value}>{tr.label}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className={styles.filterGroup} />
+                  </div>
+                </details>
               </div>
 
               <div className={styles.modalFooter}>

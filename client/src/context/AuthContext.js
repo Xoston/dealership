@@ -9,7 +9,6 @@ export const AuthProvider = ({ children }) => {
   const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light');
   const [notifications, setNotifications] = useState([]);
 
-  // При загрузке проверяем сессию – кука уйдёт автоматически
   useEffect(() => {
     api.get('/auth/me')
       .then(res => setUser(res.data))
@@ -17,7 +16,6 @@ export const AuthProvider = ({ children }) => {
       .finally(() => setLoading(false));
   }, []);
 
-  // Применение темы
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
     localStorage.setItem('theme', theme);
@@ -40,6 +38,12 @@ export const AuthProvider = ({ children }) => {
   const logout = async () => {
     await api.post('/auth/logout');
     setUser(null);
+    // Очистка персональных данных, чтобы не было утечек между пользователями
+    localStorage.removeItem('purchaseReceipts');
+    localStorage.removeItem('loanStatuses');
+    localStorage.removeItem('tdStatuses');
+    localStorage.removeItem('favorites');
+    localStorage.removeItem('compareList');
   };
 
   const addNotification = (msg) => {
