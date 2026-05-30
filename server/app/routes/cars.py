@@ -40,6 +40,14 @@ def read_car(car_id: int):
         raise HTTPException(status_code=404, detail="Car not found")
     return car
 
+# ------- НОВЫЙ ЭНДПОИНТ (получение изображений автомобиля) -------
+@router.get("/{car_id}/images", response_model=List[schemas.CarImageOut])
+def get_car_images(car_id: int):
+    car = crud.get_car(car_id)          # проверяем, что авто существует
+    if not car:
+        raise HTTPException(status_code=404, detail="Car not found")
+    return crud.get_car_images(car_id)  # сама функция уже есть в crud
+
 @router.post("/", response_model=schemas.CarOut)
 @limiter.limit("10/minute")
 def create_car(request: Request, car_data: schemas.CarCreate, current_user=Depends(get_current_admin_or_manager)):

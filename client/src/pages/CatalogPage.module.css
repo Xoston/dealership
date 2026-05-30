@@ -460,7 +460,7 @@
   gap: 0.5rem;
   margin-bottom: 1.2rem;
   padding: 0.6rem 1rem;
-  background: rgba(255,255,255,0.6);
+  background: var(--glass-bg);   /* убран статический белый, теперь зависит от темы */
   backdrop-filter: blur(8px);
   border-radius: 16px;
   border: 1px solid rgba(128,128,128,0.15);

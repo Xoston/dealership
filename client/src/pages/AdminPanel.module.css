@@ -1,25 +1,25 @@
 /* ========================
-   ОСНОВНЫЕ СТИЛИ АДМИН‑ПАНЕЛИ
+   ОСНОВНЫЕ СТИЛИ АДМИН‑ПАНЕЛИ (адаптивная тема)
    ======================== */
 .container { max-width: 1200px; margin: 2rem auto; padding: 0 2rem; }
 .loading { text-align: center; padding: 3rem; font-size: 1.5rem; color: var(--primary); }
 .title { font-family: 'Playfair Display', serif; font-size: 2.5rem; margin-bottom: 2rem; text-align: center; }
-.tabs { display: flex; gap: 1rem; border-bottom: 1px solid #e0e0e0; margin-bottom: 2rem; }
-.tab { padding: 0.8rem 1.5rem; background: none; border: none; border-bottom: 3px solid transparent; font-weight: 600; color: #666; cursor: pointer; transition: all 0.3s; }
-.tab:hover { color: var(--primary); }
-.active { border-bottom-color: var(--primary); color: var(--primary); }
+.tabs { display: flex; gap: 1rem; border-bottom: 1px solid rgba(128,128,128,0.3); margin-bottom: 2rem; }
+.tab { padding: 0.8rem 1.5rem; background: none; border: none; border-bottom: 3px solid transparent; font-weight: 600; color: var(--text); opacity: 0.7; cursor: pointer; transition: all 0.3s; }
+.tab:hover { opacity: 1; color: var(--primary); }
+.active { border-bottom-color: var(--primary); color: var(--primary); opacity: 1; }
 
 /* Ключевые метрики */
 .dashboard { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
-.statCard { background: white; padding: 1.5rem; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); text-align: center; }
-.statCard h3 { font-weight: 600; color: #555; margin-bottom: 0.5rem; }
+.statCard { background: var(--bg); padding: 1.5rem; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); text-align: center; }
+.statCard h3 { font-weight: 600; color: var(--text); opacity: 0.7; margin-bottom: 0.5rem; }
 .statCard p { font-size: 2.5rem; font-weight: 700; color: var(--primary); }
 
 /* Таблицы */
-.table { width: 100%; border-collapse: collapse; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
-.table th, .table td { padding: 1rem; text-align: left; border-bottom: 1px solid #eee; }
-.table th { background: #f8f6fb; font-weight: 600; color: var(--primary); }
-.table tr:hover { background: #fafafa; }
+.table { width: 100%; border-collapse: collapse; background: var(--bg); border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+.table th, .table td { padding: 1rem; text-align: left; border-bottom: 1px solid rgba(128,128,128,0.2); }
+.table th { background: var(--glass-bg); font-weight: 600; color: var(--primary); }
+.table tr:hover { background: var(--accent); }
 
 /* Кнопки */
 .deleteBtn { background: transparent; border: 1px solid #d32f2f; color: #d32f2f; padding: 0.4rem 1rem; border-radius: 20px; cursor: pointer; transition: all 0.3s; }
@@ -32,8 +32,8 @@
 .modal { background: var(--bg); border-radius: 24px; width: 100%; max-width: 700px; max-height: 95vh; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.3); }
 .modalHeader { display: flex; justify-content: space-between; align-items: center; padding: 1.5rem 1.5rem 0.5rem; }
 .modalHeader h4 { font-family: 'Playfair Display', serif; font-size: 1.5rem; color: var(--primary); }
-.closeBtn { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #888; transition: 0.3s; }
-.closeBtn:hover { color: #333; }
+.closeBtn { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text); opacity: 0.7; transition: 0.3s; }
+.closeBtn:hover { opacity: 1; color: var(--primary); }
 .modalBody { padding: 0 1.5rem 1rem; flex: 1; overflow-y: auto; min-height: 0; }
 .modalFooter { padding: 1rem 1.5rem; border-top: 1px solid rgba(128,128,128,0.2); display: flex; justify-content: flex-end; }
 
@@ -51,55 +51,15 @@
 .submitBtn:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(74,20,140,0.5); }
 
 /* Селекты для марки/модели (замена select) */
-.selectField {
-  width: 100%;
-  padding: 0.7rem 1rem;
-  border-radius: 12px;
-  border: 1.5px solid rgba(128,128,128,0.3);
-  background: var(--bg);
-  color: var(--text);
-  cursor: pointer;
-  position: relative;
-  user-select: none;
-  font-size: 0.95rem;
-  transition: 0.3s;
-}
-.selectField.placeholder {
-  color: #888;
-}
-.selectField.disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
+.selectField { width: 100%; padding: 0.7rem 1rem; border-radius: 12px; border: 1.5px solid rgba(128,128,128,0.3); background: var(--bg); color: var(--text); cursor: pointer; position: relative; user-select: none; font-size: 0.95rem; transition: 0.3s; }
+.selectField.placeholder { color: #888; }
+.selectField.disabled { opacity: 0.6; cursor: not-allowed; }
 
 /* Переключатель (рестайлинг) */
-.toggleSwitch {
-  width: 44px;
-  height: 24px;
-  background: rgba(128,128,128,0.3);
-  border-radius: 12px;
-  position: relative;
-  cursor: pointer;
-  transition: background 0.3s;
-  flex-shrink: 0;
-}
-.toggleActive {
-  background: var(--primary);
-}
-.toggleKnob {
-  width: 20px;
-  height: 20px;
-  background: white;
-  border-radius: 50%;
-  position: absolute;
-  top: 2px;
-  left: 2px;
-  transition: left 0.3s;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-}
-.toggleActive .toggleKnob {
-  left: 22px;
-}
+.toggleSwitch { width: 44px; height: 24px; background: rgba(128,128,128,0.3); border-radius: 12px; position: relative; cursor: pointer; transition: background 0.3s; flex-shrink: 0; }
+.toggleActive { background: var(--primary); }
+.toggleKnob { width: 20px; height: 20px; background: white; border-radius: 50%; position: absolute; top: 2px; left: 2px; transition: left 0.3s; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+.toggleActive .toggleKnob { left: 22px; }
 
 /* Технические характеристики */
 .techDetails { margin-bottom: 1rem; }
@@ -108,21 +68,12 @@
 
 /* Загрузка фото */
 .imagePanel { margin-top: 2rem; background: var(--glass-bg); padding: 1.5rem; border-radius: 16px; }
-.uploadArea {
-  border: 2px dashed rgba(128,128,128,0.4);
-  border-radius: 16px;
-  padding: 1.5rem;
-  text-align: center;
-  background: var(--glass-bg);
-  backdrop-filter: blur(10px);
-  cursor: pointer;
-  transition: border-color 0.3s;
-}
+.uploadArea { border: 2px dashed rgba(128,128,128,0.4); border-radius: 16px; padding: 1.5rem; text-align: center; background: var(--glass-bg); backdrop-filter: blur(10px); cursor: pointer; transition: border-color 0.3s; }
 .uploadArea:hover { border-color: var(--primary); }
 .uploadingText { color: var(--primary); }
 .uploadIcon { font-size: 2rem; color: var(--primary-light); margin-bottom: 0.5rem; }
-.uploadTitle { font-weight: 500; margin-bottom: 0.2rem; }
-.uploadSubtitle { font-size: 0.85rem; opacity: 0.6; }
+.uploadTitle { font-weight: 500; margin-bottom: 0.2rem; color: var(--text); }
+.uploadSubtitle { font-size: 0.85rem; opacity: 0.6; color: var(--text); }
 .imageGrid { display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 1rem; }
 .thumbnailContainer { position: relative; width: 100px; height: 80px; }
 .thumbnailContainer img { width: 100%; height: 100%; object-fit: cover; border-radius: 6px; }
@@ -142,7 +93,7 @@
 .noModels { text-align: center; color: var(--text); padding: 1rem; }
 
 /* Статусы, кнопки одобрения/отклонения */
-.approveBtn, .rejectBtn { padding: 0.4rem 0.8rem; border-radius: 20px; font-weight: 600; border: none; cursor: pointer; transition: 0.3s; }
+.approveBtn, .rejectBtn { padding: 0.4rem 0.8rem; border-radius: 20px; font-weight: 600; border: none; cursor: pointer; transition: 0.3s; white-space: nowrap; flex-shrink: 0; display: inline-block; }
 .approveBtn { background: #e8f5e9; color: #2e7d32; }
 .approveBtn:hover { background: #c8e6c9; }
 .rejectBtn { background: #fdecea; color: #d32f2f; }
@@ -156,8 +107,8 @@
 .loanCommentModal { background: var(--bg); border-radius: 20px; padding: 2rem; width: 90%; max-width: 400px; box-shadow: 0 20px 50px rgba(0,0,0,0.3); }
 .loanCommentTextarea { width: 100%; padding: 0.7rem; border-radius: 12px; border: 1.5px solid rgba(128,128,128,0.3); background: var(--bg); color: var(--text); font-family: inherit; font-size: 0.95rem; margin: 1rem 0; }
 .loanCommentButtons { display: flex; gap: 0.5rem; justify-content: flex-end; }
-.cancelBtn { background: transparent; border: 1px solid #888; color: #888; padding: 0.6rem 1.5rem; border-radius: 30px; font-weight: 600; cursor: pointer; transition: 0.2s; }
-.cancelBtn:hover { background: #888; color: white; }
+.cancelBtn { background: transparent; border: 1px solid var(--text); opacity: 0.7; color: var(--text); padding: 0.6rem 1.5rem; border-radius: 30px; font-weight: 600; cursor: pointer; transition: 0.2s; }
+.cancelBtn:hover { background: var(--text); opacity: 1; color: var(--bg); }
 
 /* Адаптивность */
 @media (max-width: 600px) {
@@ -166,102 +117,126 @@
 }
 
 /* ========================
-   РАСШИРЕННЫЙ ДАШБОРД
+   РАСШИРЕННЫЙ ДАШБОРД (адаптивный)
    ======================== */
 .analyticsGrid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem; margin-top: 1.5rem; }
-.analyticsBlock { background: white; padding: 1.5rem; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); transition: transform 0.2s ease; }
+.analyticsBlock { background: var(--bg); padding: 1.5rem; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); transition: transform 0.2s ease; }
 .analyticsBlock:hover { transform: translateY(-2px); }
 .blockTitle { font-family: 'Playfair Display', serif; font-size: 1.3rem; color: var(--primary); margin-bottom: 1rem; }
-.emptyText { color: #888; font-style: italic; }
+.emptyText { color: var(--text); opacity: 0.6; font-style: italic; }
 
 /* Выручка (уменьшенный шрифт) */
 .revenueAmount { font-size: 1.8rem !important; word-break: break-word; overflow-wrap: break-word; line-height: 1.2; margin-bottom: 0.3rem; }
 
 /* Топ‑5 продаж */
 .topSalesList { display: flex; flex-direction: column; gap: 0.8rem; }
-.topSalesCard { background: #f9f9fb; border-radius: 12px; padding: 0.8rem 1rem; border: 1px solid transparent; box-shadow: 0 2px 8px rgba(0,0,0,0.03); }
+.topSalesCard { background: var(--glass-bg); border-radius: 12px; padding: 0.8rem 1rem; border: 1px solid transparent; box-shadow: 0 2px 8px rgba(0,0,0,0.03); }
 .topSalesHeader { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.5rem; flex-wrap: wrap; }
-.topSalesName { font-weight: 600; margin-right: 0.5rem; }
-.topSalesStats { font-size: 0.85rem; color: #666; white-space: nowrap; }
-.topSalesBar { height: 6px; background: rgba(0,0,0,0.06); border-radius: 3px; overflow: hidden; }
+.topSalesName { font-weight: 600; margin-right: 0.5rem; color: var(--text); }
+.topSalesStats { font-size: 0.85rem; color: var(--text); opacity: 0.7; white-space: nowrap; }
+.topSalesBar { height: 6px; background: rgba(128,128,128,0.2); border-radius: 3px; overflow: hidden; }
 .topSalesFill { height: 100%; background: linear-gradient(90deg, var(--primary), var(--primary-light)); border-radius: 3px; transition: width 0.6s; }
-
-/* Статусы кредитов (модная панель) */
-.statusPanel { display: flex; flex-direction: column; gap: 1.2rem; }
-.statusPanelItem { display: flex; flex-direction: column; gap: 0.4rem; }
-.statusPanelInfo { display: flex; align-items: center; gap: 0.6rem; }
-.statusPanelDot { width: 12px; height: 12px; border-radius: 4px; flex-shrink: 0; }
-.statusPanelLabel { font-weight: 600; color: var(--text); flex: 1; }
-.statusPanelCount { font-weight: 700; font-size: 1rem; color: #333; background: #f5f5f5; padding: 0.2rem 0.7rem; border-radius: 12px; white-space: nowrap; }
-.statusPanelCount small { font-weight: 400; font-size: 0.8rem; margin-left: 0.2rem; color: #666; }
-.statusPanelBar { height: 8px; background: #f0f0f0; border-radius: 4px; overflow: hidden; }
-.statusPanelFill { height: 100%; border-radius: 4px; transition: width 0.6s; }
 
 /* Последние заявки */
 .recentList { list-style: none; padding: 0; margin: 0; }
-.recentItem { border-bottom: 1px solid #eee; padding: 0.5rem 0; }
-.recentRow { display: flex; justify-content: space-between; font-weight: 500; }
+.recentItem { border-bottom: 1px solid rgba(128,128,128,0.2); padding: 0.5rem 0; }
+.recentRow { display: flex; justify-content: space-between; font-weight: 500; color: var(--text); }
 .recentAmount { font-weight: 700; color: var(--primary); }
-.recentMeta { font-size: 0.85rem; color: #777; margin-top: 0.2rem; }
+.recentMeta { font-size: 0.85rem; color: var(--text); opacity: 0.7; margin-top: 0.2rem; }
 
 /* Гистограмма марок */
 .histogramContainer { max-height: 300px; overflow-y: auto; padding-right: 0.5rem; display: flex; flex-direction: column; gap: 0.8rem; }
 .histogramBar { display: flex; align-items: center; gap: 0.6rem; }
-.histogramLabel { width: 100px; font-weight: 500; font-size: 0.9rem; text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.histogramTrack { flex: 1; height: 14px; background: #f5f5f5; border-radius: 7px; overflow: hidden; }
+.histogramLabel { width: 100px; font-weight: 500; font-size: 0.9rem; text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text); }
+.histogramTrack { flex: 1; height: 14px; background: rgba(128,128,128,0.2); border-radius: 7px; overflow: hidden; }
 .histogramFill { height: 100%; border-radius: 7px; transition: width 0.6s; }
-.histogramValue { font-weight: 600; font-size: 0.9rem; min-width: 30px; }
-.moreBrands { text-align: center; color: #888; font-size: 0.85rem; margin-top: 0.3rem; }
+.histogramValue { font-weight: 600; font-size: 0.9rem; min-width: 30px; color: var(--text); }
+.moreBrands { text-align: center; color: var(--text); opacity: 0.6; font-size: 0.85rem; margin-top: 0.3rem; }
 
 /* Ожидающие тест‑драйвы */
-.pendingTdCount { font-size: 3rem; font-weight: 700; color: var(--primary); margin: 0; animation: pulse 2s infinite; }
+.pendingTdCount { font-size: 3rem; font-weight: 700; color: var(--primary); margin: 0; animation: pulse 2s infinite; cursor: pointer; transition: color 0.2s, transform 0.2s; }
+.pendingTdCount:hover { color: var(--primary-light); transform: scale(1.08); }
 @keyframes pulse { 0% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.05); opacity: 0.8; } 100% { transform: scale(1); opacity: 1; } }
 
 /* ========================
    ФИЛЬТРЫ И ТАБЛИЦЫ
    ======================== */
-.roleSelect {
-  padding: 0.4rem 0.8rem;
-  border-radius: 20px;
-  border: 1.5px solid var(--primary);
-  background: var(--bg);
-  color: var(--text);
-  font-weight: 600;
-  font-size: 0.85rem;
-  cursor: pointer;
-  outline: none;
-  transition: 0.2s;
-}
+.roleSelect { padding: 0.4rem 0.8rem; border-radius: 20px; border: 1.5px solid var(--primary); background: var(--bg); color: var(--text); font-weight: 600; font-size: 0.85rem; cursor: pointer; outline: none; transition: 0.2s; }
 .roleSelect:disabled { opacity: 0.5; cursor: not-allowed; }
 
-.sortable { cursor: pointer; user-select: none; transition: color 0.2s; }
-.sortable:hover { color: var(--primary-light); }
+.sortable { cursor: pointer; user-select: none; transition: color 0.2s; color: var(--text); }
+.sortable:hover { color: var(--primary); }
 
 .filterPanel { display: flex; gap: 0.8rem; flex-wrap: wrap; margin-bottom: 1rem; align-items: center; }
 .filterInput { padding: 0.4rem 0.8rem; border-radius: 12px; border: 1.5px solid rgba(128,128,128,0.3); background: var(--bg); color: var(--text); width: 200px; }
 .filterInputSmall { width: 100px; padding: 0.4rem 0.8rem; border-radius: 12px; border: 1.5px solid rgba(128,128,128,0.3); background: var(--bg); color: var(--text); }
-.resetFiltersBtn { background: transparent; border: 1px solid #888; color: #888; padding: 0.4rem 1rem; border-radius: 20px; cursor: pointer; transition: 0.2s; }
-.resetFiltersBtn:hover { background: #888; color: white; }
+.resetFiltersBtn { background: transparent; border: 1px solid var(--text); opacity: 0.7; color: var(--text); padding: 0.4rem 1rem; border-radius: 20px; cursor: pointer; transition: 0.2s; }
+.resetFiltersBtn:hover { background: var(--text); color: var(--bg); opacity: 1; }
 
-.editBtn, .deleteCarBtn {
-  background: transparent;
-  border: 1.5px solid var(--primary);
-  color: var(--primary);
-  padding: 0.3rem 0.8rem;
-  border-radius: 20px;
-  font-weight: 600;
-  font-size: 0.85rem;
-  cursor: pointer;
-  transition: 0.2s;
-  margin-right: 0.4rem;
-}
+.editBtn, .deleteCarBtn { background: transparent; border: 1.5px solid var(--primary); color: var(--primary); padding: 0.3rem 0.8rem; border-radius: 20px; font-weight: 600; font-size: 0.85rem; cursor: pointer; transition: 0.2s; margin-right: 0.4rem; }
 .editBtn:hover { background: var(--primary); color: white; }
 .deleteCarBtn { border-color: #D32F2F; color: #D32F2F; }
 .deleteCarBtn:hover { background: #D32F2F; color: white; }
 
-.actionsCell { display: flex; gap: 0.5rem; }
+/* ========================
+   КРУГОВАЯ ДИАГРАММА
+   ======================== */
+.pieChartContainer { display: flex; flex-direction: row; align-items: center; gap: 1.5rem; flex-wrap: wrap; }
+.pieLegend { display: flex; flex-direction: column; gap: 0.8rem; min-width: 150px; }
+.legendItem { display: flex; align-items: center; gap: 0.6rem; font-size: 0.9rem; color: var(--text); }
+.legendColor { width: 14px; height: 14px; border-radius: 4px; flex-shrink: 0; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+.legendText { font-weight: 500; white-space: nowrap; color: var(--text); }
+.pieChart { flex: 1; min-width: 200px; max-width: 350px; margin: 0 auto; }
+.pieSvg { width: 100%; height: auto; max-height: 300px; }
+.pieSlice { transition: opacity 0.2s, transform 0.2s; cursor: pointer; transform-origin: 80px 80px; }
+.pieSlice:hover { opacity: 0.85; transform: scale(1.03); }
 
-@media (max-width: 768px) {
-  .analyticsGrid { grid-template-columns: 1fr; }
-  .histogramLabel { width: 70px; font-size: 0.8rem; }
+/* ========================
+   ОБЪЁМНЫЕ СТОЛБЦЫ (СТАТУСЫ КРЕДИТОВ)
+   ======================== */
+.columnChart { display: flex; justify-content: space-around; align-items: flex-end; height: 220px; padding: 0 0.5rem; gap: 1rem; }
+.columnItem { flex: 1; max-width: 100px; display: flex; flex-direction: column; align-items: center; height: 100%; justify-content: flex-end; transition: transform 0.3s; }
+.columnItem:hover { transform: translateY(-8px); }
+.columnValue { font-size: 1.2rem; font-weight: 700; color: var(--text); margin-bottom: 0.4rem; transition: all 0.3s; }
+.columnItem:hover .columnValue { color: var(--primary); transform: scale(1.1); }
+.columnBar { width: 100%; height: 160px; background: rgba(128,128,128,0.15); border-radius: 8px 8px 0 0; overflow: hidden; display: flex; flex-direction: column; justify-content: flex-end; box-shadow: inset 0 2px 4px rgba(0,0,0,0.1); transition: box-shadow 0.3s; }
+.columnItem:hover .columnBar { box-shadow: inset 0 2px 4px rgba(0,0,0,0.1), 0 8px 25px rgba(0,0,0,0.15); }
+.columnFill { width: 100%; border-radius: 8px 8px 0 0; position: relative; transition: height 0.5s ease, box-shadow 0.3s; background: var(--bar-color); box-shadow: 0 0 10px var(--bar-color); }
+.columnItem:hover .columnFill { box-shadow: 0 0 20px var(--bar-color), 0 8px 25px rgba(0,0,0,0.2); }
+.columnTop { position: absolute; top: -8px; left: 0; width: 100%; height: 0; border-left: 8px solid transparent; border-right: 8px solid transparent; border-bottom: 8px solid var(--bar-color); opacity: 0.9; }
+.columnLabel { font-size: 0.8rem; font-weight: 600; color: var(--text); margin-top: 0.5rem; text-align: center; transition: color 0.3s; }
+.columnItem:hover .columnLabel { color: var(--primary); }
+
+/* ========================
+   ФИНАЛЬНЫЙ ФИКС СТОЛБЦА ДЕЙСТВИЙ
+   ======================== */
+.actionsCell {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex-wrap: nowrap;
+}
+.actionsCell .approveBtn,
+.actionsCell .rejectBtn,
+.actionsCell .editBtn,
+.actionsCell .deleteCarBtn {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+.table th:last-child,
+.table td:last-child {
+  min-width: 180px;
+}
+
+@media (max-width: 600px) {
+  .columnChart { height: 180px; gap: 0.5rem; }
+  .columnValue { font-size: 1rem; }
+  .columnLabel { font-size: 0.7rem; }
+  .actionsCell {
+    flex-wrap: wrap;
+  }
+  .table th:last-child,
+  .table td:last-child {
+    min-width: auto;
+  }
 }
