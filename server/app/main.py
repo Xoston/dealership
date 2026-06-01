@@ -28,8 +28,13 @@ app.add_middleware(
 
 app.add_middleware(GZipMiddleware, minimum_size=1000)
 
+# Раздача статических файлов из папки uploads
 os.makedirs("uploads", exist_ok=True)
 app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
+
+# Раздача статических файлов из папки images (исправление ошибки 404 для картинок машин и заглушек)
+os.makedirs("images", exist_ok=True)
+app.mount("/images", StaticFiles(directory="images"), name="images")
 
 file_logger = FileLoggerObserver("audit.log")
 event_manager.subscribe(file_logger)

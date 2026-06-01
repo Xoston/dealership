@@ -220,6 +220,14 @@
   color: white;
 }
 
+/* Комментарий администратора к заявке */
+.comment {
+  font-style: italic;
+  opacity: 0.8;
+  margin-top: 0.3rem;
+  color: var(--text);
+}
+
 /* Адаптивность */
 @media (max-width: 600px) {
   .favoritesGrid {

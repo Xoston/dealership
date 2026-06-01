@@ -1,6 +1,6 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Body
 from .. import schemas, crud
-from ..dependencies import get_current_user
+from ..dependencies import get_current_user, get_current_admin_or_manager
 from ..patterns.facade import LoanCalculatorFacade
 from ..patterns.strategy import AnnuityStrategy
 from ..audit import event_manager
@@ -26,3 +26,21 @@ def calculate_loan(loan_data: schemas.LoanCalculateRequest,
 @router.get("/my", response_model=List[schemas.LoanApplicationOut])
 def my_loans(current_user=Depends(get_current_user)):
     return crud.get_user_loan_applications(current_user["id"])
+
+@router.get("/all", response_model=List[schemas.LoanApplicationOut])
+def all_loans(current_user=Depends(get_current_admin_or_manager)):
+    return crud.get_all_loan_applications()
+
+@router.put("/{loan_id}/status", response_model=schemas.LoanApplicationOut)
+def update_loan_status(loan_id: int, payload: dict = Body(...), current_user=Depends(get_current_admin_or_manager)):
+    status = payload.get("status")
+    comment = payload.get("comment", "")
+    if not status:
+        raise HTTPException(status_code=400, detail="Статус обязателен к заполнению")
+        
+    loan = crud.update_loan_status(loan_id, status, comment)
+    if not loan:
+        raise HTTPException(status_code=404, detail="Кредитная заявка не найдена")
+        
+    event_manager.notify("LOAN_STATUS_UPDATED", {"loan_id": loan_id, "status": status})
+    return loan

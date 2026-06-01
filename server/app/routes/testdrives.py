@@ -23,16 +23,25 @@ def my_testdrives(current_user=Depends(get_current_user)):
 def all_testdrives(current_user=Depends(get_current_admin_or_manager)):
     return crud.get_all_test_drives()
 
-# ---------- Отзыв после тест-драйва ----------
+@router.put("/{td_id}/status", response_model=schemas.TestDriveRequestOut)
+def update_test_drive_status(td_id: int, payload: dict = Body(...), current_user=Depends(get_current_admin_or_manager)):
+    status = payload.get("status")
+    comment = payload.get("comment", "")
+    if not status:
+        raise HTTPException(status_code=400, detail="Статус обязателен к заполнению")
+    
+    td = crud.update_test_drive_status(td_id, status, comment)
+    if not td:
+        raise HTTPException(status_code=404, detail="Заявка на тест-драйв не найдена")
+        
+    event_manager.notify("TESTDRIVE_STATUS_UPDATED", {"td_id": td_id, "status": status})
+    return td
+
 @router.post("/review")
 def submit_review(payload: dict = Body(...), current_user=Depends(get_current_user)):
     test_drive_id = payload.get("test_drive_id")
     rating = payload.get("rating")
     comment = payload.get("comment", "")
     if not test_drive_id or not rating:
-        raise HTTPException(status_code=400, detail="test_drive_id and rating are required")
-    if not 1 <= rating <= 5:
-        raise HTTPException(status_code=400, detail="Rating must be between 1 and 5")
-    review = crud.create_review(current_user["id"], test_drive_id, rating, comment)
-    event_manager.notify("REVIEW_SUBMITTED", {"user": current_user["email"], "test_drive_id": test_drive_id})
-    return review
+        raise HTTPException(status_code=400, detail="test_drive_id и rating обязательны")
+    return crud.create_review(current_user["id"], test_drive_id, rating, comment)

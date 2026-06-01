@@ -159,9 +159,15 @@ const AdminPanel = () => {
   const [currentAction, setCurrentAction] = useState(null);
   const [loanComment, setLoanComment] = useState('');
 
+  // ---------- Модальное окно комментария ТЕСТ-ДРАЙВА ----------
+  const [testDriveCommentModal, setTestDriveCommentModal] = useState(false);
+  const [currentTestDriveId, setCurrentTestDriveId] = useState(null);
+  const [currentTestDriveAction, setCurrentTestDriveAction] = useState(null);
+  const [testDriveComment, setTestDriveComment] = useState('');
+
   // ---------- Фотографии ----------
-  const [newPhotos, setNewPhotos] = useState([]);           // только что загруженные (url)
-  const [existingPhotos, setExistingPhotos] = useState([]); // уже привязанные к авто (объекты {id, image_url})
+  const [newPhotos, setNewPhotos] = useState([]);
+  const [existingPhotos, setExistingPhotos] = useState([]);
   const fileInputRef = useRef(null);
 
   // ================= ЗАГРУЗКА ДАННЫХ =================
@@ -243,8 +249,7 @@ const AdminPanel = () => {
       acceleration: '', max_speed: '', clearance: '', seats: ''
     });
     setFieldErrors({}); setFormError('');
-    setNewPhotos([]);
-    setExistingPhotos([]);
+    setNewPhotos([]); setExistingPhotos([]);
     setShowFormModal(true);
   };
 
@@ -262,25 +267,19 @@ const AdminPanel = () => {
     });
     setFieldErrors({}); setFormError('');
     setNewPhotos([]);
-    // Загружаем существующие изображения
     try {
       const res = await api.get(`/cars/${car.id}/images`);
       setExistingPhotos(res.data);
-      // Если основное фото не задано, но есть изображения, делаем первое основным
       if (!car.image_url && res.data.length > 0) {
         setCarForm(prev => ({ ...prev, image_url: res.data[0].image_url }));
       }
-    } catch {
-      setExistingPhotos([]);
-    }
+    } catch { setExistingPhotos([]); }
     setShowFormModal(true);
   };
 
   const closeFormModal = () => {
-    setShowFormModal(false);
-    setEditingCar(null);
-    setNewPhotos([]);
-    setExistingPhotos([]);
+    setShowFormModal(false); setEditingCar(null);
+    setNewPhotos([]); setExistingPhotos([]);
   };
 
   const selectBrand = (brand) => {
@@ -319,7 +318,6 @@ const AdminPanel = () => {
     return Object.keys(errors).length === 0;
   };
 
-  // ---------- Загрузка новых фото ----------
   const handleMultiplePhotos = async (e) => {
     const files = Array.from(e.target.files);
     if (!files.length) return;
@@ -334,19 +332,14 @@ const AdminPanel = () => {
     }
     if (newUrls.length > 0) {
       setNewPhotos(prev => [...prev, ...newUrls]);
-      // Автоматически делаем основным первое новое фото, если ещё нет ни одного основного
       if (!carForm.image_url && existingPhotos.length === 0) {
         setCarForm(prev => ({ ...prev, image_url: newUrls[0] }));
       }
     }
-    setUploading(false);
-    e.target.value = '';
+    setUploading(false); e.target.value = '';
   };
 
-  // Сделать фото основным при клике
-  const setAsMainPhoto = (url) => {
-    setCarForm(prev => ({ ...prev, image_url: url }));
-  };
+  const setAsMainPhoto = (url) => setCarForm(prev => ({ ...prev, image_url: url }));
 
   const removeNewPhoto = (url) => {
     setNewPhotos(prev => prev.filter(u => u !== url));
@@ -368,19 +361,14 @@ const AdminPanel = () => {
         const newMain = updatedExisting.length > 0 ? updatedExisting[0].image_url : (newPhotos[0] || '');
         setCarForm(prev => ({ ...prev, image_url: newMain }));
       }
-    } catch (err) {
-      alert('Не удалось удалить изображение');
-    }
+    } catch (err) { alert('Не удалось удалить изображение'); }
   };
 
-  // ================= ОТПРАВКА ФОРМЫ =================
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validateForm() || submitting) return;
-    setFormError('');
-    setSubmitting(true);
+    setFormError(''); setSubmitting(true);
 
-    // Гарантируем, что image_url не пустой, если есть изображения
     let mainImage = carForm.image_url;
     if (!mainImage) {
       if (existingPhotos.length > 0) mainImage = existingPhotos[0].image_url;
@@ -404,11 +392,8 @@ const AdminPanel = () => {
     try {
       if (editingCar) {
         await api.put(`/cars/${editingCar.id}`, payload);
-        // Добавляем новые фото (кроме того, что уже стало основным)
         for (const url of newPhotos) {
-          if (url !== mainImage) {
-            await api.post(`/cars/${editingCar.id}/images`, { image_url: url });
-          }
+          if (url !== mainImage) await api.post(`/cars/${editingCar.id}/images`, { image_url: url });
         }
         const updatedCar = (await api.get(`/cars/${editingCar.id}`)).data;
         setCars(prev => prev.map(c => c.id === editingCar.id ? updatedCar : c));
@@ -416,9 +401,7 @@ const AdminPanel = () => {
         const res = await api.post('/cars/', payload);
         const carId = res.data.id;
         for (const url of newPhotos) {
-          if (url !== mainImage) {
-            await api.post(`/cars/${carId}/images`, { image_url: url });
-          }
+          if (url !== mainImage) await api.post(`/cars/${carId}/images`, { image_url: url });
         }
         setCars(prev => [...prev, res.data]);
       }
@@ -428,26 +411,18 @@ const AdminPanel = () => {
       if (Array.isArray(detail)) setFormError(detail.map(e => e.msg).join('. '));
       else if (typeof detail === 'string') setFormError(detail);
       else setFormError('Ошибка сервера');
-    } finally {
-      setSubmitting(false);
-    }
+    } finally { setSubmitting(false); }
   };
 
-  // ================= ПОЛЬЗОВАТЕЛИ =================
+  // ================= ПОЛЬЗОВАТЕЛИ / АВТО / КРЕДИТЫ =================
   const handleDeleteUser = async (userId) => { if (window.confirm('Удалить пользователя?')) { await api.delete(`/admin/users/${userId}`); setUsers(prev => prev.filter(u => u.id !== userId)); } };
   const handleRoleChange = async (userId, newRole) => { await api.put(`/admin/users/${userId}/role`, { role: newRole }); setUsers(prev => prev.map(u => u.id === userId ? { ...u, role: newRole } : u)); };
-
-  // ================= АВТОМОБИЛИ =================
   const handleDeleteCar = async (carId) => { if (window.confirm('Удалить автомобиль?')) { await api.delete(`/cars/${carId}`); setCars(prev => prev.filter(c => c.id !== carId)); } };
 
-  // ================= КРЕДИТЫ =================
   const openLoanComment = (loanId, action) => {
-    setCurrentLoanId(loanId);
-    setCurrentAction(action);
-    setLoanComment('');
-    setLoanCommentModal(true);
+    setCurrentLoanId(loanId); setCurrentAction(action);
+    setLoanComment(''); setLoanCommentModal(true);
   };
-
   const submitLoanStatus = async () => {
     try {
       await api.put(`/admin/loans/${currentLoanId}/status`, { status: currentAction, comment: loanComment });
@@ -456,7 +431,30 @@ const AdminPanel = () => {
     } catch (err) { alert('Ошибка обновления статуса'); }
   };
 
-  const handleTestDriveStatus = async (tdId, status) => { try { await api.put(`/admin/testdrives/${tdId}/status`, { status }); setTestDrives(prev => prev.map(td => td.id === tdId ? { ...td, status } : td)); } catch (err) { alert('Ошибка обновления статуса'); } };
+  // ================= ТЕСТ-ДРАЙВЫ =================
+  const openTestDriveComment = (tdId, action) => {
+    setCurrentTestDriveId(tdId);
+    setCurrentTestDriveAction(action);
+    setTestDriveComment('');
+    setTestDriveCommentModal(true);
+  };
+
+  const submitTestDriveStatus = async () => {
+    try {
+      await api.put(`/admin/testdrives/${currentTestDriveId}/status`, {
+        status: currentTestDriveAction,
+        comment: testDriveComment,
+      });
+      setTestDrives(prev =>
+        prev.map(td =>
+          td.id === currentTestDriveId
+            ? { ...td, status: currentTestDriveAction, admin_comment: testDriveComment }
+            : td
+        )
+      );
+      setTestDriveCommentModal(false);
+    } catch (err) { alert('Ошибка обновления статуса'); }
+  };
 
   if (loading) return <div className={styles.loading}>Загрузка...</div>;
 
@@ -471,11 +469,10 @@ const AdminPanel = () => {
     return true;
   }).sort((a, b) => {
     if (!carSortKey) return 0;
-    const valA = a[carSortKey];
-    const valB = b[carSortKey];
+    const valA = a[carSortKey], valB = b[carSortKey];
     if (typeof valA === 'string' && typeof valB === 'string') return carSortDir === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
-    if (valA === null || valA === undefined) return 1;
-    if (valB === null || valB === undefined) return -1;
+    if (valA == null) return 1;
+    if (valB == null) return -1;
     return carSortDir === 'asc' ? valA - valB : valB - valA;
   });
 
@@ -483,7 +480,6 @@ const AdminPanel = () => {
     if (carSortKey === key) setCarSortDir(prev => prev === 'asc' ? 'desc' : 'asc');
     else { setCarSortKey(key); setCarSortDir('asc'); }
   };
-
   const resetCarFilters = () => {
     setCarSearch(''); setCarMinPrice(''); setCarMaxPrice('');
     setCarMinYear(''); setCarMaxYear(''); setCarSortKey(''); setCarSortDir('asc');
@@ -507,14 +503,12 @@ const AdminPanel = () => {
       <h2 className={styles.title}>Админ-панель</h2>
       <div className={styles.tabs}>
         {tabs.map(tab => (
-          <button key={tab.key} className={`${styles.tab} ${activeTab === tab.key ? styles.active : ''}`} onClick={() => setActiveTab(tab.key)}>
-            {tab.label}
-          </button>
+          <button key={tab.key} className={`${styles.tab} ${activeTab === tab.key ? styles.active : ''}`} onClick={() => setActiveTab(tab.key)}>{tab.label}</button>
         ))}
       </div>
 
       <div className={styles.content}>
-        {/* ---------- ДАШБОРД ---------- */}
+        {/* ===== ДАШБОРД ===== */}
         {activeTab === 'dashboard' && stats && (
           <>
             <div className={styles.dashboard}>
@@ -605,6 +599,11 @@ const AdminPanel = () => {
                       <div className={styles.recentMeta}>
                         {loan.user_email} · {loan.status === 'calculated' ? 'Рассчитана' : loan.status === 'approved' ? 'Одобрена' : 'Отклонена'}
                         {loan.created_at && <span> · {new Date(loan.created_at).toLocaleDateString()}</span>}
+                        {(loan.admin_comment || loan.comment) && (
+                          <div style={{ marginTop: '0.3rem', color: 'var(--primary)', fontStyle: 'italic', fontSize: '0.85rem' }}>
+                            ➡ {loan.admin_comment || loan.comment}
+                          </div>
+                        )}
                       </div>
                     </li>
                   ))}
@@ -658,7 +657,7 @@ const AdminPanel = () => {
                         }
                         return { offset: endAngle, elements: acc.elements };
                       }, { offset: 0, elements: [] }).elements}
-                      <circle cx="80" cy="80" r="35" fill="white" />
+                      <circle cx="80" cy="80" r="35" fill="var(--bg)" />
                       <text x="80" y="75" textAnchor="middle" fill="var(--primary)" fontSize="12" fontWeight="bold">Всего</text>
                       <text x="80" y="92" textAnchor="middle" fill="var(--text)" fontSize="16" fontWeight="bold">
                         {dashboardMetrics.carsByBrand.slice(0, 6).reduce((sum, item) => sum + item.count, 0)}
@@ -671,22 +670,37 @@ const AdminPanel = () => {
               {/* Ожидающие тест-драйвы (кликабельные) */}
               <div className={styles.analyticsBlock}>
                 <h3 className={styles.blockTitle}>Тест‑драйвы (ожидают)</h3>
-                <span
+                <motion.span
                   className={styles.pendingTdCount}
                   onClick={() => setActiveTab('testdrives')}
                   title="Перейти к тест‑драйвам"
                   role="button"
                   tabIndex={0}
                   onKeyDown={(e) => e.key === 'Enter' && setActiveTab('testdrives')}
+                  
+                  animate={{
+                    y: [0, -6, 0],
+                  }}
+                  transition={{
+                    duration: 2,
+                    repeat: Infinity,
+                    ease: "easeInOut"
+                  }}
+                  whileHover={{ 
+                    scale: 1.15,
+                    rotate: [0, -5, 5, -5, 0],
+                    transition: { duration: 0.4 }
+                  }}
+                  whileTap={{ scale: 0.95 }}
                 >
                   {testDrives.filter(td => td.status === 'pending').length}
-                </span>
+                </motion.span>
               </div>
-            </div>{/* Закрытие analyticsGrid */}
+            </div>
           </>
         )}
 
-        {/* ---------- ПОЛЬЗОВАТЕЛИ ---------- */}
+        {/* ===== ПОЛЬЗОВАТЕЛИ ===== */}
         {activeTab === 'users' && user.role === 'admin' && (
           <div>
             <table className={styles.table}>
@@ -708,7 +722,7 @@ const AdminPanel = () => {
           </div>
         )}
 
-        {/* ---------- АВТОМОБИЛИ ---------- */}
+        {/* ===== АВТОМОБИЛИ ===== */}
         {activeTab === 'cars' && (
           <div>
             <button className={styles.addBtn} onClick={openAddForm}>Добавить автомобиль</button>
@@ -746,7 +760,7 @@ const AdminPanel = () => {
           </div>
         )}
 
-        {/* ---------- ТЕСТ-ДРАЙВЫ ---------- */}
+        {/* ===== ТЕСТ-ДРАЙВЫ ===== */}
         {activeTab === 'testdrives' && (
           <div>
             <table className={styles.table}>
@@ -756,8 +770,24 @@ const AdminPanel = () => {
                   <tr key={td.id}>
                     <td>{td.id}</td><td>{td.user_id}</td><td>{td.car_id}</td>
                     <td>{new Date(td.preferred_date).toLocaleString()}</td>
-                    <td><span className={`${styles.status} ${td.status === 'approved' ? styles.approved : td.status === 'rejected' ? styles.rejected : styles.pending}`}>{td.status === 'approved' ? 'Одобрена' : td.status === 'rejected' ? 'Отклонена' : 'Ожидает'}</span></td>
-                    <td className={styles.actionsCell}>{td.status === 'pending' && (<><button className={styles.approveBtn} onClick={() => handleTestDriveStatus(td.id, 'approved')}>Одобрить</button><button className={styles.rejectBtn} onClick={() => handleTestDriveStatus(td.id, 'rejected')}>Отклонить</button></>)}</td>
+                    <td>
+                      <span className={`${styles.status} ${td.status === 'approved' ? styles.approved : td.status === 'rejected' ? styles.rejected : styles.pending}`}>
+                        {td.status === 'approved' ? 'Одобрена' : td.status === 'rejected' ? 'Отклонена' : 'Ожидает'}
+                      </span>
+                      {(td.admin_comment || td.comment) && (
+                        <div style={{ fontSize: '0.85rem', opacity: 0.7, marginTop: '0.4rem', whiteSpace: 'normal', maxWidth: '200px', wordBreak: 'break-word' }}>
+                          💬 {td.admin_comment || td.comment}
+                        </div>
+                      )}
+                    </td>
+                    <td className={styles.actionsCell}>
+                      {td.status === 'pending' && (
+                        <>
+                          <button className={styles.approveBtn} onClick={() => openTestDriveComment(td.id, 'approved')}>Одобрить</button>
+                          <button className={styles.rejectBtn} onClick={() => openTestDriveComment(td.id, 'rejected')}>Отклонить</button>
+                        </>
+                      )}
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -765,7 +795,7 @@ const AdminPanel = () => {
           </div>
         )}
 
-        {/* ---------- КРЕДИТЫ ---------- */}
+        {/* ===== КРЕДИТЫ ===== */}
         {activeTab === 'loans' && (
           <div>
             <table className={styles.table}>
@@ -775,8 +805,24 @@ const AdminPanel = () => {
                   <tr key={loan.id}>
                     <td>{loan.id}</td><td>{loan.user_email}</td><td>{loan.brand} {loan.model}</td>
                     <td>{loan.amount?.toLocaleString()} ₽</td><td>{loan.term_months} мес.</td><td>{loan.monthly_payment?.toLocaleString()} ₽</td>
-                    <td><span className={`${styles.status} ${loan.status === 'approved' ? styles.approved : loan.status === 'rejected' ? styles.rejected : styles.pending}`}>{loan.status === 'approved' ? 'Одобрена' : loan.status === 'rejected' ? 'Отклонена' : 'Рассчитана'}</span></td>
-                    <td className={styles.actionsCell}>{loan.status === 'calculated' && (<><button className={styles.approveBtn} onClick={() => openLoanComment(loan.id, 'approved')}>Одобрить</button><button className={styles.rejectBtn} onClick={() => openLoanComment(loan.id, 'rejected')}>Отклонить</button></>)}</td>
+                    <td>
+                      <span className={`${styles.status} ${loan.status === 'approved' ? styles.approved : loan.status === 'rejected' ? styles.rejected : styles.pending}`}>
+                        {loan.status === 'approved' ? 'Одобрена' : loan.status === 'rejected' ? 'Отклонена' : 'Рассчитана'}
+                      </span>
+                      {(loan.admin_comment || loan.comment) && (
+                        <div style={{ fontSize: '0.85rem', opacity: 0.7, marginTop: '0.4rem', whiteSpace: 'normal', maxWidth: '200px', wordBreak: 'break-word' }}>
+                          💬 {loan.admin_comment || loan.comment}
+                        </div>
+                      )}
+                    </td>
+                    <td className={styles.actionsCell}>
+                      {loan.status === 'calculated' && (
+                        <>
+                          <button className={styles.approveBtn} onClick={() => openLoanComment(loan.id, 'approved')}>Одобрить</button>
+                          <button className={styles.rejectBtn} onClick={() => openLoanComment(loan.id, 'rejected')}>Отклонить</button>
+                        </>
+                      )}
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -797,9 +843,25 @@ const AdminPanel = () => {
             </AnimatePresence>
           </div>
         )}
+
+        {/* ===== МОДАЛЬНОЕ ОКНО КОММЕНТАРИЯ ТЕСТ-ДРАЙВА ===== */}
+        <AnimatePresence>
+          {testDriveCommentModal && (
+            <motion.div className={styles.modalOverlay} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setTestDriveCommentModal(false)}>
+              <motion.div className={styles.loanCommentModal} initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} onClick={e => e.stopPropagation()}>
+                <h3>{currentTestDriveAction === 'approved' ? 'Одобрение' : 'Отклонение'} тест‑драйва</h3>
+                <textarea rows="3" placeholder="Введите комментарий (необязательно)..." value={testDriveComment} onChange={(e) => setTestDriveComment(e.target.value)} className={styles.loanCommentTextarea} />
+                <div className={styles.loanCommentButtons}>
+                  <button className={styles.submitBtn} onClick={submitTestDriveStatus}>Подтвердить</button>
+                  <button className={styles.cancelBtn} onClick={() => setTestDriveCommentModal(false)}>Отмена</button>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
-      {/* Модальное окно формы */}
+      {/* ===== МОДАЛЬНОЕ ОКНО ФОРМЫ АВТО (ПОЛНОСТЬЮ ВОССТАНОВЛЕНО) ===== */}
       <AnimatePresence>
         {showFormModal && (
           <motion.div className={styles.modalOverlay} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={closeFormModal}>
@@ -823,33 +885,33 @@ const AdminPanel = () => {
                   <div className={styles.formRow}>
                     <div className={styles.formGroup}>
                       <label>Год выпуска *</label>
-                      <input type="number" value={carForm.year} onChange={e => setCarForm({...carForm, year: e.target.value})} placeholder="Например, 2024" className={fieldErrors.year ? styles.inputError : ''} />
+                      <input type="number" value={carForm.year} onChange={e => setCarForm({ ...carForm, year: e.target.value })} placeholder="Например, 2024" className={fieldErrors.year ? styles.inputError : ''} />
                       {fieldErrors.year && <span className={styles.errorMsg}>{fieldErrors.year}</span>}
                     </div>
                     <div className={styles.formGroup}>
                       <label>Цена (₽) *</label>
-                      <input type="number" value={carForm.price} onChange={e => setCarForm({...carForm, price: e.target.value})} placeholder="Например, 15000000" className={fieldErrors.price ? styles.inputError : ''} />
+                      <input type="number" value={carForm.price} onChange={e => setCarForm({ ...carForm, price: e.target.value })} placeholder="Например, 15000000" className={fieldErrors.price ? styles.inputError : ''} />
                       {fieldErrors.price && <span className={styles.errorMsg}>{fieldErrors.price}</span>}
                     </div>
                   </div>
                   <div className={styles.formGroup}>
                     <label>Описание</label>
-                    <textarea value={carForm.description} onChange={e => setCarForm({...carForm, description: e.target.value})} rows="2" placeholder="Краткое описание" />
+                    <textarea value={carForm.description} onChange={e => setCarForm({ ...carForm, description: e.target.value })} rows="2" placeholder="Краткое описание" />
                   </div>
                   <div className={styles.formRow}>
                     <div className={styles.formGroup}>
                       <label>Тип кузова</label>
-                      <select value={carForm.body_type} onChange={e => setCarForm({...carForm, body_type: e.target.value})}>
+                      <select value={carForm.body_type} onChange={e => setCarForm({ ...carForm, body_type: e.target.value })}>
                         {Object.entries(bodyTypesRussian).map(([key, label]) => (<option key={key} value={key}>{label}</option>))}
                       </select>
                     </div>
                     <div className={styles.formGroup}>
                       <label>Рестайлинг</label>
                       <label className={styles.checkboxLabel}>
-                        <div className={`${styles.toggleSwitch} ${carForm.restyling ? styles.toggleActive : ''}`} onClick={() => setCarForm({...carForm, restyling: !carForm.restyling})}>
+                        <div className={`${styles.toggleSwitch} ${carForm.restyling ? styles.toggleActive : ''}`} onClick={() => setCarForm({ ...carForm, restyling: !carForm.restyling })}>
                           <div className={styles.toggleKnob} />
                         </div>
-                        <input type="checkbox" checked={carForm.restyling} onChange={e => setCarForm({...carForm, restyling: e.target.checked})} style={{ display: 'none' }} />
+                        <input type="checkbox" checked={carForm.restyling} onChange={e => setCarForm({ ...carForm, restyling: e.target.checked })} style={{ display: 'none' }} />
                         <span>{carForm.restyling ? 'Да' : 'Нет'}</span>
                       </label>
                     </div>
@@ -857,16 +919,16 @@ const AdminPanel = () => {
                   <details className={styles.techDetails}>
                     <summary>Технические характеристики</summary>
                     <div className={styles.specsGrid}>
-                      <div className={styles.formGroup}><label>Объём двигателя, л</label><select value={carForm.engine_volume || ''} onChange={e => setCarForm({...carForm, engine_volume: e.target.value})}><option value="">—</option>{engineVolumes.map(v => <option key={v} value={v}>{v}</option>)}</select></div>
-                      <div className={styles.formGroup}><label>Мощность, л.с.</label><select value={carForm.power || ''} onChange={e => setCarForm({...carForm, power: e.target.value})}><option value="">—</option>{powers.map(v => <option key={v} value={v}>{v}</option>)}</select></div>
-                      <div className={styles.formGroup}><label>Топливо</label><select value={carForm.fuel_type || ''} onChange={e => setCarForm({...carForm, fuel_type: e.target.value})}><option value="">—</option>{fuelTypes.map(v => <option key={v} value={v}>{{ petrol:'Бензин', diesel:'Дизель', hybrid:'Гибрид', electric:'Электро' }[v] || v}</option>)}</select></div>
-                      <div className={styles.formGroup}><label>Расход, л/100км</label><select value={carForm.consumption || ''} onChange={e => setCarForm({...carForm, consumption: e.target.value})}><option value="">—</option>{[5.0,6.0,7.0,8.0,9.0,10.0,12.0,15.0].map(v => <option key={v} value={v}>{v}</option>)}</select></div>
-                      <div className={styles.formGroup}><label>Привод</label><select value={carForm.drive_type || ''} onChange={e => setCarForm({...carForm, drive_type: e.target.value})}><option value="">—</option>{driveTypes.map(v => <option key={v} value={v}>{{ FWD:'Передний', RWD:'Задний', AWD:'Полный' }[v] || v}</option>)}</select></div>
-                      <div className={styles.formGroup}><label>Коробка передач</label><select value={carForm.transmission || ''} onChange={e => setCarForm({...carForm, transmission: e.target.value})}><option value="">—</option>{transmissions.map(v => <option key={v} value={v}>{{ manual:'Механика', automatic:'Автомат', robot:'Робот', variator:'Вариатор' }[v] || v}</option>)}</select></div>
-                      <div className={styles.formGroup}><label>Разгон 0-100 км/ч, с</label><select value={carForm.acceleration || ''} onChange={e => setCarForm({...carForm, acceleration: e.target.value})}><option value="">—</option>{accelerations.map(v => <option key={v} value={v}>{v}</option>)}</select></div>
-                      <div className={styles.formGroup}><label>Макс. скорость, км/ч</label><select value={carForm.max_speed || ''} onChange={e => setCarForm({...carForm, max_speed: e.target.value})}><option value="">—</option>{maxSpeeds.map(v => <option key={v} value={v}>{v}</option>)}</select></div>
-                      <div className={styles.formGroup}><label>Клиренс, мм</label><select value={carForm.clearance || ''} onChange={e => setCarForm({...carForm, clearance: e.target.value})}><option value="">—</option>{clearances.map(v => <option key={v} value={v}>{v}</option>)}</select></div>
-                      <div className={styles.formGroup}><label>Мест</label><select value={carForm.seats || ''} onChange={e => setCarForm({...carForm, seats: e.target.value})}><option value="">—</option>{seatOptions.map(v => <option key={v} value={v}>{v}</option>)}</select></div>
+                      <div className={styles.formGroup}><label>Объём двигателя, л</label><select value={carForm.engine_volume || ''} onChange={e => setCarForm({ ...carForm, engine_volume: e.target.value })}><option value="">—</option>{engineVolumes.map(v => <option key={v} value={v}>{v}</option>)}</select></div>
+                      <div className={styles.formGroup}><label>Мощность, л.с.</label><select value={carForm.power || ''} onChange={e => setCarForm({ ...carForm, power: e.target.value })}><option value="">—</option>{powers.map(v => <option key={v} value={v}>{v}</option>)}</select></div>
+                      <div className={styles.formGroup}><label>Топливо</label><select value={carForm.fuel_type || ''} onChange={e => setCarForm({ ...carForm, fuel_type: e.target.value })}><option value="">—</option>{fuelTypes.map(v => <option key={v} value={v}>{{ petrol: 'Бензин', diesel: 'Дизель', hybrid: 'Гибрид', electric: 'Электро' }[v] || v}</option>)}</select></div>
+                      <div className={styles.formGroup}><label>Расход, л/100км</label><select value={carForm.consumption || ''} onChange={e => setCarForm({ ...carForm, consumption: e.target.value })}><option value="">—</option>{[5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 12.0, 15.0].map(v => <option key={v} value={v}>{v}</option>)}</select></div>
+                      <div className={styles.formGroup}><label>Привод</label><select value={carForm.drive_type || ''} onChange={e => setCarForm({ ...carForm, drive_type: e.target.value })}><option value="">—</option>{driveTypes.map(v => <option key={v} value={v}>{{ FWD: 'Передний', RWD: 'Задний', AWD: 'Полный' }[v] || v}</option>)}</select></div>
+                      <div className={styles.formGroup}><label>Коробка передач</label><select value={carForm.transmission || ''} onChange={e => setCarForm({ ...carForm, transmission: e.target.value })}><option value="">—</option>{transmissions.map(v => <option key={v} value={v}>{{ manual: 'Механика', automatic: 'Автомат', robot: 'Робот', variator: 'Вариатор' }[v] || v}</option>)}</select></div>
+                      <div className={styles.formGroup}><label>Разгон 0-100 км/ч, с</label><select value={carForm.acceleration || ''} onChange={e => setCarForm({ ...carForm, acceleration: e.target.value })}><option value="">—</option>{accelerations.map(v => <option key={v} value={v}>{v}</option>)}</select></div>
+                      <div className={styles.formGroup}><label>Макс. скорость, км/ч</label><select value={carForm.max_speed || ''} onChange={e => setCarForm({ ...carForm, max_speed: e.target.value })}><option value="">—</option>{maxSpeeds.map(v => <option key={v} value={v}>{v}</option>)}</select></div>
+                      <div className={styles.formGroup}><label>Клиренс, мм</label><select value={carForm.clearance || ''} onChange={e => setCarForm({ ...carForm, clearance: e.target.value })}><option value="">—</option>{clearances.map(v => <option key={v} value={v}>{v}</option>)}</select></div>
+                      <div className={styles.formGroup}><label>Мест</label><select value={carForm.seats || ''} onChange={e => setCarForm({ ...carForm, seats: e.target.value })}><option value="">—</option>{seatOptions.map(v => <option key={v} value={v}>{v}</option>)}</select></div>
                     </div>
                   </details>
                   <div className={styles.imagePanel}>

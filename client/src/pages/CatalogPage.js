@@ -205,27 +205,31 @@ const CatalogPage = () => {
     }
   }, [sortedCars, currentPage, totalPages]);
 
-  const toggleCompare = (carId) => {
+  const toggleCompare = (car) => {
     let newList;
-    if (compareList.includes(carId)) {
-      newList = compareList.filter(id => id !== carId);
+    const isAlreadyCompared = compareList.some(item => item.id === car.id);
+    
+    if (isAlreadyCompared) {
+      newList = compareList.filter(item => item.id !== car.id);
     } else {
       if (compareList.length >= 3) {
         alert('Максимум 3 автомобиля для сравнения');
         return;
       }
-      newList = [...compareList, carId];
+      newList = [...compareList, car];
     }
     setCompareList(newList);
     localStorage.setItem('compareList', JSON.stringify(newList));
   };
 
-  const toggleFavorite = (carId) => {
+  const toggleFavorite = (car) => {
     let newFav;
-    if (favorites.includes(carId)) {
-      newFav = favorites.filter(id => id !== carId);
+    const isAlreadyFavorite = favorites.some(item => item.id === car.id);
+
+    if (isAlreadyFavorite) {
+      newFav = favorites.filter(item => item.id !== car.id);
     } else {
-      newFav = [...favorites, carId];
+      newFav = [...favorites, car];
     }
     setFavorites(newFav);
     localStorage.setItem('favorites', JSON.stringify(newFav));
@@ -381,7 +385,6 @@ const CatalogPage = () => {
         <p className={styles.noResults}>По вашему запросу ничего не найдено</p>
       ) : (
         <>
-          {/* Счётчик найденных машин – убран */}
           <div className={styles.grid}>
             {paginatedCars.map((car) => (
               <motion.div
@@ -409,16 +412,9 @@ const CatalogPage = () => {
                 </Link>
 
                 <button
-                  className={`${styles.iconBtn} ${styles.compareBtn} ${compareList.includes(car.id) ? styles.activeIcon : ''}`}
-                  onClick={(e) => { e.preventDefault(); toggleCompare(car.id); }}
-                  title={compareList.includes(car.id) ? 'Убрать из сравнения' : 'Добавить к сравнению'}
-                >
-                  ↓↑
-                </button>
-                <button
-                  className={`${styles.iconBtn} ${styles.favBtn} ${favorites.includes(car.id) ? styles.activeFav : ''}`}
-                  onClick={(e) => { e.preventDefault(); toggleFavorite(car.id); }}
-                  title={favorites.includes(car.id) ? 'Убрать из избранного' : 'Добавить в избранное'}
+                  className={`${styles.iconBtn} ${styles.favBtn} ${favorites.some(item => item.id === car.id) ? styles.activeFav : ''}`}
+                  onClick={(e) => { e.preventDefault(); toggleFavorite(car); }}
+                  title={favorites.some(item => item.id === car.id) ? 'Убрать из избранного' : 'Добавить в избранное'}
                 >
                   🤍
                 </button>
@@ -591,7 +587,6 @@ const CatalogPage = () => {
                   </div>
                 </details>
               </div>
-
               <div className={styles.modalFooter}>
                 <button className={styles.applyBtn} onClick={applyFilters}>Применить</button>
                 <button className={styles.resetBtn} onClick={resetFilters}>Сбросить</button>

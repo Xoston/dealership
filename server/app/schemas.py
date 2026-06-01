@@ -40,7 +40,7 @@ class Token(BaseModel):
     token_type: str = "bearer"
     user: UserOut
 
-# ---------- Cars (остальное без изменений) ----------
+# ---------- Cars ----------
 class CarImageOut(BaseModel):
     id: int
     car_id: int
@@ -137,6 +137,8 @@ class LoanApplicationOut(BaseModel):
     overpayment: float
     status: str
     created_at: datetime
+    # При необходимости можно добавить admin_comment, но сейчас не требуется
+    # admin_comment: Optional[str] = None
 
     model_config = {"from_attributes": True}
 
@@ -160,8 +162,9 @@ class TestDriveRequestOut(BaseModel):
     car_id: int
     preferred_date: datetime
     phone: str
-    message: Optional[str]
+    message: Optional[str] = None
     status: str
     created_at: datetime
+    admin_comment: Optional[str] = None    # <-- добавлено
 
     model_config = {"from_attributes": True}

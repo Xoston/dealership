@@ -4,7 +4,8 @@ import os
 DATABASE_URL = os.environ.get("DATABASE_URL", "dealership.db")
 
 def get_connection():
-    conn = sqlite3.connect(DATABASE_URL)
+    # Добавлен таймаут ожидания освобождения БД (30 сек) и отключена проверка потока для многопоточности FastAPI
+    conn = sqlite3.connect(DATABASE_URL, timeout=30.0, check_same_thread=False)
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA journal_mode=WAL")
     conn.execute("PRAGMA foreign_keys=ON")
@@ -92,7 +93,7 @@ def init_db():
     );
     """)
 
-    # Миграция: добавляем новые столбцы, если их нет
+    # Миграция для таблицы cars: добавляем новые столбцы, если их нет
     new_columns = [
         "engine_volume REAL",
         "power INTEGER",
@@ -112,6 +113,18 @@ def init_db():
             cursor.execute(f"ALTER TABLE cars ADD COLUMN {col_name} {col_type}")
         except sqlite3.OperationalError:
             pass  # колонка уже существует
+
+    # Автоматическая миграция: добавляем admin_comment в test_drive_requests, если его нет
+    try:
+        cursor.execute("ALTER TABLE test_drive_requests ADD COLUMN admin_comment TEXT")
+    except sqlite3.OperationalError:
+        pass
+
+    # Автоматическая миграция: добавляем admin_comment в loan_applications, если его нет
+    try:
+        cursor.execute("ALTER TABLE loan_applications ADD COLUMN admin_comment TEXT")
+    except sqlite3.OperationalError:
+        pass
 
     conn.commit()
     conn.close()

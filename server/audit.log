@@ -179,3 +179,31 @@
 {"timestamp": "2026-05-30T08:24:34.258757", "event": "CAR_UPDATED", "data": {"admin": "admin@luxury.com", "car_id": 3}}
 {"timestamp": "2026-05-30T08:27:21.505691", "event": "USER_LOGIN", "data": {"email": "test@mail.ru"}}
 {"timestamp": "2026-05-30T20:45:34.407559", "event": "USER_LOGIN", "data": {"email": "admin@luxury.com"}}
+{"timestamp": "2026-06-01T11:23:52.766778", "event": "USER_LOGIN", "data": {"email": "admin@luxury.com"}}
+{"timestamp": "2026-06-01T11:32:45.468096", "event": "LOAN_CALCULATED", "data": {"user": "admin@luxury.com", "car_id": 1, "amount": 321321312.0}}
+{"timestamp": "2026-06-01T11:35:18.184807", "event": "PURCHASE_MADE", "data": {"user": "admin@luxury.com", "car_id": 1, "price": 321321312.0}}
+{"timestamp": "2026-06-01T11:54:25.971580", "event": "USER_LOGIN", "data": {"email": "admin@luxury.com"}}
+{"timestamp": "2026-06-01T12:13:49.863959", "event": "TESTDRIVE_REQUESTED", "data": {"user": "admin@luxury.com", "car_id": 1}}
+{"timestamp": "2026-06-01T12:13:53.754771", "event": "LOAN_CALCULATED", "data": {"user": "admin@luxury.com", "car_id": 1, "amount": 321321312.0}}
+{"timestamp": "2026-06-01T12:13:55.357668", "event": "LOAN_CALCULATED", "data": {"user": "admin@luxury.com", "car_id": 1, "amount": 321321312.0}}
+{"timestamp": "2026-06-01T12:20:27.503616", "event": "TESTDRIVE_STATUS_CHANGED", "data": {"admin": "admin@luxury.com", "td_id": 2, "new_status": "approved"}}
+{"timestamp": "2026-06-01T13:25:59.288045", "event": "USER_LOGIN", "data": {"email": "admin@luxury.com"}}
+{"timestamp": "2026-06-01T13:26:47.926512", "event": "TESTDRIVE_REQUESTED", "data": {"user": "admin@luxury.com", "car_id": 2}}
+{"timestamp": "2026-06-01T13:26:53.619502", "event": "TESTDRIVE_STATUS_CHANGED", "data": {"admin": "admin@luxury.com", "td_id": 3, "new_status": "approved"}}
+{"timestamp": "2026-06-01T13:36:06.773168", "event": "TESTDRIVE_REQUESTED", "data": {"user": "admin@luxury.com", "car_id": 3}}
+{"timestamp": "2026-06-01T13:36:13.113270", "event": "TESTDRIVE_STATUS_CHANGED", "data": {"admin": "admin@luxury.com", "td_id": 4, "new_status": "approved"}}
+{"timestamp": "2026-06-01T13:43:52.999489", "event": "TESTDRIVE_REQUESTED", "data": {"user": "admin@luxury.com", "car_id": 2}}
+{"timestamp": "2026-06-01T13:44:01.418916", "event": "TESTDRIVE_STATUS_CHANGED", "data": {"admin": "admin@luxury.com", "td_id": 5, "new_status": "approved"}}
+{"timestamp": "2026-06-01T13:44:18.069334", "event": "TESTDRIVE_REQUESTED", "data": {"user": "admin@luxury.com", "car_id": 3}}
+{"timestamp": "2026-06-01T13:44:28.257116", "event": "TESTDRIVE_STATUS_CHANGED", "data": {"admin": "admin@luxury.com", "td_id": 6, "new_status": "rejected"}}
+{"timestamp": "2026-06-01T14:00:29.191569", "event": "TESTDRIVE_REQUESTED", "data": {"user": "admin@luxury.com", "car_id": 3}}
+{"timestamp": "2026-06-01T14:00:34.653320", "event": "TESTDRIVE_STATUS_CHANGED", "data": {"admin": "admin@luxury.com", "td_id": 7, "new_status": "approved"}}
+{"timestamp": "2026-06-01T14:02:03.815107", "event": "TESTDRIVE_REQUESTED", "data": {"user": "admin@luxury.com", "car_id": 2}}
+{"timestamp": "2026-06-01T14:29:53.926397", "event": "USER_LOGIN", "data": {"email": "admin@luxury.com"}}
+{"timestamp": "2026-06-01T15:08:39.584450", "event": "TESTDRIVE_STATUS_CHANGED", "data": {"admin": "admin@luxury.com", "td_id": 8, "new_status": "approved"}}
+{"timestamp": "2026-06-01T15:20:29.986933", "event": "LOAN_STATUS_CHANGED", "data": {"admin": "admin@luxury.com", "loan_id": 5, "new_status": "rejected"}}
+{"timestamp": "2026-06-01T15:29:30.709824", "event": "LOAN_STATUS_CHANGED", "data": {"admin": "admin@luxury.com", "loan_id": 4, "new_status": "approved"}}
+{"timestamp": "2026-06-01T15:31:57.467415", "event": "USER_LOGIN", "data": {"email": "admin@luxury.com"}}
+{"timestamp": "2026-06-01T19:56:00.146730", "event": "USER_LOGIN", "data": {"email": "admin@luxury.com"}}
+{"timestamp": "2026-06-01T20:04:46.739985", "event": "USER_LOGIN", "data": {"email": "admin@luxury.com"}}
+{"timestamp": "2026-06-01T20:09:46.025015", "event": "USER_LOGIN", "data": {"email": "admin@luxury.com"}}

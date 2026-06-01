@@ -1,28 +1,48 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
 import api, { getImageUrl } from '../services/api';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import ComparePage from './ComparePage';
 import styles from './UserDashboard.module.css';
 
 const UserDashboard = () => {
-  const { user, setUser, notifications, addNotification, clearNotifications } = useAuth();
+  const { user, setUser, notifications, clearNotifications } = useAuth();
   const [activeTab, setActiveTab] = useState('profile');
   const [purchases, setPurchases] = useState([]);
   const [testDrives, setTestDrives] = useState([]);
   const [loans, setLoans] = useState([]);
   const [favorites, setFavorites] = useState([]);
+  const [compareIds, setCompareIds] = useState([]); // Храним только ID выбранных для сравнения авто
   const [loading, setLoading] = useState(true);
+  
+  // Состояния для редактирования профиля
   const [profileForm, setProfileForm] = useState({
     full_name: user?.full_name || '',
     phone: user?.phone || '',
   });
   const [updateStatus, setUpdateStatus] = useState(null);
 
+  // Состояния для отправки отзывов по тест-драйвам
+  const [reviewForm, setReviewForm] = useState({
+    test_drive_id: null,
+    rating: 5,
+    comment: ''
+  });
+
+  const tabs = [
+    { key: 'profile', label: 'Профиль' },
+    { key: 'purchases', label: 'История покупок' },
+    { key: 'testdrives', label: 'Тест-драйвы' },
+    { key: 'loans', label: 'Кредитные заявки' },
+    { key: 'favorites', label: 'Избранное' },
+    { key: 'compare', label: 'Сравнение авто' },
+    { key: 'notifications', label: 'Уведомления' }
+  ];
+
   // ================= ЗАГРУЗКА ДАННЫХ =================
   const fetchData = useCallback(async () => {
     try {
+      setLoading(true);
       const [pRes, tRes, lRes] = await Promise.all([
         api.get('/purchases/my'),
         api.get('/testdrives/my'),
@@ -32,313 +52,454 @@ const UserDashboard = () => {
       setTestDrives(tRes.data);
       setLoans(lRes.data);
 
-      // Избранное
-      const favIds = JSON.parse(localStorage.getItem('favorites') || '[]');
-      if (favIds.length) {
-        const favCars = [];
-        for (const id of favIds) {
-          try {
-            const carRes = await api.get(`/cars/${id}`);
-            favCars.push(carRes.data);
-          } catch (err) { /* автомобиль удалён */ }
-        }
-        setFavorites(favCars);
-      } else {
-        setFavorites([]);
-      }
+      // Читаем Избранное
+      const cachedFavs = JSON.parse(localStorage.getItem('favorites') || '[]');
+      setFavorites(cachedFavs);
 
-      // Проверка статусов для уведомлений
-      const savedLoanStatuses = JSON.parse(localStorage.getItem('loanStatuses') || '{}');
-      const newNotifications = [];
-      lRes.data.forEach(loan => {
-        const prevStatus = savedLoanStatuses[loan.id];
-        if (prevStatus && prevStatus !== loan.status) {
-          const text = loan.status === 'approved' ? `Кредит #${loan.id} одобрен` : `Кредит #${loan.id} отклонён`;
-          newNotifications.push(text);
-        }
-      });
-      const savedTDStatuses = JSON.parse(localStorage.getItem('tdStatuses') || '{}');
-      tRes.data.forEach(td => {
-        const prevStatus = savedTDStatuses[td.id];
-        if (prevStatus && prevStatus !== td.status) {
-          const text = td.status === 'approved' ? `Тест-драйв #${td.id} одобрен` : `Тест-драйв #${td.id} отклонён`;
-          newNotifications.push(text);
-        }
-      });
-      newNotifications.forEach(msg => addNotification(msg));
-
-      const newLoanStatuses = {};
-      lRes.data.forEach(l => { newLoanStatuses[l.id] = l.status; });
-      localStorage.setItem('loanStatuses', JSON.stringify(newLoanStatuses));
-      const newTDStatuses = {};
-      tRes.data.forEach(t => { newTDStatuses[t.id] = t.status; });
-      localStorage.setItem('tdStatuses', JSON.stringify(newTDStatuses));
+      // Читаем ID машин для сравнения
+      const cachedCompareIds = JSON.parse(localStorage.getItem('compareIds') || '[]');
+      setCompareIds(cachedCompareIds);
     } catch (err) {
-      console.error(err);
+      console.error('Ошибка при загрузке данных ЛК:', err);
     } finally {
       setLoading(false);
     }
-  }, [addNotification]);
+  }, []);
 
   useEffect(() => {
-    if (user) fetchData();
-  }, [user, fetchData]);
+    fetchData();
+  }, [fetchData]);
 
-  useEffect(() => {
-    if (['loans', 'testdrives', 'favorites', 'compare'].includes(activeTab)) fetchData();
-  }, [activeTab, fetchData]);
-
-  const handleProfileUpdate = async (e) => {
+  // Обновление данных профиля
+  const handleProfileSubmit = async (e) => {
     e.preventDefault();
     setUpdateStatus(null);
     try {
-      const res = await api.put('/auth/me', profileForm);
+      const res = await api.put('/auth/profile', profileForm);
       setUser(res.data);
-      setUpdateStatus('success');
+      setUpdateStatus({ type: 'success', text: 'Профиль успешно обновлен' });
     } catch (err) {
-      setUpdateStatus('error');
-      console.error(err);
+      setUpdateStatus({ type: 'error', text: 'Не удалось обновить профиль. Попробуйте позже.' });
     }
   };
 
+  // Извлечение безопасного ID машины (фикс ошибки с undefined)
+  const getCarId = (car) => {
+    if (!car) return null;
+    return car.id || car.car_id || null;
+  };
+
+  // Удаление из избранного
   const removeFavorite = (carId) => {
-    const newFav = favorites.filter(car => car.id !== carId);
-    setFavorites(newFav);
-    localStorage.setItem('favorites', JSON.stringify(newFav.map(car => car.id)));
+    if (!carId) return;
+    const updated = favorites.filter(car => getCarId(car) !== carId);
+    setFavorites(updated);
+    localStorage.setItem('favorites', JSON.stringify(updated));
+    
+    const updatedCompare = compareIds.filter(cId => cId !== carId);
+    setCompareIds(updatedCompare);
+    localStorage.setItem('compareIds', JSON.stringify(updatedCompare));
   };
 
-  // ================= ПЕЧАТЬ ОДНОГО ЧЕКА =================
-  const printSingleReceipt = (receipt) => {
-    const dateStr = new Date(receipt.purchase_date).toLocaleString('ru-RU');
-    const paymentStr =
-      receipt.paymentMethod === 'card'
-        ? 'Банковская карта'
-        : receipt.paymentMethod === 'cash'
-        ? 'Наличные'
-        : 'Кредит';
+  // Переключение машины в списке сравнения
+  const toggleCompare = (carId) => {
+    if (!carId) return;
+    let updated;
+    if (compareIds.includes(carId)) {
+      updated = compareIds.filter(cId => cId !== carId);
+    } else {
+      updated = [...compareIds, carId];
+    }
+    setCompareIds(updated);
+    localStorage.setItem('compareIds', JSON.stringify(updated));
+  };
 
-    const printContent = `
-      <html>
-        <head>
-          <title>Чек #${receipt.id}</title>
-          <style>
-            body {
-              font-family: 'Courier New', monospace;
-              padding: 2rem;
-              color: #111;
-              background: white;
-            }
-            .header {
-              text-align: center;
-              border-bottom: 2px dashed #ccc;
-              padding-bottom: 1rem;
-              margin-bottom: 1.5rem;
-            }
-            .header h1 {
-              font-family: 'Playfair Display', serif;
-              color: #4A148C;
-              font-size: 2rem;
-              margin: 0 0 0.3rem 0;
-            }
-            .row {
-              display: flex;
-              justify-content: space-between;
-              padding: 0.4rem 0;
-              border-bottom: 1px dotted #ddd;
-            }
-            .row span { color: #555; font-size: 0.95rem; }
-            .row strong { color: #111; font-size: 0.95rem; }
-            .footer {
-              margin-top: 2rem;
-              text-align: center;
-              color: #888;
-              font-size: 0.9rem;
-            }
-          </style>
-        </head>
-        <body>
-          <div class="header">
-            <h1>Luxury Dealer</h1>
-            <p>Чек #${receipt.id}</p>
-          </div>
-          <div class="row"><span>Автомобиль</span><strong>${receipt.brand} ${receipt.model}</strong></div>
-          <div class="row"><span>Год выпуска</span><strong>${receipt.year}</strong></div>
-          <div class="row"><span>Цена</span><strong>${receipt.price?.toLocaleString('ru-RU')} ₽</strong></div>
-          <div class="row"><span>Дата покупки</span><strong>${dateStr}</strong></div>
-          <div class="row"><span>Способ оплаты</span><strong>${paymentStr}</strong></div>
-          <div class="footer">Спасибо за покупку!</div>
-        </body>
-      </html>
-    `;
-
-    const printWindow = window.open('', '_blank', 'width=600,height=500');
-    if (printWindow) {
-      printWindow.document.write(printContent);
-      printWindow.document.close();
-      printWindow.focus();
-      printWindow.print();
-      printWindow.close();
+  // Отправка отзыва
+  const handleReviewSubmit = async (e, tdId) => {
+    e.preventDefault();
+    try {
+      await api.post('/testdrives/review', {
+        test_drive_id: tdId,
+        rating: Number(reviewForm.rating),
+        comment: reviewForm.comment
+      });
+      alert('Спасибо за ваш отзыв!');
+      setReviewForm({ test_drive_id: null, rating: 5, comment: '' });
+      fetchData();
+    } catch (err) {
+      console.error('Ошибка отправки отзыва:', err);
+      alert('Не удалось отправить отзыв.');
     }
   };
 
-  const tabs = [
-    { key: 'profile', label: 'Профиль' },
-    { key: 'purchases', label: 'Мои покупки' },
-    { key: 'favorites', label: 'Избранное' },
-    { key: 'compare', label: 'Сравнение' },
-    { key: 'testdrives', label: 'Тест-драйвы' },
-    { key: 'loans', label: 'Кредиты' },
-    { key: 'notifications', label: 'Уведомления' },
-  ];
+  // Бронебойный хелпер для вытаскивания URL картинки
+  const resolveCarImage = (car) => {
+    if (!car) return '';
+    let url = car.image_url || car.image;
+    if (!url && car.images && car.images.length > 0) {
+      url = car.images[0].image_url || car.images[0];
+    }
+    if (typeof url === 'string') {
+      if (!url.startsWith('http') && !url.startsWith('/')) {
+        return '/' + url;
+      }
+      return url;
+    }
+    return '';
+  };
 
-  const renderContent = () => {
+  // Фильтруем массив избранного для вкладки сравнения
+  const compareCars = favorites.filter(car => {
+    const cid = getCarId(car);
+    return cid && compareIds.includes(cid);
+  });
+
+  // Проверка отличий в характеристиках
+  const isFieldDifferent = (fieldKey) => {
+    if (compareCars.length < 2) return false;
+    const firstValue = compareCars[0][fieldKey];
+    return compareCars.some(car => car[fieldKey] !== firstValue);
+  };
+
+  // ================= ОТРИСОВКА ВКЛАДОК =================
+  const renderTabContent = () => {
     switch (activeTab) {
       case 'profile':
         return (
-          <div className={styles.profileSection}>
-            <h3>Редактировать профиль</h3>
-            <form onSubmit={handleProfileUpdate} className={styles.profileForm}>
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className={styles.profileSection}>
+            <form onSubmit={handleProfileSubmit} className={styles.profileForm}>
               <div className={styles.field}>
-                <label>Email (нельзя изменить)</label>
-                <input type="email" value={user.email} disabled />
+                <label>ФИО владельца</label>
+                <input 
+                  type="text" 
+                  value={profileForm.full_name} 
+                  onChange={e => setProfileForm({ ...profileForm, full_name: e.target.value })} 
+                  required 
+                />
               </div>
               <div className={styles.field}>
-                <label>Полное имя</label>
-                <input type="text" value={profileForm.full_name} onChange={(e) => setProfileForm({ ...profileForm, full_name: e.target.value })} required />
+                <label>Номер телефона</label>
+                <input 
+                  type="text" 
+                  value={profileForm.phone} 
+                  onChange={e => setProfileForm({ ...profileForm, phone: e.target.value })} 
+                  required 
+                />
               </div>
-              <div className={styles.field}>
-                <label>Телефон</label>
-                <input type="tel" value={profileForm.phone} onChange={(e) => setProfileForm({ ...profileForm, phone: e.target.value })} />
-              </div>
-              <button type="submit" className={styles.saveBtn}>Сохранить изменения</button>
-              {updateStatus === 'success' && <p className={styles.successMsg}>Профиль обновлен</p>}
-              {updateStatus === 'error' && <p className={styles.errorMsg}>Ошибка обновления</p>}
+              <button type="submit" className={styles.saveBtn}>
+                Сохранить изменения
+              </button>
+              {updateStatus && (
+                <p className={updateStatus.type === 'success' ? styles.successMsg : styles.errorMsg}>
+                  {updateStatus.text}
+                </p>
+              )}
             </form>
-          </div>
+          </motion.div>
         );
 
       case 'purchases':
-        // ТОЛЬКО ДАННЫЕ С СЕРВЕРА
-        const sortedPurchases = [...purchases].sort(
-          (a, b) => new Date(b.purchase_date) - new Date(a.purchase_date)
-        );
-        return sortedPurchases.length ? (
+        return purchases.length ? (
           <div className={styles.cardsGrid}>
-            {sortedPurchases.map((p, idx) => (
-              <motion.div key={idx} className={`${styles.card} ${styles.receiptCard}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+            {purchases.map((p) => (
+              <div key={`purchase-${p.id}`} className={`${styles.card} ${styles.receiptCard}`}>
                 <div className={styles.receiptHeader}>
-                  <h4>Luxury Dealer</h4>
-                  <span>Чек #{idx + 1}</span>
+                  <h4>Договор купли-продажи №{p.id}</h4>
+                  <span>{p.purchase_date ? new Date(p.purchase_date).toLocaleDateString('ru-RU') : ''}</span>
                 </div>
                 <div className={styles.receiptBody}>
-                  <div className={styles.receiptRow}><span>Автомобиль</span><strong>{p.brand} {p.model}</strong></div>
-                  <div className={styles.receiptRow}><span>Год</span><strong>{p.year}</strong></div>
-                  <div className={styles.receiptRow}><span>Цена</span><strong>{p.price?.toLocaleString()} ₽</strong></div>
-                  <div className={styles.receiptRow}><span>Дата</span><strong>{new Date(p.purchase_date).toLocaleString()}</strong></div>
-                  {p.paymentMethod && <div className={styles.receiptRow}><span>Оплата</span><strong>{p.paymentMethod === 'card' ? 'Карта' : p.paymentMethod === 'cash' ? 'Наличные' : 'Кредит'}</strong></div>}
+                  <div className={styles.receiptRow}>
+                    <span>Автомобиль:</span>
+                    <strong>{p.car_brand || p.brand || 'Luxury Car'} {p.car_model || p.model || ''}</strong>
+                  </div>
+                  <div className={styles.receiptRow}>
+                    <span>Стоимость сделки:</span>
+                    <strong>{p.price?.toLocaleString('ru-RU')} ₽</strong>
+                  </div>
+                  <div className={styles.receiptRow}>
+                    <span>Статус плательщика:</span>
+                    <strong>Владелец подтвержден</strong>
+                  </div>
                 </div>
-                <button className={styles.printBtn} onClick={() => printSingleReceipt(p)}>🖨 Распечатать</button>
-              </motion.div>
+                <button className={styles.printBtn} onClick={() => window.print()}>
+                  Распечатать чек (PDF)
+                </button>
+              </div>
             ))}
           </div>
-        ) : <p className={styles.empty}>У вас ещё нет покупок.</p>;
-
-      case 'favorites':
-        return favorites.length ? (
-          <div className={styles.favoritesGrid}>
-            {favorites.map(car => (
-              <motion.div key={car.id} className={styles.favCard} initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                <img src={getImageUrl(car.image_url || '/images/default-car.jpg')} alt={car.model} className={styles.favImage} />
-                <div className={styles.favInfo}>
-                  <Link to={`/cars/${car.id}`} className={styles.favLink}>
-                    <strong>{car.brand} {car.model}</strong> ({car.year})
-                  </Link>
-                  <span className={styles.price}>{car.price.toLocaleString()} ₽</span>
-                  <button className={styles.removeFav} onClick={() => removeFavorite(car.id)}>Убрать из избранного</button>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        ) : <p className={styles.empty}>Нет избранных автомобилей.</p>;
-
-      case 'compare':
-        return <ComparePage />;
+        ) : (
+          <p className={styles.empty}>У вас пока нет оформленных покупок автомобилей.</p>
+        );
 
       case 'testdrives':
         return testDrives.length ? (
           <div className={styles.cardsGrid}>
             {testDrives.map((td) => (
-              <div key={td.id} className={styles.card}>
-                <div className={styles.cardHeader}>Заявка #{td.id}</div>
+              <div key={`td-${td.id}`} className={styles.card}>
+                <div className={styles.cardHeader}>
+                  <h4>Тест-драйв №{td.id}</h4>
+                  <span className={`${styles.loanStatus} ${styles[td.status]}`}>
+                    {td.status === 'pending' && 'На рассмотрении'}
+                    {td.status === 'approved' && 'Одобрен'}
+                    {td.status === 'rejected' && 'Отклонен'}
+                  </span>
+                </div>
                 <div className={styles.cardBody}>
-                  <span>Авто ID: {td.car_id}</span>
-                  <span>Дата: {new Date(td.preferred_date).toLocaleString()}</span>
-                  <span className={styles.status}>Статус: {
-                    td.status === 'pending' ? 'Ожидает' :
-                    td.status === 'approved' ? 'Одобрена' :
-                    td.status === 'rejected' ? 'Отклонена' :
-                    td.status
-                  }</span>
+                  <p><strong>Автомобиль:</strong> {td.car_brand || td.brand || 'Luxury'} {td.car_model || td.model || 'Car'}</p>
+                  <p><strong>Дата сессии:</strong> {td.preferred_date ? new Date(td.preferred_date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }) : 'Не назначена'}</p>
+                  <p><strong>Контактный телефон:</strong> {td.phone}</p>
+                  
+                  {td.comment && (
+                    <div className={styles.comment}>
+                      <strong>Ответ автосалона:</strong> {td.comment}
+                    </div>
+                  )}
+
+                  {td.status === 'approved' && (
+                    <div style={{ marginTop: '1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                      <h5 style={{ margin: '0 0 0.2rem 0', fontSize: '0.95rem' }}>Оставить отзыв о поездке</h5>
+                      <form onSubmit={(e) => handleReviewSubmit(e, td.id)} style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                        <select 
+                          value={reviewForm.test_drive_id === td.id ? reviewForm.rating : 5}
+                          onChange={(e) => setReviewForm({ ...reviewForm, test_drive_id: td.id, rating: e.target.value })}
+                          style={{ background: 'var(--bg)', color: 'var(--text)', border: '1px solid rgba(128,128,128,0.2)', padding: '0.3rem', borderRadius: '6px' }}
+                        >
+                          <option value="5">5 ★★★★★</option>
+                          <option value="4">4 ★★★★</option>
+                          <option value="3">3 ★★★</option>
+                          <option value="2">2 ★★</option>
+                          <option value="1">1 ★</option>
+                        </select>
+                        <motion.textarea 
+                          placeholder="Поделитесь впечатлениями..." 
+                          value={reviewForm.test_drive_id === td.id ? reviewForm.comment : ''}
+                          onChange={(e) => setReviewForm({ ...reviewForm, test_drive_id: td.id, comment: e.target.value })}
+                          style={{ width: '100%', background: 'var(--bg)', color: 'var(--text)', border: '1px solid rgba(128,128,128,0.2)', borderRadius: '8px', padding: '0.5rem', fontSize: '0.85rem' }}
+                          rows="2"
+                          required
+                        />
+                        <button type="submit" className={styles.printBtn}>Отправить</button>
+                      </form>
+                    </div>
+                  )}
                 </div>
               </div>
             ))}
           </div>
-        ) : <p className={styles.empty}>Нет заявок на тест-драйв.</p>;
+        ) : (
+          <p className={styles.empty}>Заявки на тест-драйв отсутствуют.</p>
+        );
 
       case 'loans':
         return loans.length ? (
           <div className={styles.cardsGrid}>
             {loans.map((loan) => (
-              <div key={loan.id} className={styles.card}>
-                <div className={styles.cardHeader}>Кредитная заявка</div>
-                <div className={styles.cardBody}>
-                  <span>Сумма: {loan.amount?.toLocaleString()} ₽</span>
-                  <span>Срок: {loan.term_months} мес.</span>
-                  <span>Платёж: {loan.monthly_payment?.toLocaleString()} ₽/мес.</span>
-                  <span className={`${styles.loanStatus} ${loan.status === 'approved' ? styles.approved : loan.status === 'rejected' ? styles.rejected : styles.pending}`}>
-                    {loan.status === 'approved' ? 'Одобрена' : loan.status === 'rejected' ? 'Отклонена' : 'Рассчитана'}
+              <div key={`loan-${loan.id}`} className={styles.card}>
+                <div className={styles.cardHeader}>
+                  <h4>Заявка №{loan.id}</h4>
+                  <span className={`${styles.loanStatus} ${styles[loan.status]}`}>
+                    {loan.status === 'pending' && 'На рассмотрении'}
+                    {loan.status === 'approved' && 'Одобрено'}
+                    {loan.status === 'rejected' && 'Отклонено'}
                   </span>
+                </div>
+                <div className={styles.cardBody}>
+                  <p><strong>Сумма финансирования:</strong> {loan.amount?.toLocaleString('ru-RU')} ₽</p>
+                  <p><strong>Период кредитования:</strong> {loan.term_months || loan.term} мес.</p>
+                  <p><strong>Процентная ставка:</strong> {loan.interest_rate || loan.rate}% годовых</p>
+                  <p><strong>Ежемесячный платеж:</strong> {loan.monthly_payment?.toLocaleString('ru-RU')} ₽</p>
+                  {loan.comment && <div className={styles.comment}><strong>Решение:</strong> {loan.comment}</div>}
                 </div>
               </div>
             ))}
           </div>
-        ) : <p className={styles.empty}>Кредитных заявок пока нет.</p>;
+        ) : (
+          <p className={styles.empty}>Расчетов или кредитных заявок пока нет.</p>
+        );
+
+      case 'favorites':
+        return favorites.length ? (
+          <div className={styles.favoritesGrid}>
+            {favorites.map((car, idx) => {
+              const carId = getCarId(car);
+              const brand = car.brand || car.car_brand || 'Premium';
+              const model = car.model || car.car_model || 'Car';
+              const imgPath = resolveCarImage(car);
+              const fallbackKey = carId ? `fav-${carId}` : `fav-idx-${idx}`;
+
+              return (
+                <div key={fallbackKey} className={styles.favCard}>
+                  <div className={styles.favImageWrapper} style={{ width: '100%', height: '160px', overflow: 'hidden', borderRadius: '8px', background: '#111' }}>
+                    <img 
+                      src={getImageUrl(imgPath)} 
+                      alt={`${brand} ${model}`} 
+                      className={styles.favImage}
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                      onError={(e) => { e.target.src = '/images/default-car.jpg'; }}
+                    />
+                  </div>
+                  <div className={styles.favInfo} style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '0.5rem' }}>
+                    {carId ? (
+                      <Link to={`/cars/${carId}`} className={styles.favLink} style={{ fontWeight: '600', fontSize: '1.1rem' }}>
+                        {brand} {model}
+                      </Link>
+                    ) : (
+                      <span className={styles.favLink} style={{ fontWeight: '600', fontSize: '1.1rem' }}>{brand} {model}</span>
+                    )}
+                    <p className={styles.price} style={{ margin: 0, color: 'var(--primary)', fontWeight: 'bold' }}>
+                      {car.price ? `${car.price.toLocaleString('ru-RU')} ₽` : 'Цена по запросу'}
+                    </p>
+                    
+                    {carId && (
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem', cursor: 'pointer', margin: '0.2rem 0' }}>
+                        <input 
+                          type="checkbox" 
+                          checked={compareIds.includes(carId)} 
+                          onChange={() => toggleCompare(carId)}
+                        />
+                        <span>Добавить к сравнению</span>
+                      </label>
+                    )}
+
+                    <button onClick={() => removeFavorite(carId)} className={styles.removeFav} style={{ width: '100%', marginTop: 'auto' }}>
+                      Удалить из избранного
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <p className={styles.empty}>Ваш список избранного пуст.</p>
+        );
+
+      case 'compare':
+        return compareCars.length ? (
+          <div className={styles.compareGrid}>
+            {compareCars.map((car, idx) => {
+              const carId = getCarId(car);
+              const imgPath = resolveCarImage(car);
+              const fallbackKey = carId ? `compare-${carId}` : `compare-idx-${idx}`;
+
+              return (
+                <div key={fallbackKey} className={styles.compareCard}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                    <span className={styles.price}>{car.price?.toLocaleString('ru-RU')} ₽</span>
+                    <button onClick={() => toggleCompare(carId)} className={styles.removeCarBtn} style={{ background: 'none', border: 'none', color: '#ff4d4d', fontSize: '1.5rem', cursor: 'pointer' }}>✕</button>
+                  </div>
+                  
+                  <img 
+                    src={getImageUrl(imgPath)} 
+                    alt={`${car.brand} ${car.model}`} 
+                    className={styles.compareImage} 
+                    onError={(e) => { e.target.src = '/images/default-car.jpg'; }}
+                  />
+                  
+                  <h3 className={styles.compareName}>{car.brand} {car.model}</h3>
+
+                  <div className={styles.compareGroup}>
+                    <div className={styles.groupTitle}>Основные параметры</div>
+                    <div className={`${styles.compareField} ${isFieldDifferent('year') ? styles.diffField : ''}`}>
+                      <span className={styles.fieldLabel}>Год выпуска</span>
+                      <span className={styles.fieldValue}>{car.year}</span>
+                    </div>
+                    <div className={`${styles.compareField} ${isFieldDifferent('body_type') ? styles.diffField : ''}`}>
+                      <span className={styles.fieldLabel}>Тип кузова</span>
+                      <span className={styles.fieldValue}>{car.body_type || 'Седан'}</span>
+                    </div>
+                  </div>
+
+                  <div className={styles.compareGroup}>
+                    <div className={styles.groupTitle}>Двигатель и КПП</div>
+                    <div className={`${styles.compareField} ${isFieldDifferent('engine_volume') ? styles.diffField : ''}`}>
+                      <span className={styles.fieldLabel}>Объем двигателя</span>
+                      <span className={styles.fieldValue}>{car.engine_volume ? `${car.engine_volume} л` : '—'}</span>
+                    </div>
+                    <div className={`${styles.compareField} ${isFieldDifferent('power') ? styles.diffField : ''}`}>
+                      <span className={styles.fieldLabel}>Мощность</span>
+                      <span className={styles.fieldValue}>{car.power ? `${car.power} л.с.` : '—'}</span>
+                    </div>
+                    <div className={`${styles.compareField} ${isFieldDifferent('transmission') ? styles.diffField : ''}`}>
+                      <span className={styles.fieldLabel}>Трансмиссия</span>
+                      <span className={styles.fieldValue}>{car.transmission || '—'}</span>
+                    </div>
+                    <div className={`${styles.compareField} ${isFieldDifferent('drive_type') ? styles.diffField : ''}`}>
+                      <span className={styles.fieldLabel}>Привод</span>
+                      <span className={styles.fieldValue}>{car.drive_type || '—'}</span>
+                    </div>
+                  </div>
+
+                  <div className={styles.compareGroup}>
+                    <div className={styles.groupTitle}>Динамика</div>
+                    <div className={`${styles.compareField} ${isFieldDifferent('acceleration') ? styles.diffField : ''}`}>
+                      <span className={styles.fieldLabel}>0-100 км/ч</span>
+                      <span className={styles.fieldValue}>{car.acceleration ? `${car.acceleration} с` : '—'}</span>
+                    </div>
+                    <div className={`${styles.compareField} ${isFieldDifferent('max_speed') ? styles.diffField : ''}`}>
+                      <span className={styles.fieldLabel}>Макс. скорость</span>
+                      <span className={styles.fieldValue}>{car.max_speed ? `${car.max_speed} км/ч` : '—'}</span>
+                    </div>
+                  </div>
+
+                  {carId && (
+                    <Link to={`/cars/${carId}`} className={styles.printBtn} style={{ textDecoration: 'none', textAlign: 'center', marginTop: '1rem', display: 'block' }}>
+                      Открыть карточку
+                    </Link>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <p className={styles.empty}>Нет выбранных авто для сравнения. Откройте вкладку «Избранное» и отметьте нужные модели галочками.</p>
+        );
 
       case 'notifications':
         return notifications.length ? (
           <div className={styles.cardsGrid}>
-            {notifications.map((n, idx) => (
-              <div key={idx} className={`${styles.card} ${styles.notificationCard}`}>
-                <div className={styles.cardBody}>{n.message}</div>
-              </div>
-            ))}
-            <button className={styles.clearBtn} onClick={clearNotifications}>Очистить все</button>
+            {notifications.map((n, idx) => {
+              const msgText = n?.message || (typeof n === 'string' ? n : 'Новое уведомление');
+              return (
+                <div key={`notification-${idx}`} className={`${styles.card} ${styles.notificationCard}`}>
+                  <div className={styles.cardBody}>{msgText}</div>
+                </div>
+              );
+            })}
+            <button className={styles.clearBtn} onClick={clearNotifications}>
+              Очистить логи уведомлений
+            </button>
           </div>
-        ) : <p className={styles.empty}>Нет новых уведомлений.</p>;
+        ) : (
+          <p className={styles.empty}>Новых уведомлений нет.</p>
+        );
 
       default:
         return null;
     }
   };
 
-  if (loading) return <div className={styles.loading}>Загрузка...</div>;
+  if (loading) return <div className={styles.loading}>Синхронизация данных профиля...</div>;
 
   return (
-    <motion.div className={styles.container} initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-      <h2 className={styles.title}>Личный кабинет – {user.full_name}</h2>
+    <motion.div className={styles.container} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }}>
+      <h2 className={styles.title}>Личный кабинет – {user?.full_name || 'Клиент'}</h2>
+      
       <div className={styles.tabs}>
         {tabs.map(tab => (
           <button
-            key={tab.key}
+            key={`tab-btn-${tab.key}`}
             className={`${styles.tab} ${activeTab === tab.key ? styles.active : ''}`}
             onClick={() => setActiveTab(tab.key)}
           >
-            {tab.label}
+            {tab.label} {tab.key === 'compare' && compareIds.length > 0 && `(${compareIds.length})`}
           </button>
         ))}
       </div>
-      <div className={styles.content}>
-        {renderContent()}
+
+      <div className={styles.tabContentWindow}>
+        <AnimatePresence mode="wait">
+          {renderTabContent()}
+        </AnimatePresence>
       </div>
     </motion.div>
   );

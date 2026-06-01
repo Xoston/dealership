@@ -4,6 +4,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import styles from './Auth.module.css';
 
+
 const LoginPage = () => {
   const { login } = useAuth();
   const navigate = useNavigate();

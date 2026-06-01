@@ -433,10 +433,11 @@
 }
 
 .creditResult {
-  background: white;
+  background: var(--glass-bg);   /* вместо белого – зависит от темы */
   padding: 0.8rem;
   border-radius: 10px;
   text-align: center;
+  color: var(--text);            /* текст теперь тоже подстраивается */
 }
 
 .creditResult p {

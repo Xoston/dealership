@@ -1,32 +1,42 @@
+/* ========================
+   АВТОРИЗАЦИЯ – АДАПТИВНАЯ ТЕМА (Auth.module.css)
+   ======================== */
 .wrapper {
   min-height: calc(100vh - 70px);
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, rgba(74,20,140,0.05) 0%, rgba(123,31,162,0.03) 100%);
+  /* Адаптивный фон: подмешиваем немного цвета к основному фону темы */
+  background: var(--bg);
+  background-image: linear-gradient(135deg, rgba(123, 31, 162, 0.04) 0%, rgba(74, 20, 140, 0.02) 100%);
   padding: 2rem;
+  transition: background 0.3s ease;
 }
 
 .card {
-  background: rgba(255, 255, 255, 0.8);
+  /* Переключается между светлым стеклом и тёмным в зависимости от темы */
+  background: var(--glass-bg);           
   backdrop-filter: blur(16px);
   border-radius: 28px;
   padding: 2.5rem;
   width: 100%;
   max-width: 440px;
-  box-shadow: 0 25px 45px rgba(74, 20, 140, 0.15);
-  border: 1px solid rgba(255, 255, 255, 0.4);
+  box-shadow: 0 25px 45px rgba(0, 0, 0, 0.15);
+  border: 1px solid rgba(128, 128, 128, 0.15);
+  color: var(--text);
+  transition: background 0.3s, border-color 0.3s;
 }
 
 .title {
   font-family: 'Playfair Display', serif;
   font-size: 2rem;
-  color: #1a1a1a;
+  color: var(--primary); /* Фирменный цвет вместо жесткого черного */
   margin-bottom: 0.5rem;
 }
 
 .subtitle {
-  color: #666;
+  color: var(--text);
+  opacity: 0.7; /* Делает текст мягче как в светлой, так и в тёмной теме */
   margin-bottom: 2rem;
 }
 
@@ -44,24 +54,40 @@
 
 .field label {
   font-weight: 600;
-  color: #333;
+  color: var(--text);
   font-size: 0.9rem;
 }
 
 .field input {
   padding: 0.8rem 1rem;
-  border: 1.5px solid rgba(74,20,140,0.2);
+  border: 1.5px solid rgba(128, 128, 128, 0.2);
   border-radius: 14px;
-  background: white;
+  background: var(--bg); /* Поле ввода подстраивается под тему */
+  color: var(--text);    /* Буквы при вводе будут контрастными */
   font-size: 1rem;
   font-family: inherit;
   transition: all 0.3s;
 }
 
+/* Стилизация подсказок (placeholder) */
+.field input::placeholder {
+  color: var(--text);
+  opacity: 0.4;
+}
+
 .field input:focus {
   outline: none;
   border-color: var(--primary-light);
-  box-shadow: 0 0 0 4px rgba(123,31,162,0.1);
+  box-shadow: 0 0 0 4px rgba(123, 31, 162, 0.15);
+}
+
+/* ФИКС АВТОЗАПОЛНЕНИЯ: предотвращает ядовито-белый/желтый фон от Google Chrome */
+.field input:-webkit-autofill,
+.field input:-webkit-autofill:hover, 
+.field input:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--text) !important;
+  -webkit-box-shadow: 0 0 0px 1000px var(--bg) inset !important;
+  transition: background-color 5000s ease-in-out 0s;
 }
 
 .btn {
@@ -74,30 +100,36 @@
   font-size: 1rem;
   cursor: pointer;
   transition: all 0.3s;
-  box-shadow: 0 6px 18px rgba(74,20,140,0.3);
+  box-shadow: 0 6px 18px rgba(74, 20, 140, 0.3);
   margin-top: 0.5rem;
 }
 
 .btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 10px 25px rgba(74,20,140,0.4);
+  box-shadow: 0 10px 25px rgba(74, 20, 140, 0.4);
 }
 
 .error {
-  color: #D32F2F;
+  color: var(--error, #D32F2F);
   font-size: 0.9rem;
   font-weight: 500;
   margin-top: -0.4rem;
+  text-align: left;
 }
 
 .footerText {
   margin-top: 1.5rem;
   text-align: center;
-  color: #666;
+  color: var(--text);
+  opacity: 0.8;
 }
 
 .footerText a {
   color: var(--primary);
   font-weight: 600;
   text-decoration: none;
+}
+
+.footerText a:hover {
+  text-decoration: underline;
 }
