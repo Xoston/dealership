@@ -134,7 +134,7 @@ const CarDetailPage = () => {
           <p className={styles.price}>{car.price.toLocaleString('ru-RU')} ₽</p>
           {car.description && <p className={styles.description}>{car.description}</p>}
 
-          <motion.button className={styles.buyButton} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => setShowPurchaseModal(true)}>
+          <motion.button className={styles.buyButton} whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.98 }} onClick={() => setShowPurchaseModal(true)}>
             Купить
           </motion.button>
 
@@ -162,11 +162,27 @@ const CarDetailPage = () => {
             </div>
           )}
 
+          {/* Элегантное премиальное уведомление об успехе */}
           {purchaseSuccess && (
-            <motion.div className={styles.successMessage} initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-              {paymentMethod === 'credit'
-                ? '✅ Заявка на кредит отправлена! Ожидайте решения банка.'
-                : '✅ Покупка оформлена! Чек доступен в личном кабинете.'}
+            <motion.div className={styles.successMessage} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+              <div className={styles.successIconWrapper}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+              </div>
+              <div className={styles.successText}>
+                {paymentMethod === 'credit' ? (
+                  <>
+                    <strong>Заявка на кредит отправлена!</strong>
+                    <span>Менеджер свяжется с вами после решения банка.</span>
+                  </>
+                ) : (
+                  <>
+                    <strong>Покупка успешно оформлена!</strong>
+                    <span>Электронный чек уже доступен в вашем личном кабинете.</span>
+                  </>
+                )}
+              </div>
             </motion.div>
           )}
         </div>
@@ -176,24 +192,30 @@ const CarDetailPage = () => {
       <AnimatePresence>
         {showPurchaseModal && (
           <motion.div className={styles.modalOverlay} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowPurchaseModal(false)}>
-            <motion.div className={`${styles.modal} ${styles.purchaseModal}`} initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.8, opacity: 0 }} onClick={e => e.stopPropagation()}>
-              <h3>Оформление покупки</h3>
+            <motion.div className={`${styles.modal} ${styles.purchaseModal}`} initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} onClick={e => e.stopPropagation()}>
+              <h3 className={styles.modalHeaderTitle}>Оформление покупки</h3>
               <div className={styles.purchaseDetails}>
-                <p><strong>{car.brand} {car.model}</strong> ({car.year})</p>
-                <p className={styles.purchasePrice}>{car.price.toLocaleString()} ₽</p>
+                <p className={styles.modalCarName}><strong>{car.brand} {car.model}</strong> <span className={styles.modalCarYear}>({car.year})</span></p>
+                <p className={styles.purchasePrice}>{car.price.toLocaleString('ru-RU')} ₽</p>
               </div>
+
+              <div className={styles.sectionLabel}>Выберите способ оплаты</div>
+              
               <div className={styles.paymentMethods}>
                 <label className={`${styles.paymentOption} ${paymentMethod === 'card' ? styles.activePayment : ''}`}>
                   <input type="radio" name="payment" value="card" checked={paymentMethod === 'card'} onChange={() => setPaymentMethod('card')} />
-                  <span>Банковская карта</span>
+                  <span className={styles.tileIcon}>💳</span>
+                  <span className={styles.tileText}>Банковская карта</span>
                 </label>
                 <label className={`${styles.paymentOption} ${paymentMethod === 'cash' ? styles.activePayment : ''}`}>
                   <input type="radio" name="payment" value="cash" checked={paymentMethod === 'cash'} onChange={() => setPaymentMethod('cash')} />
-                  <span>Наличные</span>
+                  <span className={styles.tileIcon}>💵</span>
+                  <span className={styles.tileText}>Наличные</span>
                 </label>
                 <label className={`${styles.paymentOption} ${paymentMethod === 'credit' ? styles.activePayment : ''}`}>
                   <input type="radio" name="payment" value="credit" checked={paymentMethod === 'credit'} onChange={() => setPaymentMethod('credit')} />
-                  <span>В кредит</span>
+                  <span className={styles.tileIcon}>🏛️</span>
+                  <span className={styles.tileText}>В кредит</span>
                 </label>
               </div>
 

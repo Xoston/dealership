@@ -1,11 +1,14 @@
-from ..schemas import CarCreate
-
 class CarFactory:
     """Фабрика для создания объектов автомобилей с дефолтными значениями в зависимости от типа кузова."""
+    
     @staticmethod
-    def create_car(car_data: CarCreate) -> dict:
+    def create_car(car_data: "CarCreate") -> dict:
         """Оригинальный метод – принимает Pydantic-схему (не используется в новой реализации, но оставлен для совместимости)."""
-        car_dict = car_data.dict()
+        # Локальный абсолютный импорт предотвращает циклическую зависимость при старте приложения
+        from app.schemas import CarCreate
+        
+        # Безопасное приведение схемы к словарю (с поддержкой Pydantic v2 model_dump)
+        car_dict = car_data.model_dump() if hasattr(car_data, "model_dump") else car_data.dict()
         return CarFactory._apply_defaults(car_dict)
 
     @staticmethod

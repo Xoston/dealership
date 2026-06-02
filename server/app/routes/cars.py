@@ -23,13 +23,15 @@ def read_cars(
     year_from: Optional[int] = Query(None),
     year_to: Optional[int] = Query(None),
     body_type: Optional[str] = Query(None),
-    restyling: Optional[bool] = Query(None)
+    restyling: Optional[bool] = Query(None),
+    search: Optional[str] = Query(None)  # Добавлена поддержка сквозной поисковой строки
 ):
     return crud.get_cars(
         brand=brand, model=model,
         min_price=min_price, max_price=max_price,
         year_from=year_from, year_to=year_to,
-        body_type=body_type, restyling=restyling
+        body_type=body_type, restyling=restyling,
+        search=search
     )
 
 @router.get("/{car_id}", response_model=schemas.CarOut)

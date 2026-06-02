@@ -1,5 +1,5 @@
 /* ========================
-   ЛИЧНЫЙ КАБИНЕТ – АДАПТИРОВАН ДЛЯ ТЁМНОЙ ТЕМЫ
+   ЛИЧНЫЙ КАБИНЕТ – АДАПТИРОВАН ДЛЯ ОБЕИХ ТЕМ
    ======================== */
 .container { max-width: 1200px; margin: 2rem auto; padding: 0 2rem; }
 .loading { text-align: center; padding: 3rem; font-size: 1.5rem; color: var(--primary); }
@@ -143,12 +143,7 @@
 }
 .removeCarBtn:hover { color: #D32F2F; opacity: 1; }
 
-.descriptionBox { font-size: 0.9rem; line-height: 1.4; color: var(--text); }
-.descText { white-space: pre-wrap; }
-.moreBtn { background: none; border: none; color: var(--primary); cursor: pointer; font-weight: 600; font-size: 0.85rem; margin-top: 0.3rem; }
-.moreBtn:hover { text-decoration: underline; }
-
-/* ---------- Стили для чеков (Мои покупки) ---------- */
+/* Стили для чеков */
 .receiptCard {
   background: var(--bg);
   border: 1px solid rgba(128,128,128,0.2);
@@ -220,7 +215,6 @@
   color: white;
 }
 
-/* Комментарий администратора к заявке */
 .comment {
   font-style: italic;
   opacity: 0.8;
@@ -228,19 +222,217 @@
   color: var(--text);
 }
 
-/* Адаптивность */
 @media (max-width: 600px) {
-  .favoritesGrid {
-    grid-template-columns: 1fr;
-  }
-  .favCard {
-    flex-direction: column;
-  }
-  .favImage {
-    width: 100%;
-    height: 200px;
-  }
-  .compareCard {
-    min-width: 260px;
-  }
+  .favoritesGrid { grid-template-columns: 1fr; }
+  .favCard { flex-direction: column; }
+  .favImage { width: 100%; height: 200px; }
+  .compareCard { min-width: 260px; }
+}
+
+.isPrinting {
+  border: none !important;
+  background: white !important;
+  color: black !important;
+  box-shadow: none !important;
+}
+
+@media print {
+  body * { visibility: hidden; }
+  .isPrinting, .isPrinting * { visibility: visible; }
+  .isPrinting { position: absolute; left: 0; top: 0; width: 100%; padding: 0; margin: 0; }
+  .printBtn { display: none !important; }
+}
+
+/* ========================================================
+   ДИНАМИЧЕСКИЕ СТИЛИ МОДАЛКИ (ПОДДЕРЖКА СВЕТЛОЙ И ТЁМНОЙ ТЕМЫ)
+   ======================================================== */
+
+.actionBtn {
+  background: none;
+  border: 1.5px solid var(--primary);
+  color: var(--primary);
+  padding: 0.6rem 1.6rem;
+  border-radius: 24px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: 1rem;
+  width: fit-content;
+}
+
+.actionBtn:hover {
+  background: var(--primary);
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 15px rgba(74, 20, 140, 0.25);
+}
+
+/* Полупрозрачный овелей одинаково хорош для обоих режимов (затемняет бэкграунд) */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+  padding: 1rem;
+}
+
+/* Модалка: Плотный, абсолютно непрозрачный фон через var(--bg) */
+.modalContent {
+  background: var(--bg); 
+  border: 1px solid rgba(128, 128, 128, 0.25);
+  border-radius: 20px;
+  padding: 2.5rem;
+  width: 100%;
+  max-width: 480px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+  position: relative;
+  color: var(--text);
+}
+
+.modalClose {
+  position: absolute;
+  top: 1.2rem;
+  right: 1.2rem;
+  background: none;
+  border: none;
+  color: var(--text);
+  font-size: 1.3rem;
+  opacity: 0.6;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.modalClose:hover {
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+.modalTitle {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.8rem;
+  margin: 0 0 0.4rem 0;
+  color: var(--text);
+}
+
+.modalSubtitle {
+  font-size: 1.1rem;
+  color: var(--primary);
+  font-weight: 700;
+  margin: 0 0 1.8rem 0;
+}
+
+.modalForm {
+  display: flex;
+  flex-direction: column;
+  gap: 1.4rem;
+}
+
+.modalField {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.modalField label {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--text);
+  opacity: 0.9;
+}
+
+/* Поле ввода: Наследует фон подложки темы, сохраняя стопроцентную контрастность */
+.modalTextarea {
+  padding: 0.9rem 1rem;
+  border: 1.5px solid rgba(128, 128, 128, 0.3);
+  border-radius: 12px;
+  background: var(--bg);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 0.95rem;
+  resize: none;
+  outline: none;
+  line-height: 1.4;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.modalTextarea:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 10px rgba(123, 31, 162, 0.2);
+}
+
+.modalTextarea::placeholder {
+  color: var(--text);
+  opacity: 0.4;
+}
+
+.modalActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+
+/* Кнопка отмена адаптируется под цвет текста */
+.cancelBtn {
+  background: none;
+  border: 1px solid rgba(128, 128, 128, 0.4);
+  color: var(--text);
+  opacity: 0.8;
+  padding: 0.75rem 1.6rem;
+  border-radius: 30px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.cancelBtn:hover {
+  background: rgba(128, 128, 128, 0.1);
+  opacity: 1;
+}
+
+.submitBtn {
+  background: var(--primary);
+  color: white;
+  border: none;
+  padding: 0.75rem 1.8rem;
+  border-radius: 30px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background 0.3s, transform 0.2s;
+}
+
+.submitBtn:hover {
+  background: var(--primary-light);
+}
+
+.starsContainer {
+  display: flex;
+  gap: 0.6rem;
+  margin: 0.3rem 0;
+}
+
+.star {
+  font-size: 2.3rem;
+  cursor: pointer;
+  color: rgba(128, 128, 128, 0.25);
+  transition: color 0.15s ease, transform 0.1s ease;
+  user-select: none;
+}
+
+.starActive {
+  color: #ffb300;
+  text-shadow: 0 0 15px rgba(255, 179, 0, 0.4);
+}
+
+.star:hover {
+  transform: scale(1.15);
 }

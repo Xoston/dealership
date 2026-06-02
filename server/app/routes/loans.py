@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException, Body
-from .. import schemas, crud
-from ..dependencies import get_current_user, get_current_admin_or_manager
-from ..patterns.facade import LoanCalculatorFacade
-from ..patterns.strategy import AnnuityStrategy
-from ..audit import event_manager
+from app import schemas, crud
+from app.dependencies import get_current_user, get_current_admin_or_manager
+from app.patterns.facade import LoanCalculatorFacade
+from app.patterns.strategy import AnnuityStrategy
+from app.audit import event_manager
 from typing import List
 
 router = APIRouter()

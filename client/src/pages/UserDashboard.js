@@ -12,17 +12,20 @@ const UserDashboard = () => {
   const [testDrives, setTestDrives] = useState([]);
   const [loans, setLoans] = useState([]);
   const [favorites, setFavorites] = useState([]);
-  const [compareIds, setCompareIds] = useState([]); // Храним только ID выбранных для сравнения авто
+  const [compareIds, setCompareIds] = useState([]);
   const [loading, setLoading] = useState(true);
   
-  // Состояния для редактирования профиля
+  const [printingId, setPrintingId] = useState(null);
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [activeReviewTd, setActiveReviewTd] = useState(null);
+  const [hoverRating, setHoverRating] = useState(null);
+  
   const [profileForm, setProfileForm] = useState({
     full_name: user?.full_name || '',
     phone: user?.phone || '',
   });
   const [updateStatus, setUpdateStatus] = useState(null);
 
-  // Состояния для отправки отзывов по тест-драйвам
   const [reviewForm, setReviewForm] = useState({
     test_drive_id: null,
     rating: 5,
@@ -39,7 +42,6 @@ const UserDashboard = () => {
     { key: 'notifications', label: 'Уведомления' }
   ];
 
-  // ================= ЗАГРУЗКА ДАННЫХ =================
   const fetchData = useCallback(async () => {
     try {
       setLoading(true);
@@ -52,11 +54,9 @@ const UserDashboard = () => {
       setTestDrives(tRes.data);
       setLoans(lRes.data);
 
-      // Читаем Избранное
       const cachedFavs = JSON.parse(localStorage.getItem('favorites') || '[]');
       setFavorites(cachedFavs);
 
-      // Читаем ID машин для сравнения
       const cachedCompareIds = JSON.parse(localStorage.getItem('compareIds') || '[]');
       setCompareIds(cachedCompareIds);
     } catch (err) {
@@ -70,7 +70,6 @@ const UserDashboard = () => {
     fetchData();
   }, [fetchData]);
 
-  // Обновление данных профиля
   const handleProfileSubmit = async (e) => {
     e.preventDefault();
     setUpdateStatus(null);
@@ -83,13 +82,19 @@ const UserDashboard = () => {
     }
   };
 
-  // Извлечение безопасного ID машины (фикс ошибки с undefined)
+  const handlePrint = (id) => {
+    setPrintingId(id);
+    setTimeout(() => {
+      window.print();
+      setPrintingId(null);
+    }, 50);
+  };
+
   const getCarId = (car) => {
     if (!car) return null;
     return car.id || car.car_id || null;
   };
 
-  // Удаление из избранного
   const removeFavorite = (carId) => {
     if (!carId) return;
     const updated = favorites.filter(car => getCarId(car) !== carId);
@@ -101,7 +106,6 @@ const UserDashboard = () => {
     localStorage.setItem('compareIds', JSON.stringify(updatedCompare));
   };
 
-  // Переключение машины в списке сравнения
   const toggleCompare = (carId) => {
     if (!carId) return;
     let updated;
@@ -114,7 +118,12 @@ const UserDashboard = () => {
     localStorage.setItem('compareIds', JSON.stringify(updated));
   };
 
-  // Отправка отзыва
+  const openReviewModal = (td) => {
+    setReviewForm({ test_drive_id: td.id, rating: 5, comment: '' });
+    setActiveReviewTd(td);
+    setShowReviewModal(true);
+  };
+
   const handleReviewSubmit = async (e, tdId) => {
     e.preventDefault();
     try {
@@ -125,6 +134,8 @@ const UserDashboard = () => {
       });
       alert('Спасибо за ваш отзыв!');
       setReviewForm({ test_drive_id: null, rating: 5, comment: '' });
+      setShowReviewModal(false);
+      setActiveReviewTd(null);
       fetchData();
     } catch (err) {
       console.error('Ошибка отправки отзыва:', err);
@@ -132,7 +143,6 @@ const UserDashboard = () => {
     }
   };
 
-  // Бронебойный хелпер для вытаскивания URL картинки
   const resolveCarImage = (car) => {
     if (!car) return '';
     let url = car.image_url || car.image;
@@ -148,20 +158,17 @@ const UserDashboard = () => {
     return '';
   };
 
-  // Фильтруем массив избранного для вкладки сравнения
   const compareCars = favorites.filter(car => {
     const cid = getCarId(car);
     return cid && compareIds.includes(cid);
   });
 
-  // Проверка отличий в характеристиках
   const isFieldDifferent = (fieldKey) => {
     if (compareCars.length < 2) return false;
     const firstValue = compareCars[0][fieldKey];
     return compareCars.some(car => car[fieldKey] !== firstValue);
   };
 
-  // ================= ОТРИСОВКА ВКЛАДОК =================
   const renderTabContent = () => {
     switch (activeTab) {
       case 'profile':
@@ -201,10 +208,10 @@ const UserDashboard = () => {
       case 'purchases':
         return purchases.length ? (
           <div className={styles.cardsGrid}>
-            {purchases.map((p) => (
-              <div key={`purchase-${p.id}`} className={`${styles.card} ${styles.receiptCard}`}>
+            {purchases.map((p, idx) => (
+              <div key={`purchase-${p.id}`} className={`${styles.card} ${styles.receiptCard} ${printingId === p.id ? styles.isPrinting : ''}`}>
                 <div className={styles.receiptHeader}>
-                  <h4>Договор купли-продажи №{p.id}</h4>
+                  <h4>Чек №{idx + 1}</h4>
                   <span>{p.purchase_date ? new Date(p.purchase_date).toLocaleDateString('ru-RU') : ''}</span>
                 </div>
                 <div className={styles.receiptBody}>
@@ -221,7 +228,7 @@ const UserDashboard = () => {
                     <strong>Владелец подтвержден</strong>
                   </div>
                 </div>
-                <button className={styles.printBtn} onClick={() => window.print()}>
+                <button className={styles.printBtn} onClick={() => handlePrint(p.id)}>
                   Распечатать чек (PDF)
                 </button>
               </div>
@@ -249,38 +256,19 @@ const UserDashboard = () => {
                   <p><strong>Дата сессии:</strong> {td.preferred_date ? new Date(td.preferred_date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }) : 'Не назначена'}</p>
                   <p><strong>Контактный телефон:</strong> {td.phone}</p>
                   
-                  {td.comment && (
+                  {(td.admin_comment || td.comment) && (
                     <div className={styles.comment}>
-                      <strong>Ответ автосалона:</strong> {td.comment}
+                      <strong>Ответ автосалона:</strong> {td.admin_comment || td.comment}
                     </div>
                   )}
 
                   {td.status === 'approved' && (
-                    <div style={{ marginTop: '1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                      <h5 style={{ margin: '0 0 0.2rem 0', fontSize: '0.95rem' }}>Оставить отзыв о поездке</h5>
-                      <form onSubmit={(e) => handleReviewSubmit(e, td.id)} style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                        <select 
-                          value={reviewForm.test_drive_id === td.id ? reviewForm.rating : 5}
-                          onChange={(e) => setReviewForm({ ...reviewForm, test_drive_id: td.id, rating: e.target.value })}
-                          style={{ background: 'var(--bg)', color: 'var(--text)', border: '1px solid rgba(128,128,128,0.2)', padding: '0.3rem', borderRadius: '6px' }}
-                        >
-                          <option value="5">5 ★★★★★</option>
-                          <option value="4">4 ★★★★</option>
-                          <option value="3">3 ★★★</option>
-                          <option value="2">2 ★★</option>
-                          <option value="1">1 ★</option>
-                        </select>
-                        <motion.textarea 
-                          placeholder="Поделитесь впечатлениями..." 
-                          value={reviewForm.test_drive_id === td.id ? reviewForm.comment : ''}
-                          onChange={(e) => setReviewForm({ ...reviewForm, test_drive_id: td.id, comment: e.target.value })}
-                          style={{ width: '100%', background: 'var(--bg)', color: 'var(--text)', border: '1px solid rgba(128,128,128,0.2)', borderRadius: '8px', padding: '0.5rem', fontSize: '0.85rem' }}
-                          rows="2"
-                          required
-                        />
-                        <button type="submit" className={styles.printBtn}>Отправить</button>
-                      </form>
-                    </div>
+                    <button 
+                      className={styles.actionBtn} 
+                      onClick={() => openReviewModal(td)}
+                    >
+                      Оставить отзыв
+                    </button>
                   )}
                 </div>
               </div>
@@ -308,7 +296,7 @@ const UserDashboard = () => {
                   <p><strong>Период кредитования:</strong> {loan.term_months || loan.term} мес.</p>
                   <p><strong>Процентная ставка:</strong> {loan.interest_rate || loan.rate}% годовых</p>
                   <p><strong>Ежемесячный платеж:</strong> {loan.monthly_payment?.toLocaleString('ru-RU')} ₽</p>
-                  {loan.comment && <div className={styles.comment}><strong>Решение:</strong> {loan.comment}</div>}
+                  {(loan.admin_comment || loan.comment) && <div className={styles.comment}><strong>Решение:</strong> {loan.admin_comment || loan.comment}</div>}
                 </div>
               </div>
             ))}
@@ -501,6 +489,81 @@ const UserDashboard = () => {
           {renderTabContent()}
         </AnimatePresence>
       </div>
+
+      {/* МОДАЛЬНОЕ ОКНО С ПЛОТНЫМ НЕПРОЗРАЧНЫМ ФОНОМ */}
+      <AnimatePresence>
+        {showReviewModal && activeReviewTd && (
+          <motion.div 
+            className={styles.modalOverlay}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => { setShowReviewModal(false); setActiveReviewTd(null); }}
+          >
+            <motion.div 
+              className={styles.modalContent}
+              initial={{ scale: 0.95, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 20 }}
+              transition={{ duration: 0.2 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button className={styles.modalClose} onClick={() => { setShowReviewModal(false); setActiveReviewTd(null); }}>✕</button>
+              <h3 className={styles.modalTitle}>Поделитесь впечатлениями</h3>
+              <p className={styles.modalSubtitle}>
+                {activeReviewTd.car_brand || activeReviewTd.brand || 'Luxury'} {activeReviewTd.car_model || activeReviewTd.model || 'Car'}
+              </p>
+              
+              <form onSubmit={(e) => handleReviewSubmit(e, activeReviewTd.id)} className={styles.modalForm}>
+                <div className={styles.modalField}>
+                  <label>Ваша оценка поездки</label>
+                  <div className={styles.starsContainer}>
+                    {[1, 2, 3, 4, 5].map((star) => {
+                      const isActive = star <= (hoverRating || reviewForm.rating);
+                      return (
+                        <span
+                          key={`star-${star}`}
+                          className={`${styles.star} ${isActive ? styles.starActive : ''}`}
+                          onClick={() => setReviewForm({ ...reviewForm, rating: star })}
+                          onMouseEnter={() => setHoverRating(star)}
+                          onMouseLeave={() => setHoverRating(null)}
+                        >
+                          ★
+                        </span>
+                      );
+                    })}
+                  </div>
+                </div>
+                
+                <div className={styles.modalField}>
+                  <label>Ваш отзыв</label>
+                  <textarea 
+                    placeholder="Расскажите, как прошёл тест-драйв, понравилась ли управляемость и динамика автомобиля..." 
+                    value={reviewForm.comment}
+                    onChange={(e) => setReviewForm({ ...reviewForm, comment: e.target.value })}
+                    className={styles.modalTextarea}
+                    rows="4"
+                    required
+                  />
+                </div>
+                
+                <div className={styles.modalActions}>
+                  <button 
+                    type="button" 
+                    className={styles.cancelBtn} 
+                    onClick={() => { setShowReviewModal(false); setActiveReviewTd(null); }}
+                  >
+                    Отмена
+                  </button>
+                  <button type="submit" className={styles.submitBtn}>
+                    Отправить отзыв
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 };

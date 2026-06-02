@@ -137,8 +137,7 @@ class LoanApplicationOut(BaseModel):
     overpayment: float
     status: str
     created_at: datetime
-    # При необходимости можно добавить admin_comment, но сейчас не требуется
-    # admin_comment: Optional[str] = None
+    admin_comment: Optional[str] = None  # РАСКОММЕНТИРОВАНО: теперь комментарии будут приходить на фронтенд
 
     model_config = {"from_attributes": True}
 
@@ -165,6 +164,6 @@ class TestDriveRequestOut(BaseModel):
     message: Optional[str] = None
     status: str
     created_at: datetime
-    admin_comment: Optional[str] = None    # <-- добавлено
+    admin_comment: Optional[str] = None
 
     model_config = {"from_attributes": True}

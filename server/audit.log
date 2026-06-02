@@ -207,3 +207,17 @@
 {"timestamp": "2026-06-01T19:56:00.146730", "event": "USER_LOGIN", "data": {"email": "admin@luxury.com"}}
 {"timestamp": "2026-06-01T20:04:46.739985", "event": "USER_LOGIN", "data": {"email": "admin@luxury.com"}}
 {"timestamp": "2026-06-01T20:09:46.025015", "event": "USER_LOGIN", "data": {"email": "admin@luxury.com"}}
+{"timestamp": "2026-06-02T08:23:27.364145", "event": "USER_LOGIN", "data": {"email": "admin@luxury.com"}}
+{"timestamp": "2026-06-02T08:24:51.246577", "event": "PURCHASE_MADE", "data": {"user": "admin@luxury.com", "car_id": 1, "price": 321321312.0}}
+{"timestamp": "2026-06-02T08:24:55.693911", "event": "PURCHASE_MADE", "data": {"user": "admin@luxury.com", "car_id": 1, "price": 321321312.0}}
+{"timestamp": "2026-06-02T08:24:59.834157", "event": "PURCHASE_MADE", "data": {"user": "admin@luxury.com", "car_id": 1, "price": 321321312.0}}
+{"timestamp": "2026-06-02T08:25:30.240800", "event": "LOAN_STATUS_CHANGED", "data": {"admin": "admin@luxury.com", "loan_id": 3, "new_status": "approved"}}
+{"timestamp": "2026-06-02T08:38:04.268819", "event": "PURCHASE_MADE", "data": {"user": "admin@luxury.com", "car_id": 2, "price": 123.0}}
+{"timestamp": "2026-06-02T08:46:53.239696", "event": "LOAN_STATUS_CHANGED", "data": {"admin": "admin@luxury.com", "loan_id": 2, "new_status": "approved"}}
+{"timestamp": "2026-06-02T08:48:54.340370", "event": "PURCHASE_MADE", "data": {"user": "admin@luxury.com", "car_id": 2, "price": 123.0}}
+{"timestamp": "2026-06-02T08:49:08.275695", "event": "LOAN_CALCULATED", "data": {"user": "admin@luxury.com", "car_id": 2, "amount": 123.0}}
+{"timestamp": "2026-06-02T08:49:16.353014", "event": "LOAN_STATUS_CHANGED", "data": {"admin": "admin@luxury.com", "loan_id": 6, "new_status": "approved"}}
+{"timestamp": "2026-06-02T11:28:41.570511", "event": "USER_LOGIN", "data": {"email": "admin@luxury.com"}}
+{"timestamp": "2026-06-02T12:01:21.703243", "event": "PURCHASE_MADE", "data": {"user": "admin@luxury.com", "car_id": 1, "price": 321321312.0}}
+{"timestamp": "2026-06-02T12:04:22.729692", "event": "PURCHASE_MADE", "data": {"user": "admin@luxury.com", "car_id": 1, "price": 321321312.0}}
+{"timestamp": "2026-06-02T15:23:01.654369", "event": "USER_LOGIN", "data": {"email": "admin@luxury.com"}}

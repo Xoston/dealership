@@ -45,18 +45,28 @@ def create_user(user_data: dict):
 
 # ---------- Cars ----------
 def get_cars(brand=None, model=None, min_price=None, max_price=None,
-             year_from=None, year_to=None, body_type=None, restyling=None):
+             year_from=None, year_to=None, body_type=None, restyling=None, search=None):
     conn = get_connection()
     try:
         cursor = conn.cursor()
         query = "SELECT * FROM cars WHERE 1=1"
         params = []
+        
+        # Если фронтенд передает общую поисковую строку через ?search=
+        if search:
+            query += " AND (brand LIKE ? OR model LIKE ? OR CAST(year AS TEXT) LIKE ?)"
+            params.extend([f"%{search}%", f"%{search}%", f"%{search}%"])
+            
+        # Если поиск идет по параметру brand (но туда ввели год, например "2020")
         if brand:
-            query += " AND brand LIKE ?"
-            params.append(f"%{brand}%")
+            query += " AND (brand LIKE ? OR CAST(year AS TEXT) LIKE ?)"
+            params.extend([f"%{brand}%", f"%{brand}%"])
+            
+        # Если поиск идет по параметру model (но туда ввели год)
         if model:
-            query += " AND model LIKE ?"
-            params.append(f"%{model}%")
+            query += " AND (model LIKE ? OR CAST(year AS TEXT) LIKE ?)"
+            params.extend([f"%{model}%", f"%{model}%"])
+            
         if min_price is not None:
             query += " AND price >= ?"
             params.append(min_price)
@@ -75,6 +85,7 @@ def get_cars(brand=None, model=None, min_price=None, max_price=None,
         if restyling is not None:
             query += " AND restyling = ?"
             params.append(restyling)
+            
         cursor.execute(query, params)
         rows = cursor.fetchall()
         cars = []
