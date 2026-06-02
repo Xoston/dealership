@@ -15,11 +15,9 @@
 ### Пошаговая инструкция
 
 1. **Клонируйте репозиторий проекта:**
-```bash
    git clone [https://github.com/Xoston/luxury-dealer.git](https://github.com/Xoston/luxury-dealer.git)
    cd luxury-dealer
 2. **Запустите сборку и развёртывание контейнеров:**
-```bash
    docker-compose up --build
 
 3. **Проверьте работоспособность сервисов:**
@@ -28,7 +26,6 @@
    * **Интерактивная документация API (Swagger):** доступна по адресу http://localhost:8000/docs
 
 4. **Остановка приложения:**
-```bash
    docker-compose down
 
 ###  Верификация ролевой модели доступа
