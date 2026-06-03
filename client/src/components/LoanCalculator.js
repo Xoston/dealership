@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { calculateLoan } from '../services/loanService';
 import styles from './LoanCalculator.module.css';
 
 const LoanCalculator = ({ carId, carPrice }) => {
@@ -10,48 +9,86 @@ const LoanCalculator = ({ carId, carPrice }) => {
   const [result, setResult] = useState(null);
   const [error, setError] = useState('');
 
-  const handleCalculate = async (e) => {
+  const handleCalculate = (e) => {
     e.preventDefault();
     setError('');
-    try {
-      const res = await calculateLoan({
-        car_id: carId,
-        amount: parseFloat(amount),
-        term_months: parseInt(term),
-        interest_rate: parseFloat(rate),
-      });
-      setResult(res.data);
-    } catch (err) {
-      setError(err.response?.data?.detail || 'Ошибка расчёта');
+
+    const principal = parseFloat(amount);
+    const months = parseInt(term);
+    const annualRate = parseFloat(rate);
+
+    if (isNaN(principal) || isNaN(months) || isNaN(annualRate) || principal <= 0 || months <= 0 || annualRate < 0) {
+      setError('Пожалуйста, введите корректные параметры расчета.');
+      return;
     }
+
+    // Локальный расчет аннуитетного платежа без обращений к API
+    const monthlyRate = annualRate / 12 / 100;
+    let monthlyPayment = 0;
+
+    if (monthlyRate === 0) {
+      monthlyPayment = principal / months;
+    } else {
+      monthlyPayment = principal * (monthlyRate * Math.pow(1 + monthlyRate, months)) / (Math.pow(1 + monthlyRate, months) - 1);
+    }
+
+    const totalPayment = monthlyPayment * months;
+    const overpayment = totalPayment - principal;
+
+    let currentBalance = principal;
+    const schedule = [];
+
+    for (let month = 1; month <= months; month++) {
+      const interestMonth = currentBalance * monthlyRate;
+      const principalMonth = monthlyPayment - interestMonth;
+      currentBalance -= principalMonth;
+
+      schedule.push({
+        month,
+        payment: Math.round(monthlyPayment).toLocaleString('ru-RU'),
+        principal: Math.round(principalMonth).toLocaleString('ru-RU'),
+        interest: Math.round(interestMonth).toLocaleString('ru-RU'),
+        balance: Math.max(0, Math.round(currentBalance)).toLocaleString('ru-RU'),
+      });
+    }
+
+    setResult({
+      monthly_payment: Math.round(monthlyPayment).toLocaleString('ru-RU'),
+      total_payment: Math.round(totalPayment).toLocaleString('ru-RU'),
+      overpayment: Math.round(overpayment).toLocaleString('ru-RU'),
+      schedule,
+    });
   };
 
   return (
     <motion.div className={styles.container} initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
       <form onSubmit={handleCalculate}>
         <div className={styles.field}>
-          <label htmlFor="amount">Сумма кредита</label>
+          <label htmlFor="amount">Сумма кредита (₽)</label>
           <input id="amount" type="number" value={amount} onChange={(e) => setAmount(e.target.value)} required />
         </div>
         <div className={styles.field}>
-          <label htmlFor="term">Срок (мес.)</label>
+          <label htmlFor="term">Срок кредита (месяцев)</label>
           <input id="term" type="number" value={term} onChange={(e) => setTerm(e.target.value)} required />
         </div>
         <div className={styles.field}>
-          <label htmlFor="rate">Годовая ставка (%)</label>
+          <label htmlFor="rate">Процентная ставка (%)</label>
           <input id="rate" type="number" step="0.1" value={rate} onChange={(e) => setRate(e.target.value)} required />
         </div>
         <button type="submit" className={styles.calcBtn}>Рассчитать</button>
       </form>
+
       {error && <p className={styles.error}>{error}</p>}
+
       {result && (
         <motion.div className={styles.result} initial={{ y: 20 }} animate={{ y: 0 }}>
           <p>Ежемесячный платёж: <strong>{result.monthly_payment} ₽</strong></p>
           <p>Общая выплата: {result.total_payment} ₽</p>
           <p>Переплата: {result.overpayment} ₽</p>
+
           {result.schedule && result.schedule.length > 0 && (
             <details style={{ marginTop: '1rem' }}>
-              <summary>График платежей</summary>
+              <summary style={{ cursor: 'pointer', color: 'var(--primary)', fontWeight: 600 }}>График платежей</summary>
               <table className={styles.paymentTable}>
                 <thead>
                   <tr>

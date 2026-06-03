@@ -1,0 +1,97 @@
+.notificationContainer {
+  position: fixed;
+  top: 24px;
+  right: 24px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  max-width: 380px;
+  pointer-events: none;
+}
+
+.notification {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px;
+  border-radius: 12px;
+  background: rgba(25, 25, 25, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+.message {
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.4;
+  flex: 1;
+  padding-right: 10px;
+}
+
+.iconWrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+
+/* Специфичные стили под типы уведомлений */
+.success {
+  border-left: 4px solid #2e7d32;
+}
+.success .iconWrapper {
+  background: rgba(46, 125, 50, 0.15);
+  color: #a5d6a7;
+}
+
+.error {
+  border-left: 4px solid #c62828;
+}
+.error .iconWrapper {
+  background: rgba(198, 40, 40, 0.15);
+  color: #ef5350;
+}
+
+.warning {
+  border-left: 4px solid #f9a825;
+}
+.warning .iconWrapper {
+  background: rgba(249, 168, 37, 0.15);
+  color: #fff59d;
+}
+
+.info {
+  border-left: 4px solid #1565c0;
+}
+.info .iconWrapper {
+  background: rgba(21, 101, 192, 0.15);
+  color: #90caf9;
+}
+
+.closeBtn {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.4);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  transition: color 0.2s;
+}
+
+.notification:hover .closeBtn {
+  color: rgba(255, 255, 255, 0.8);
+}

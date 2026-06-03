@@ -1,24 +1,25 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useNotification } from '../context/NotificationContext';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import styles from './Auth.module.css';
 
-
 const LoginPage = () => {
   const { login } = useAuth();
+  const { addNotification } = useNotification();
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       await login(email, password);
+      addNotification('Вы успешно вошли в систему', 'success');
       navigate('/dashboard');
     } catch (err) {
-      setError('Неверные учетные данные');
+      addNotification('Неверный Email или пароль. Попробуйте снова.', 'error');
     }
   };
 
@@ -53,7 +54,6 @@ const LoginPage = () => {
               required
             />
           </div>
-          {error && <p className={styles.error}>{error}</p>}
           <button type="submit" className={styles.btn}>Войти</button>
         </form>
         <p className={styles.footerText}>
