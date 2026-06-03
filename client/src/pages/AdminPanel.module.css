@@ -15,7 +15,7 @@
 .statCard h3 { font-weight: 600; color: var(--text); opacity: 0.7; margin-bottom: 0.5rem; }
 .statCard p { font-size: 2.5rem; font-weight: 700; color: var(--primary); }
 
-/* Таблицы — Резиновая адаптивная верстка */
+/* Таблицы */
 .table { width: 100%; border-collapse: collapse; background: var(--bg); border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
 .table th, .table td { padding: 1rem; text-align: left; border-bottom: 1px solid rgba(128,128,128,0.2); vertical-align: middle; }
 .table th { background: var(--glass-bg); font-weight: 600; color: var(--primary); }
@@ -103,13 +103,6 @@
 .rejected { background: #fdecea; color: #d32f2f; }
 .pending { background: #fff3e0; color: #e65100; }
 
-/* Комментарий кредита */
-.loanCommentModal { background: var(--bg); border-radius: 20px; padding: 2rem; width: 90%; max-width: 400px; box-shadow: 0 20px 50px rgba(0,0,0,0.3); }
-.loanCommentTextarea { width: 100%; padding: 0.7rem; border-radius: 12px; border: 1.5px solid rgba(128,128,128,0.3); background: var(--bg); color: var(--text); font-family: inherit; font-size: 0.95rem; margin: 1rem 0; }
-.loanCommentButtons { display: flex; gap: 0.5rem; justify-content: flex-end; }
-.cancelBtn { background: transparent; border: 1px solid var(--text); opacity: 0.7; color: var(--text); padding: 0.6rem 1.5rem; border-radius: 30px; font-weight: 600; cursor: pointer; transition: 0.2s; }
-.cancelBtn:hover { background: var(--text); opacity: 1; color: var(--bg); }
-
 /* Адаптивность общего контейнера */
 @media (max-width: 600px) {
   .formRow { flex-direction: column; gap: 0.8rem; }
@@ -117,7 +110,7 @@
 }
 
 /* ========================
-   РАСШИРЕННЫЙ ДАШБОРД (адаптивный)
+   РАСШИРЕННЫЙ ДАШБОРД
    ======================== */
 .analyticsGrid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem; margin-top: 1.5rem; }
 .analyticsBlock { background: var(--bg); padding: 1.5rem; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); transition: transform 0.2s ease; }
@@ -154,9 +147,8 @@
 .moreBrands { text-align: center; color: var(--text); opacity: 0.6; font-size: 0.85rem; margin-top: 0.3rem; }
 
 /* Ожидающие тест‑драйвы */
-/* Ожидающие тест‑драйвы */
 .pendingTdCount {
-  display: inline-block; /* Важно для работы анимаций framer-motion */
+  display: inline-block;
   font-size: 3rem;
   font-weight: 700;
   color: var(--primary);
@@ -165,11 +157,9 @@
   transition: color 0.2s;
   user-select: none;
 }
-
 .pendingTdCount:hover {
   color: var(--primary-light);
 }
-@keyframes pulse { 0% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.05); opacity: 0.8; } 100% { transform: scale(1); opacity: 1; } }
 
 /* Фильтры */
 .roleSelect { padding: 0.4rem 0.8rem; border-radius: 20px; border: 1.5px solid var(--primary); background: var(--bg); color: var(--text); font-weight: 600; font-size: 0.85rem; cursor: pointer; outline: none; transition: 0.2s; }
@@ -213,38 +203,188 @@
 .columnItem:hover .columnLabel { color: var(--primary); }
 
 /* ========================
-   АВТО-ПОДСТРОЙКА КОЛОНКИ ДЕЙСТВИЙ (ФИКС)
+   ФИКС КОЛОНКИ ДЕЙСТВИЙ
    ======================== */
 .actionsCell {
-  display: table-cell;          /* Строго сохраняем табличную структуру ячейки */
-  white-space: nowrap;          /* Запрещаем перенос кнопок на новую строку */
-  vertical-align: middle;
-}
-
-/* Применяем классический CSS-трюк: сжимаем колонку до минимума, запрещая кнопкам перенос */
-.table th:last-child,
-.table td:last-child {
-  width: 1%;                    /* Занимает ровно столько места, сколько нужно кнопкам в ряд */
   white-space: nowrap;
 }
-
-/* Настраиваем аккуратные отступы между кнопками внутри ячейки */
+.table th:last-child,
+.table td:last-child {
+  width: 1%;
+  white-space: nowrap;
+}
 .actionsCell button {
   margin-right: 0.5rem;
   vertical-align: middle;
 }
-
 .actionsCell button:last-child {
   margin-right: 0;
 }
-
-/* На планшетах и мобилках включаем горизонтальный скролл всей таблицы, чтобы текст не сжимался */
 @media (max-width: 900px) {
   .table {
     display: block;
     width: 100%;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* ========================
+   МОДАЛКИ КОММЕНТАРИЕВ (с переносом слов)
+   ======================== */
+.loanCommentModal {
+  background: var(--bg);
+  border-radius: 24px;
+  padding: 2rem;
+  width: 90%;
+  max-width: 500px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+  position: relative;
+  color: var(--text);
+  animation: fadeScaleIn 0.3s ease;
+}
+
+@keyframes fadeScaleIn {
+  0% { opacity: 0; transform: scale(0.95); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+.loanCommentModal h3 {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.4rem;
+  margin: 0 0 1rem 0;
+  color: var(--primary);
+  text-align: center;
+  border-bottom: 1px solid rgba(128,128,128,0.15);
+  padding-bottom: 0.8rem;
+  flex-shrink: 0;
+}
+
+/* Контейнер для текста комментария */
+.commentViewBody {
+  padding: 1rem 0;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  color: var(--text);
+  flex: 1;
+  overflow-y: auto;
+  min-height: 50px;
+  max-height: 50vh;
+}
+
+.loanCommentTextarea {
+  width: 100%;
+  padding: 0.9rem 1rem;
+  border-radius: 14px;
+  border: 1.5px solid rgba(128,128,128,0.25);
+  background: var(--glass-bg);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 0.95rem;
+  resize: vertical;
+  min-height: 90px;
+  margin-bottom: 1.5rem;
+  line-height: 1.5;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.loanCommentTextarea:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px rgba(123,31,162,0.15);
+}
+
+.loanCommentButtons {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+  flex-shrink: 0;
+  margin-top: 0.5rem;
+}
+
+.loanCommentButtons .submitBtn {
+  background: var(--primary);
+  color: white;
+  border: none;
+  padding: 0.7rem 2rem;
+  border-radius: 30px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+}
+
+.loanCommentButtons .submitBtn:hover {
+  background: var(--primary-light);
+  transform: scale(1.02);
+}
+
+.loanCommentButtons .cancelBtn {
+  background: transparent;
+  border: 1px solid rgba(128,128,128,0.4);
+  color: var(--text);
+  padding: 0.7rem 1.5rem;
+  border-radius: 30px;
+  font-weight: 500;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.loanCommentButtons .cancelBtn:hover {
+  background: rgba(128,128,128,0.08);
+}
+
+/* Кнопка‑иконка 💬 */
+.commentIconBtn {
+  background: none;
+  border: none;
+  font-size: 1.3rem;
+  cursor: pointer;
+  padding: 0;
+  margin-left: 0.5rem;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+  color: var(--text);
+}
+.commentIconBtn:hover {
+  opacity: 1;
+}
+
+/* Крестик закрытия модалки */
+.modalClose {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: var(--text);
+  opacity: 0.5;
+}
+.modalClose:hover {
+  opacity: 1;
+}
+
+/* Адаптивность модалок */
+@media (max-width: 500px) {
+  .loanCommentModal {
+    padding: 1.5rem;
+    max-width: 95%;
+    max-height: 90vh;
+  }
+  .loanCommentTextarea {
+    min-height: 70px;
+    font-size: 0.9rem;
+  }
+  .commentViewBody {
+    max-height: 40vh;
   }
 }
 

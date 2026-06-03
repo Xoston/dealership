@@ -47,7 +47,7 @@
   box-shadow: 0 8px 25px rgba(0,0,0,0.08);
   transition: transform 0.3s, box-shadow 0.3s;
   display: flex;
-  flex-direction: column;          /* теперь вертикально */
+  flex-direction: column;
 }
 .favCard:hover {
   transform: translateY(-6px);
@@ -56,15 +56,15 @@
 
 .favImageWrapper {
   width: 100%;
-  height: 220px;                  /* увеличенная высота */
+  height: 220px;
   overflow: hidden;
-  background: #111;               /* тёмный фон для загрузки */
+  background: #111;
 }
 
 .favImage {
   width: 100%;
   height: 100%;
-  object-fit: cover;              /* заполнение без искажений */
+  object-fit: cover;
   display: block;
 }
 
@@ -530,10 +530,77 @@
   .printBtn { display: none !important; }
 }
 
+/* ---------- ПАГИНАЦИЯ ---------- */
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 2rem;
+  flex-wrap: wrap;
+}
+
+.pageBtn {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg);
+  border: 1.5px solid rgba(128,128,128,0.25);
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--text);
+  cursor: pointer;
+  transition: all 0.25s ease;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+
+.pageBtn:hover:not(:disabled):not(.dots):not(.activePage) {
+  background: var(--accent);
+  border-color: var(--primary);
+  color: var(--primary);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(74,20,140,0.15);
+}
+
+.activePage {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
+  font-weight: 700;
+  box-shadow: 0 6px 16px rgba(74,20,140,0.3);
+  transform: scale(1.05);
+}
+
+.dots {
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  cursor: default;
+  pointer-events: none;
+  color: #888;
+  font-weight: 400;
+}
+
+.pageBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
 /* ---------- АДАПТИВ ---------- */
 @media (max-width: 600px) {
   .favoritesGrid { grid-template-columns: 1fr; }
   .favCard { flex-direction: column; }
   .favImageWrapper { height: 200px; }
   .compareCard { min-width: 260px; }
+  .pageBtn {
+    width: 36px;
+    height: 36px;
+    font-size: 0.85rem;
+    border-radius: 10px;
+  }
 }

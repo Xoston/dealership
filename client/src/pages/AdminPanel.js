@@ -170,6 +170,10 @@ const AdminPanel = () => {
   const [existingPhotos, setExistingPhotos] = useState([]);
   const fileInputRef = useRef(null);
 
+  // ---------- Просмотр комментария ----------
+  const [showCommentView, setShowCommentView] = useState(false);
+  const [commentViewData, setCommentViewData] = useState({ title: '', text: '' });
+
   // ================= ЗАГРУЗКА ДАННЫХ =================
   const fetchData = async () => {
     setLoading(true);
@@ -456,6 +460,12 @@ const AdminPanel = () => {
     } catch (err) { alert('Ошибка обновления статуса'); }
   };
 
+  // Функция открытия просмотра комментария
+  const openCommentView = (text, title) => {
+    setCommentViewData({ title, text });
+    setShowCommentView(true);
+  };
+
   if (loading) return <div className={styles.loading}>Загрузка...</div>;
 
   // ================= ФИЛЬТРАЦИЯ АВТОМОБИЛЕЙ =================
@@ -600,9 +610,13 @@ const AdminPanel = () => {
                         {loan.user_email} · {loan.status === 'calculated' ? 'Рассчитана' : loan.status === 'approved' ? 'Одобрена' : 'Отклонена'}
                         {loan.created_at && <span> · {new Date(loan.created_at).toLocaleDateString()}</span>}
                         {(loan.admin_comment || loan.comment) && (
-                          <div style={{ marginTop: '0.3rem', color: 'var(--primary)', fontStyle: 'italic', fontSize: '0.85rem' }}>
-                            ➡ {loan.admin_comment || loan.comment}
-                          </div>
+                          <button
+                            className={styles.commentIconBtn}
+                            onClick={() => openCommentView(loan.admin_comment || loan.comment, `Кредит №${loan.id}`)}
+                            title="Показать комментарий"
+                          >
+                            💬
+                          </button>
                         )}
                       </div>
                     </li>
@@ -677,7 +691,7 @@ const AdminPanel = () => {
                   role="button"
                   tabIndex={0}
                   onKeyDown={(e) => e.key === 'Enter' && setActiveTab('testdrives')}
-                  
+
                   animate={{
                     y: [0, -6, 0],
                   }}
@@ -686,7 +700,7 @@ const AdminPanel = () => {
                     repeat: Infinity,
                     ease: "easeInOut"
                   }}
-                  whileHover={{ 
+                  whileHover={{
                     scale: 1.15,
                     rotate: [0, -5, 5, -5, 0],
                     transition: { duration: 0.4 }
@@ -775,9 +789,13 @@ const AdminPanel = () => {
                         {td.status === 'approved' ? 'Одобрена' : td.status === 'rejected' ? 'Отклонена' : 'Ожидает'}
                       </span>
                       {(td.admin_comment || td.comment) && (
-                        <div style={{ fontSize: '0.85rem', opacity: 0.7, marginTop: '0.4rem', whiteSpace: 'normal', maxWidth: '200px', wordBreak: 'break-word' }}>
-                          💬 {td.admin_comment || td.comment}
-                        </div>
+                        <button
+                          className={styles.commentIconBtn}
+                          onClick={() => openCommentView(td.admin_comment || td.comment, `Тест-драйв №${td.id}`)}
+                          title="Показать комментарий"
+                        >
+                          💬
+                        </button>
                       )}
                     </td>
                     <td className={styles.actionsCell}>
@@ -810,9 +828,13 @@ const AdminPanel = () => {
                         {loan.status === 'approved' ? 'Одобрена' : loan.status === 'rejected' ? 'Отклонена' : 'Рассчитана'}
                       </span>
                       {(loan.admin_comment || loan.comment) && (
-                        <div style={{ fontSize: '0.85rem', opacity: 0.7, marginTop: '0.4rem', whiteSpace: 'normal', maxWidth: '200px', wordBreak: 'break-word' }}>
-                          💬 {loan.admin_comment || loan.comment}
-                        </div>
+                        <button
+                          className={styles.commentIconBtn}
+                          onClick={() => openCommentView(loan.admin_comment || loan.comment, `Кредит №${loan.id}`)}
+                          title="Показать комментарий"
+                        >
+                          💬
+                        </button>
                       )}
                     </td>
                     <td className={styles.actionsCell}>
@@ -854,6 +876,24 @@ const AdminPanel = () => {
                 <div className={styles.loanCommentButtons}>
                   <button className={styles.submitBtn} onClick={submitTestDriveStatus}>Подтвердить</button>
                   <button className={styles.cancelBtn} onClick={() => setTestDriveCommentModal(false)}>Отмена</button>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* ===== МОДАЛЬНОЕ ОКНО ПРОСМОТРА КОММЕНТАРИЯ ===== */}
+        <AnimatePresence>
+          {showCommentView && (
+            <motion.div className={styles.modalOverlay} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowCommentView(false)}>
+              <motion.div className={styles.loanCommentModal} initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} onClick={e => e.stopPropagation()}>
+                <button className={styles.modalClose} onClick={() => setShowCommentView(false)}>✕</button>
+                <h3>{commentViewData.title}</h3>
+                <div className={styles.commentViewBody}>
+                  {commentViewData.text}
+                </div>
+                <div className={styles.loanCommentButtons}>
+                  <button className={styles.cancelBtn} onClick={() => setShowCommentView(false)}>Закрыть</button>
                 </div>
               </motion.div>
             </motion.div>

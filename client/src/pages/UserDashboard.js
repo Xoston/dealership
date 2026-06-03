@@ -35,6 +35,14 @@ const UserDashboard = () => {
     comment: ''
   });
 
+  // ---------- ПАГИНАЦИЯ ----------
+  const [page, setPage] = useState({
+    purchases: 1,
+    testdrives: 1,
+    loans: 1,
+  });
+  const PER_PAGE = 5;
+
   const tabs = [
     { key: 'profile', label: 'Профиль' },
     { key: 'purchases', label: 'История покупок' },
@@ -193,6 +201,58 @@ const UserDashboard = () => {
     return compareCars.some(car => car[fieldKey] !== firstValue);
   };
 
+  // Общая функция пагинации
+  const renderPagination = (tabKey, totalItems) => {
+    const totalPages = Math.ceil(totalItems / PER_PAGE);
+    const current = page[tabKey] || 1;
+    if (totalPages <= 1) return null;
+
+    const getPageNumbers = () => {
+      const pages = [];
+      if (totalPages <= 7) {
+        for (let i = 1; i <= totalPages; i++) pages.push(i);
+      } else {
+        pages.push(1);
+        if (current > 3) pages.push('...');
+        const start = Math.max(2, current - 1);
+        const end = Math.min(totalPages - 1, current + 1);
+        for (let i = start; i <= end; i++) pages.push(i);
+        if (current < totalPages - 2) pages.push('...');
+        pages.push(totalPages);
+      }
+      return pages;
+    };
+
+    return (
+      <div className={styles.pagination}>
+        <button
+          className={styles.pageBtn}
+          disabled={current === 1}
+          onClick={() => setPage(prev => ({ ...prev, [tabKey]: current - 1 }))}
+        >
+          ‹
+        </button>
+        {getPageNumbers().map((p, idx) => (
+          <button
+            key={idx}
+            className={`${styles.pageBtn} ${p === current ? styles.activePage : ''} ${p === '...' ? styles.dots : ''}`}
+            onClick={() => typeof p === 'number' && setPage(prev => ({ ...prev, [tabKey]: p }))}
+            disabled={p === '...'}
+          >
+            {p}
+          </button>
+        ))}
+        <button
+          className={styles.pageBtn}
+          disabled={current === totalPages}
+          onClick={() => setPage(prev => ({ ...prev, [tabKey]: current + 1 }))}
+        >
+          ›
+        </button>
+      </div>
+    );
+  };
+
   const renderTabContent = () => {
     switch (activeTab) {
       case 'profile':
@@ -229,121 +289,142 @@ const UserDashboard = () => {
           </motion.div>
         );
 
-      case 'purchases':
+      case 'purchases': {
+        const totalPages = Math.ceil(purchases.length / PER_PAGE);
+        const currentPage = page.purchases || 1;
+        const paginatedPurchases = purchases.slice((currentPage - 1) * PER_PAGE, currentPage * PER_PAGE);
         return purchases.length ? (
-          <div className={styles.cardsGrid}>
-            {purchases.map((p, idx) => (
-              <div key={`purchase-${p.id}`} className={`${styles.card} ${styles.receiptCard} ${printingId === p.id ? styles.isPrinting : ''}`}>
-                <div className={styles.receiptHeader}>
-                  <h4>Чек №{idx + 1}</h4>
-                  <span>{p.purchase_date ? new Date(p.purchase_date).toLocaleDateString('ru-RU') : ''}</span>
+          <>
+            <div className={styles.cardsGrid}>
+              {paginatedPurchases.map((p, idx) => (
+                <div key={`purchase-${p.id}`} className={`${styles.card} ${styles.receiptCard} ${printingId === p.id ? styles.isPrinting : ''}`}>
+                  <div className={styles.receiptHeader}>
+                    <h4>Чек №{p.id}</h4>
+                    <span>{p.purchase_date ? new Date(p.purchase_date).toLocaleDateString('ru-RU') : ''}</span>
+                  </div>
+                  <div className={styles.receiptBody}>
+                    <div className={styles.receiptRow}>
+                      <span>Автомобиль:</span>
+                      <strong>{p.car_brand || p.brand || 'Luxury Car'} {p.car_model || p.model || ''}</strong>
+                    </div>
+                    <div className={styles.receiptRow}>
+                      <span>Стоимость сделки:</span>
+                      <strong>{p.price?.toLocaleString('ru-RU')} ₽</strong>
+                    </div>
+                    <div className={styles.receiptRow}>
+                      <span>Статус плательщика:</span>
+                      <strong>Владелец подтвержден</strong>
+                    </div>
+                  </div>
+                  <button className={styles.printBtn} onClick={() => handlePrint(p.id)}>
+                    Распечатать чек (PDF)
+                  </button>
                 </div>
-                <div className={styles.receiptBody}>
-                  <div className={styles.receiptRow}>
-                    <span>Автомобиль:</span>
-                    <strong>{p.car_brand || p.brand || 'Luxury Car'} {p.car_model || p.model || ''}</strong>
-                  </div>
-                  <div className={styles.receiptRow}>
-                    <span>Стоимость сделки:</span>
-                    <strong>{p.price?.toLocaleString('ru-RU')} ₽</strong>
-                  </div>
-                  <div className={styles.receiptRow}>
-                    <span>Статус плательщика:</span>
-                    <strong>Владелец подтвержден</strong>
-                  </div>
-                </div>
-                <button className={styles.printBtn} onClick={() => handlePrint(p.id)}>
-                  Распечатать чек (PDF)
-                </button>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+            {renderPagination('purchases', purchases.length)}
+          </>
         ) : (
           <p className={styles.empty}>У вас пока нет оформленных покупок автомобилей.</p>
         );
+      }
 
-      case 'testdrives':
+      case 'testdrives': {
+        const totalPages = Math.ceil(testDrives.length / PER_PAGE);
+        const currentPage = page.testdrives || 1;
+        const paginatedTestDrives = testDrives.slice((currentPage - 1) * PER_PAGE, currentPage * PER_PAGE);
         return testDrives.length ? (
-          <div className={styles.cardsGrid}>
-            {testDrives.map((td) => (
-              <div key={`td-${td.id}`} className={styles.card}>
-                <div className={styles.cardHeader}>
-                  <h4>Тест-драйв №{td.id}</h4>
-                  <span className={`${styles.loanStatus} ${styles[td.status]}`}>
-                    {td.status === 'pending' && 'На рассмотрении'}
-                    {td.status === 'approved' && 'Одобрен'}
-                    {td.status === 'rejected' && 'Отклонен'}
-                  </span>
-                </div>
-                <div className={styles.cardBody}>
-                  <p><strong>Автомобиль:</strong> {td.car_brand || td.brand || 'Luxury'} {td.car_model || td.model || 'Car'}</p>
-                  <p><strong>Дата сессии:</strong> {td.preferred_date ? new Date(td.preferred_date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }) : 'Не назначена'}</p>
-                  <p><strong>Контактный телефон:</strong> {td.phone}</p>
-                  
-                  {(td.admin_comment || td.comment) && (
-                    <button 
-                      type="button" 
-                      className={styles.actionBtn}
-                      onClick={() => openViewCommentModal(td, 'testdrive')}
-                      style={{ marginTop: '0.5rem' }}
-                    >
-                      Посмотреть комментарий
-                    </button>
-                  )}
+          <>
+            <div className={styles.cardsGrid}>
+              {paginatedTestDrives.map((td) => (
+                <div key={`td-${td.id}`} className={styles.card}>
+                  <div className={styles.cardHeader}>
+                    <h4>Тест-драйв №{td.id}</h4>
+                    <span className={`${styles.loanStatus} ${styles[td.status]}`}>
+                      {td.status === 'pending' && 'На рассмотрении'}
+                      {td.status === 'approved' && 'Одобрен'}
+                      {td.status === 'rejected' && 'Отклонен'}
+                    </span>
+                  </div>
+                  <div className={styles.cardBody}>
+                    <p><strong>Автомобиль:</strong> {td.car_brand || td.brand || 'Luxury'} {td.car_model || td.model || 'Car'}</p>
+                    <p><strong>Дата сессии:</strong> {td.preferred_date ? new Date(td.preferred_date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }) : 'Не назначена'}</p>
+                    <p><strong>Контактный телефон:</strong> {td.phone}</p>
+                    
+                    {(td.admin_comment || td.comment) && (
+                      <button 
+                        type="button" 
+                        className={styles.actionBtn}
+                        onClick={() => openViewCommentModal(td, 'testdrive')}
+                        style={{ marginTop: '0.5rem' }}
+                      >
+                        Посмотреть комментарий
+                      </button>
+                    )}
 
-                  {td.status === 'approved' && (
-                    <button 
-                      className={styles.actionBtn} 
-                      onClick={() => openReviewModal(td)}
-                      style={{ marginTop: '0.5rem' }}
-                    >
-                      Оставить отзыв
-                    </button>
-                  )}
+                    {td.status === 'approved' && (
+                      <button 
+                        className={styles.actionBtn} 
+                        onClick={() => openReviewModal(td)}
+                        style={{ marginTop: '0.5rem' }}
+                      >
+                        Оставить отзыв
+                      </button>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+            {renderPagination('testdrives', testDrives.length)}
+          </>
         ) : (
           <p className={styles.empty}>Заявки на тест-драйв отсутствуют.</p>
         );
+      }
 
-      case 'loans':
+      case 'loans': {
+        const totalPages = Math.ceil(loans.length / PER_PAGE);
+        const currentPage = page.loans || 1;
+        const paginatedLoans = loans.slice((currentPage - 1) * PER_PAGE, currentPage * PER_PAGE);
         return loans.length ? (
-          <div className={styles.cardsGrid}>
-            {loans.map((loan) => (
-              <div key={`loan-${loan.id}`} className={styles.card}>
-                <div className={styles.cardHeader}>
-                  <h4>Заявка №{loan.id}</h4>
-                  <span className={`${styles.loanStatus} ${styles[loan.status]}`}>
-                    {loan.status === 'pending' && 'На рассмотрении'}
-                    {loan.status === 'approved' && 'Одобрено'}
-                    {loan.status === 'rejected' && 'Отклонено'}
-                  </span>
+          <>
+            <div className={styles.cardsGrid}>
+              {paginatedLoans.map((loan) => (
+                <div key={`loan-${loan.id}`} className={styles.card}>
+                  <div className={styles.cardHeader}>
+                    <h4>Заявка №{loan.id}</h4>
+                    <span className={`${styles.loanStatus} ${styles[loan.status]}`}>
+                      {loan.status === 'pending' && 'На рассмотрении'}
+                      {loan.status === 'approved' && 'Одобрено'}
+                      {loan.status === 'rejected' && 'Отклонено'}
+                    </span>
+                  </div>
+                  <div className={styles.cardBody}>
+                    <p><strong>Сумма финансирования:</strong> {loan.amount?.toLocaleString('ru-RU')} ₽</p>
+                    <p><strong>Период кредитования:</strong> {loan.term_months || loan.term} мес.</p>
+                    <p><strong>Процентная ставка:</strong> {loan.interest_rate || loan.rate}% годовых</p>
+                    <p><strong>Ежемесячный платеж:</strong> {loan.monthly_payment?.toLocaleString('ru-RU')} ₽</p>
+                    
+                    {(loan.admin_comment || loan.comment) && (
+                      <button 
+                        type="button" 
+                        className={styles.actionBtn}
+                        onClick={() => openViewCommentModal(loan, 'loan')}
+                        style={{ marginTop: '0.5rem' }}
+                      >
+                        Посмотреть решение
+                      </button>
+                    )}
+                  </div>
                 </div>
-                <div className={styles.cardBody}>
-                  <p><strong>Сумма финансирования:</strong> {loan.amount?.toLocaleString('ru-RU')} ₽</p>
-                  <p><strong>Период кредитования:</strong> {loan.term_months || loan.term} мес.</p>
-                  <p><strong>Процентная ставка:</strong> {loan.interest_rate || loan.rate}% годовых</p>
-                  <p><strong>Ежемесячный платеж:</strong> {loan.monthly_payment?.toLocaleString('ru-RU')} ₽</p>
-                  
-                  {(loan.admin_comment || loan.comment) && (
-                    <button 
-                      type="button" 
-                      className={styles.actionBtn}
-                      onClick={() => openViewCommentModal(loan, 'loan')}
-                      style={{ marginTop: '0.5rem' }}
-                    >
-                      Посмотреть решение
-                    </button>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+            {renderPagination('loans', loans.length)}
+          </>
         ) : (
           <p className={styles.empty}>Расчетов или кредитных заявок пока нет.</p>
         );
+      }
 
       case 'favorites':
         return favorites.length ? (
@@ -357,7 +438,6 @@ const UserDashboard = () => {
 
               return (
                 <div key={fallbackKey} className={styles.favCard}>
-                  {/* Изображение теперь сверху, не сжимается */}
                   <div className={styles.favImageWrapper}>
                     <img 
                       src={getImageUrl(imgPath)} 
@@ -366,7 +446,6 @@ const UserDashboard = () => {
                       onError={(e) => { e.target.src = '/images/default-car.jpg'; }}
                     />
                   </div>
-
                   <div className={styles.favInfo}>
                     {carId ? (
                       <Link to={`/cars/${carId}`} className={styles.favLink}>
@@ -378,8 +457,6 @@ const UserDashboard = () => {
                     <p className={styles.price}>
                       {car.price ? `${car.price.toLocaleString('ru-RU')} ₽` : 'Цена по запросу'}
                     </p>
-                    
-                    {/* Стильная кнопка‑переключатель «Сравнить» */}
                     {carId && (
                       <button
                         className={`${styles.compareToggle} ${compareIds.includes(carId) ? styles.compareActive : ''}`}
@@ -389,7 +466,6 @@ const UserDashboard = () => {
                         {compareIds.includes(carId) ? 'В сравнении' : 'Добавить к сравнению'}
                       </button>
                     )}
-
                     <button onClick={() => removeFavorite(carId)} className={styles.removeFav}>
                       Удалить из избранного
                     </button>
@@ -416,16 +492,14 @@ const UserDashboard = () => {
                     <span className={styles.price}>{car.price?.toLocaleString('ru-RU')} ₽</span>
                     <button onClick={() => toggleCompare(carId)} className={styles.removeCarBtn} style={{ background: 'none', border: 'none', color: '#ff4d4d', fontSize: '1.5rem', cursor: 'pointer' }}>✕</button>
                   </div>
-                  
                   <img 
                     src={getImageUrl(imgPath)} 
                     alt={`${car.brand} ${car.model}`} 
                     className={styles.compareImage} 
                     onError={(e) => { e.target.src = '/images/default-car.jpg'; }}
                   />
-                  
                   <h3 className={styles.compareName}>{car.brand} {car.model}</h3>
-
+                  {/* группы сравнения */}
                   <div className={styles.compareGroup}>
                     <div className={styles.groupTitle}>Основные параметры</div>
                     <div className={`${styles.compareField} ${isFieldDifferent('year') ? styles.diffField : ''}`}>
@@ -437,7 +511,6 @@ const UserDashboard = () => {
                       <span className={styles.fieldValue}>{car.body_type || 'Седан'}</span>
                     </div>
                   </div>
-
                   <div className={styles.compareGroup}>
                     <div className={styles.groupTitle}>Двигатель и КПП</div>
                     <div className={`${styles.compareField} ${isFieldDifferent('engine_volume') ? styles.diffField : ''}`}>
@@ -457,7 +530,6 @@ const UserDashboard = () => {
                       <span className={styles.fieldValue}>{car.drive_type || '—'}</span>
                     </div>
                   </div>
-
                   <div className={styles.compareGroup}>
                     <div className={styles.groupTitle}>Динамика</div>
                     <div className={`${styles.compareField} ${isFieldDifferent('acceleration') ? styles.diffField : ''}`}>
@@ -469,7 +541,6 @@ const UserDashboard = () => {
                       <span className={styles.fieldValue}>{car.max_speed ? `${car.max_speed} км/ч` : '—'}</span>
                     </div>
                   </div>
-
                   {carId && (
                     <Link to={`/cars/${carId}`} className={styles.printBtn} style={{ textDecoration: 'none', textAlign: 'center', marginTop: '1rem', display: 'block' }}>
                       Открыть карточку
