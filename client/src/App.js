@@ -15,11 +15,13 @@ import UserDashboard from './pages/UserDashboard';
 import AdminPanel from './pages/AdminPanel';
 import ProtectedRoute from './components/ProtectedRoute';
 import NotFoundPage from './pages/NotFoundPage';
+import WebSocketListener from './components/WebSocketListener';
 
 function App() {
   return (
     <NotificationProvider>
       <AuthProvider>
+        <WebSocketListener />
         <ParticlesBackground />
         <BrowserRouter>
           <Navbar />

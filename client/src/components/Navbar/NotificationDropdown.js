@@ -1,10 +1,10 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useAuth } from '../../context/AuthContext';
+import { useNotification } from '../../context/NotificationContext'; // <-- Правильный контекст
 import styles from './NotificationDropdown.module.css';
 
 const NotificationDropdown = ({ onClose }) => {
-  const { notifications, clearNotifications } = useAuth();
+  const { notifications = [], removeNotification, clearNotifications } = useNotification();
 
   return (
     <AnimatePresence>
@@ -28,8 +28,29 @@ const NotificationDropdown = ({ onClose }) => {
             <p className={styles.empty}>Нет новых уведомлений</p>
           ) : (
             notifications.map((n) => (
-              <div key={n.id} className={styles.item}>
-                {n.message}
+              <div 
+                key={n.id} 
+                className={styles.item} 
+                style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px' }}
+              >
+                <span style={{ flex: 1, fontSize: '13px', lineHeight: '1.4' }}>{n.message}</span>
+                <button 
+                  onClick={() => removeNotification(n.id)}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: 'rgba(255, 255, 255, 0.4)',
+                    cursor: 'pointer',
+                    fontSize: '12px',
+                    padding: '4px 6px',
+                    transition: 'color 0.2s'
+                  }}
+                  onMouseEnter={(e) => e.target.style.color = '#fff'}
+                  onMouseLeave={(e) => e.target.style.color = 'rgba(255, 255, 255, 0.4)'}
+                  title="Удалить"
+                >
+                  ✕
+                </button>
               </div>
             ))
           )}

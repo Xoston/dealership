@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { useNotification } from '../../context/NotificationContext';
 import { motion } from 'framer-motion';
 import styles from './Navbar.module.css';
 import NotificationDropdown from './NotificationDropdown';
@@ -24,7 +25,8 @@ const BellIcon = ({ hasNotifications }) => (
 );
 
 const Navbar = () => {
-  const { user, logout, theme, toggleTheme, notifications } = useAuth();
+  const { user, logout, theme, toggleTheme } = useAuth();
+  const { notifications = [] } = useNotification() || {};
   const navigate = useNavigate();
   const [showNotifications, setShowNotifications] = useState(false);
   const notifRef = useRef(null);
@@ -47,7 +49,12 @@ const Navbar = () => {
   }, [showNotifications]);
 
   return (
-    <motion.nav className={styles.navbar} initial={{ y: -100, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.6, ease: 'easeOut' }}>
+    <motion.nav 
+      className={styles.navbar} 
+      initial={{ y: -100, opacity: 0 }} 
+      animate={{ y: 0, opacity: 1 }} 
+      transition={{ duration: 0.6, ease: 'easeOut' }}
+    >
       <div className={styles.logo}>
         <Link to="/">LUXURY DEALER</Link>
       </div>
@@ -56,9 +63,8 @@ const Navbar = () => {
         {user ? (
           <>
             <Link to="/dashboard">Личный кабинет</Link>
-            {/* Админ‑панель доступна администратору и менеджеру */}
             {(user.role === 'admin' || user.role === 'manager') && (
-              <Link to="/admin">Админ-панель</Link>
+              <Link to="/admin">Admin-панель</Link>
             )}
             <div className={styles.notificationWrapper} ref={notifRef}>
               <button
@@ -89,4 +95,4 @@ const Navbar = () => {
   );
 };
 
-export default Navbar;  
+export default Navbar;

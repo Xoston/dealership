@@ -6,6 +6,11 @@ from ..cache import cached
 
 router = APIRouter(prefix="/api/admin", tags=["admin"])
 
+# ---- ЗАГЛУШКА: Новые заявки (исправляет ошибку 404 в консоли) ----
+@router.get("/applications/new")
+def get_new_applications(current_user=Depends(get_current_admin_or_manager)):
+    return []
+
 # ---- Статистика ----
 @router.get("/stats")
 @cached(ttl=30)

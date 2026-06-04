@@ -1,0 +1,130 @@
+.modal {
+  max-width: 450px;
+  width: 90%;
+  box-sizing: border-box;
+  background: var(--bg); /* Чистый цвет темы без прозрачности */
+  color: var(--text);
+  padding: 2.2rem 2rem;
+  border-radius: 24px;
+  border: 1px solid rgba(128, 128, 128, 0.25);
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.3);
+}
+
+.modalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.8rem;
+}
+
+.modalTitle {
+  margin: 0;
+  font-family: 'Playfair Display', serif;
+  color: var(--text);
+  font-size: 1.6rem;
+  font-weight: 600;
+}
+
+.closeButton {
+  background: transparent;
+  border: none;
+  font-size: 1.4rem;
+  cursor: pointer;
+  color: var(--text);
+  opacity: 0.5;
+  padding: 0.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.2s;
+}
+
+.closeButton:hover {
+  opacity: 1;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+}
+
+.fieldGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  color: var(--text);
+  opacity: 0.7;
+}
+
+.input, .select, .textarea {
+  padding: 0.85rem 1rem;
+  border-radius: 12px;
+  border: 1px solid rgba(128, 128, 128, 0.25);
+  background: var(--bg);
+  color: var(--text);
+  font-family: inherit;
+  outline: none;
+  width: 100%;
+  box-sizing: border-box;
+  font-size: 0.95rem;
+  transition: border-color 0.2s;
+}
+
+.input:focus, .select:focus, .textarea:focus {
+  border-color: var(--primary);
+}
+
+.inputError {
+  border: 2px solid #D32F2F !important;
+}
+
+.textarea {
+  resize: none;
+}
+
+.errorText {
+  color: #D32F2F;
+  font-size: 0.85rem;
+  margin: 0;
+  font-weight: 600;
+  text-align: center;
+}
+
+.submitButton {
+  background: linear-gradient(135deg, var(--primary), var(--primary-light));
+  color: white;
+  border: none;
+  padding: 0.95rem;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  font-family: inherit;
+  transition: opacity 0.2s;
+  width: 100%;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  margin-top: 0.4rem;
+}
+
+.submitButton:hover {
+  opacity: 0.9;
+}
+
+.successContainer {
+  text-align: center;
+  padding: 1.5rem 0;
+  color: var(--text);
+}
+
+.successTitle {
+  color: #4CAF50;
+  margin-bottom: 0.5rem;
+  font-size: 1.4rem;
+}

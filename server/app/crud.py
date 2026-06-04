@@ -484,3 +484,28 @@ def get_user_reviews(user_id: int):
         return [dict(row) for row in rows]
     finally:
         conn.close()
+
+def get_all_reviews():
+    conn = get_connection()
+    try:
+        conn.row_factory = lambda cursor, row: dict(zip([col[0] for col in cursor.description], row))
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT 
+                r.id, 
+                r.user_id, 
+                r.test_drive_id, 
+                r.rating, 
+                r.comment,
+                u.email as user_email,
+                c.brand as car_brand,
+                c.model as car_model
+            FROM reviews r
+            JOIN users u ON r.user_id = u.id
+            JOIN test_drive_requests td ON r.test_drive_id = td.id
+            JOIN cars c ON td.car_id = c.id
+            ORDER BY r.id DESC
+        """)
+        return cursor.fetchall()
+    finally:
+        conn.close()

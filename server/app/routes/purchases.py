@@ -5,6 +5,11 @@ from ..audit import event_manager
 
 router = APIRouter()
 
+# ---- ЗАГЛУШКА: Все заявки (исправляет ошибку 404 по пути /api/applications) ----
+@router.get("/")
+def get_all_applications(current_user=Depends(get_current_user)):
+    return []
+
 @router.post("/")
 def purchase_car(payload: dict = Body(...), current_user=Depends(get_current_user)):
     car_id = payload.get("car_id")

@@ -1,12 +1,15 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useNotification } from '../context/NotificationContext'; // Импорт тостера
 import api, { getImageUrl } from '../services/api';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import styles from './UserDashboard.module.css';
 
 const UserDashboard = () => {
-  const { user, setUser, notifications, clearNotifications } = useAuth();
+  const { user, setUser } = useAuth();   // больше нет notifications/clearNotifications
+  const { addNotification } = useNotification(); // хук тостов
+
   const [activeTab, setActiveTab] = useState('profile');
   const [purchases, setPurchases] = useState([]);
   const [testDrives, setTestDrives] = useState([]);
@@ -81,7 +84,6 @@ const UserDashboard = () => {
     fetchData();
   }, [fetchData]);
 
-  // Контролируем печать после гарантированного обновления DOM-структуры
   useEffect(() => {
     if (printingId !== null) {
       window.print();
@@ -96,8 +98,10 @@ const UserDashboard = () => {
       const res = await api.put('/auth/profile', profileForm);
       setUser(res.data);
       setUpdateStatus({ type: 'success', text: 'Профиль успешно обновлен' });
+      addNotification('Профиль успешно обновлён', 'success');
     } catch (err) {
       setUpdateStatus({ type: 'error', text: 'Не удалось обновить профиль. Попробуйте позже.' });
+      addNotification('Не удалось обновить профиль', 'error');
     }
   };
 
@@ -164,14 +168,14 @@ const UserDashboard = () => {
         rating: Number(reviewForm.rating),
         comment: reviewForm.comment
       });
-      alert('Спасибо за ваш отзыв!');
+      addNotification('Спасибо за ваш отзыв!', 'success');
       setReviewForm({ test_drive_id: null, rating: 5, comment: '' });
       setShowReviewModal(false);
       setActiveReviewTd(null);
       fetchData();
     } catch (err) {
       console.error('Ошибка отправки отзыва:', err);
-      alert('Не удалось отправить отзыв.');
+      addNotification('Не удалось отправить отзыв', 'error');
     }
   };
 
@@ -201,7 +205,7 @@ const UserDashboard = () => {
     return compareCars.some(car => car[fieldKey] !== firstValue);
   };
 
-  // Общая функция пагинации
+  // Пагинация
   const renderPagination = (tabKey, totalItems) => {
     const totalPages = Math.ceil(totalItems / PER_PAGE);
     const current = page[tabKey] || 1;
@@ -499,7 +503,6 @@ const UserDashboard = () => {
                     onError={(e) => { e.target.src = '/images/default-car.jpg'; }}
                   />
                   <h3 className={styles.compareName}>{car.brand} {car.model}</h3>
-                  {/* группы сравнения */}
                   <div className={styles.compareGroup}>
                     <div className={styles.groupTitle}>Основные параметры</div>
                     <div className={`${styles.compareField} ${isFieldDifferent('year') ? styles.diffField : ''}`}>
@@ -555,22 +558,23 @@ const UserDashboard = () => {
         );
 
       case 'notifications':
-        return notifications.length ? (
-          <div className={styles.cardsGrid}>
-            {notifications.map((n, idx) => {
-              const msgText = n?.message || (typeof n === 'string' ? n : 'Новое уведомление');
-              return (
-                <div key={`notification-${idx}`} className={`${styles.card} ${styles.notificationCard}`}>
-                  <div className={styles.cardBody}>{msgText}</div>
-                </div>
-              );
-            })}
-            <button className={styles.clearBtn} onClick={clearNotifications}>
-              Очистить логи уведомлений
-            </button>
+        return (
+          <div className={styles.notificationsTab}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+              <h2 style={{ color: 'var(--text)', margin: 0, fontFamily: "'Playfair Display', serif" }}>
+                Центр уведомлений
+              </h2>
+            </div>
+            <div style={{ textAlign: 'center', padding: '4rem 2rem', background: 'var(--glass-bg)', borderRadius: '20px', color: 'var(--text)', opacity: 0.6 }}>
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ marginBottom: '1rem', opacity: 0.5 }}>
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M13.73 21a2 2 0 0 1-3.46 0" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+              <p style={{ margin: 0, fontSize: '1.1rem', fontWeight: '500' }}>
+                Все уведомления теперь приходят во всплывающих окнах (тостах).
+              </p>
+            </div>
           </div>
-        ) : (
-          <p className={styles.empty}>Новых уведомлений нет.</p>
         );
 
       default:

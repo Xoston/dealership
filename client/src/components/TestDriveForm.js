@@ -1,18 +1,41 @@
 import React, { useState } from 'react';
 import { createTestDrive } from '../services/testDriveService';
 import { useAuth } from '../context/AuthContext';
-import styles from './TestDriveForm.module.css';
+import styles from './TestDrive.module.css';
 
 const TestDriveForm = ({ carId }) => {
   const { user } = useAuth();
-  const [date, setDate] = useState('');
+  const [selectedDate, setSelectedDate] = useState('');
+  const [selectedTime, setSelectedTime] = useState('');
   const [phone, setPhone] = useState('');
   const [message, setMessage] = useState('');
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
 
+  // Генерируем массив из 45 дней вперед для записи на любой день месяца
+  const getNext45Days = () => {
+    const days = [];
+    const options = { weekday: 'short', month: 'long', day: 'numeric' };
+    for (let i = 0; i < 45; i++) {
+      const d = new Date();
+      d.setDate(d.getDate() + i);
+      
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      const dateStr = `${year}-${month}-${day}`;
+      
+      let label = d.toLocaleDateString('ru-RU', options);
+      label = label.charAt(0).toUpperCase() + label.slice(1);
+      
+      days.push({ dateStr, label });
+    }
+    return days;
+  };
+
+  const timeSlots = ['10:00', '11:30', '13:00', '14:30', '16:00', '17:30', '19:00', '20:30'];
+
   const validatePhone = (value) => {
-    // Разрешённые форматы: +79161234567 или 89161234567
     const cleaned = value.replace(/\D/g, '');
     if (cleaned.length !== 11) return false;
     if (cleaned[0] !== '7' && cleaned[0] !== '8') return false;
@@ -20,7 +43,6 @@ const TestDriveForm = ({ carId }) => {
   };
 
   const formatPhone = (value) => {
-    // Автоматически добавляем +7 или 8 при вводе
     const digits = value.replace(/\D/g, '');
     if (digits.length === 0) return '';
     if (digits[0] === '8') return `8${digits.slice(1, 11)}`;
@@ -28,69 +50,126 @@ const TestDriveForm = ({ carId }) => {
   };
 
   const handlePhoneChange = (e) => {
-    const raw = e.target.value;
-    setPhone(formatPhone(raw));
+    setPhone(formatPhone(e.target.value));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
-    if (!user) {
-      setError('Войдите, чтобы отправить заявку');
+    if (!selectedDate) {
+      setError('Пожалуйста, выберите дату тест-драйва');
+      return;
+    }
+    if (!selectedTime) {
+      setError('Пожалуйста, выберите время тест-драйва');
       return;
     }
     if (!validatePhone(phone)) {
-      setError('Некорректный номер телефона. Введите 11 цифр, начиная с +7 или 8.');
+      setError('Неверный формат телефона');
       return;
     }
+
+    // Формируем ISO строку даты и времени с секундами
+    const fullDateTime = `${selectedDate}T${selectedTime}:00`;
+
     try {
-      await createTestDrive({
-        car_id: carId,
-        preferred_date: date,
-        phone,
-        message,
-      });
+      // Меняем ключ с "date" на "preferred_date", как требует Pydantic-схема бэкенда
+      await createTestDrive({ car_id: carId, preferred_date: fullDateTime, phone, message });
       setSuccess(true);
+      setError('');
     } catch (err) {
       const detail = err.response?.data?.detail;
+      
       if (Array.isArray(detail)) {
-        setError(detail.map(e => e.msg).join('. '));
+        const messages = detail.map(d => `${d.loc?.[1] || 'поле'}: ${d.msg}`).join(', ');
+        setError(messages);
       } else if (typeof detail === 'string') {
         setError(detail);
       } else {
-        setError('Ошибка при отправке заявки');
+        setError('Ошибка при записи');
       }
     }
   };
 
-  if (!user) return <p style={{ marginTop: '1.5rem', color: '#888' }}>Войдите, чтобы записаться на тест-драйв</p>;
+  if (success) {
+    return (
+      <div className={styles.successContainer}>
+        <h4 className={styles.successTitle}>Успешно!</h4>
+        <p style={{ opacity: 0.9, margin: 0 }}>Вы записались на тест-драйв. Менеджер скоро свяжется с вами.</p>
+      </div>
+    );
+  }
 
   return (
-    <div style={{ marginTop: '2rem' }}>
-      {success && <p style={{ color: 'green' }}>✔ Заявка отправлена!</p>}
-      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-        <input type="datetime-local" value={date} onChange={(e) => setDate(e.target.value)} required
-          style={{ padding: '0.8rem', borderRadius: '12px', border: '2px solid rgba(74,20,140,0.15)', fontFamily: 'inherit' }} />
+    <form onSubmit={handleSubmit} className={styles.form}>
+      
+      {/* Селект Даты */}
+      <div className={styles.fieldGroup}>
+        <label className={styles.label}>ДАТА ТЕСТ-ДРАЙВА</label>
+        <select 
+          value={selectedDate} 
+          onChange={(e) => { setSelectedDate(e.target.value); setError(''); }}
+          required
+          className={styles.select}
+        >
+          <option value="" disabled>Выберите удобный день...</option>
+          {getNext45Days().map((item) => (
+            <option key={item.dateStr} value={item.dateStr}>
+              {item.label}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* Селект Времени */}
+      <div className={styles.fieldGroup}>
+        <label className={styles.label}>ВРЕМЯ</label>
+        <select 
+          value={selectedTime} 
+          onChange={(e) => { setSelectedTime(e.target.value); setError(''); }}
+          required
+          className={styles.select}
+        >
+          <option value="" disabled>Выберите время...</option>
+          {timeSlots.map((time) => (
+            <option key={time} value={time}>
+              {time}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* Телефон */}
+      <div className={styles.fieldGroup}>
+        <label className={styles.label}>КОНТАКТНЫЙ ТЕЛЕФОН</label>
         <input
           type="tel"
-          placeholder="Телефон (+79161234567)"
+          placeholder="+7 (916) 123-45-67"
           value={phone}
           onChange={handlePhoneChange}
           required
           pattern="(\+7|8)\d{10}"
-          title="Введите номер в формате +79161234567 или 89161234567"
-          style={{ padding: '0.8rem', borderRadius: '12px', border: error ? '2px solid #D32F2F' : '2px solid rgba(74,20,140,0.15)', fontFamily: 'inherit' }}
+          className={`${styles.input} ${error && !selectedDate && !selectedTime ? styles.inputError : ''}`}
         />
-        <textarea placeholder="Сообщение (необязательно)" value={message} onChange={(e) => setMessage(e.target.value)}
-          style={{ padding: '0.8rem', borderRadius: '12px', border: '2px solid rgba(74,20,140,0.15)', fontFamily: 'inherit', resize: 'vertical' }} />
-        <button type="submit" style={{
-          background: 'linear-gradient(135deg, var(--primary), var(--primary-light))',
-          color: 'white', border: 'none', padding: '0.8rem', borderRadius: '30px', fontWeight: 600, cursor: 'pointer',
-          boxShadow: '0 4px 15px rgba(74,20,140,0.3)', transition: 'all 0.3s'
-        }}>Отправить</button>
-      </form>
-      {error && <p style={{ color: 'red', marginTop: '0.5rem' }}>{error}</p>}
-    </div>
+      </div>
+      
+      {/* Комментарий */}
+      <div className={styles.fieldGroup}>
+        <label className={styles.label}>КОММЕНТАРИЙ</label>
+        <textarea 
+          placeholder="Пожелания к тест-драйву (необязательно)" 
+          value={message} 
+          onChange={(e) => setMessage(e.target.value)}
+          rows="2"
+          className={styles.textarea}
+        />
+      </div>
+      
+      {error && <p className={styles.errorText}>{error}</p>}
+      
+      <button type="submit" className={styles.submitButton}>
+        Подтвердить запись
+      </button>
+    </form>
   );
 };
 
