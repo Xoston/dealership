@@ -34,16 +34,20 @@ def update_test_drive_status(td_id: int, payload: dict = Body(...), current_user
     if not td:
         raise HTTPException(status_code=404, detail="Заявка на тест-драйв не найдена")
         
-    # Извлекаем user_id из результирующего объекта БД, чтобы точечно оповестить пользователя
     user_id = td.get("user_id") if isinstance(td, dict) else getattr(td, "user_id", None)
     event_manager.notify("TESTDRIVE_STATUS_UPDATED", {"td_id": td_id, "status": status, "user_id": user_id})
     return td
 
-@router.post("/review")
-def submit_review(payload: dict = Body(...), current_user=Depends(get_current_user)):
-    test_drive_id = payload.get("test_drive_id")
+@router.post("/{td_id}/review")
+def submit_review(td_id: int, payload: dict = Body(...), current_user=Depends(get_current_user)):
     rating = payload.get("rating")
-    comment = payload.get("comment", "")
-    if not test_drive_id or not rating:
-        raise HTTPException(status_code=400, detail="ID тест-драйва и рейтинг обязательны")
-    return crud.create_review(current_user["id"], test_drive_id, rating, comment)
+    review_text = payload.get("review_text", "")
+    
+    if not rating:
+        raise HTTPException(status_code=400, detail="Оценка обязательна")
+        
+    td = crud.update_test_drive_review(td_id, rating, review_text)
+    if not td:
+        raise HTTPException(status_code=404, detail="Заявка на тест-драйв не найдена")
+        
+    return {"status": "success", "message": "Отзыв успешно сохранен", "testdrive": td}

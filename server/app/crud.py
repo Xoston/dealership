@@ -52,17 +52,14 @@ def get_cars(brand=None, model=None, min_price=None, max_price=None,
         query = "SELECT * FROM cars WHERE 1=1"
         params = []
         
-        # Если фронтенд передает общую поисковую строку через ?search=
         if search:
             query += " AND (brand LIKE ? OR model LIKE ? OR CAST(year AS TEXT) LIKE ?)"
             params.extend([f"%{search}%", f"%{search}%", f"%{search}%"])
             
-        # Если поиск идет по параметру brand (но туда ввели год, например "2020")
         if brand:
             query += " AND (brand LIKE ? OR CAST(year AS TEXT) LIKE ?)"
             params.extend([f"%{brand}%", f"%{brand}%"])
             
-        # Если поиск идет по параметру model (но туда ввели год)
         if model:
             query += " AND (model LIKE ? OR CAST(year AS TEXT) LIKE ?)"
             params.extend([f"%{model}%", f"%{model}%"])
@@ -348,6 +345,19 @@ def update_test_drive_status(td_id: int, new_status: str, comment: str = None):
         conn.close()
     return get_test_drive(td_id)
 
+def update_test_drive_review(td_id: int, rating: int, review_text: str):
+    """Сохраняет оценку и текст отзыва в таблицу test_drive_requests"""
+    conn = get_connection()
+    try:
+        with conn:
+            conn.execute(
+                "UPDATE test_drive_requests SET rating = ?, review_text = ? WHERE id = ?",
+                (rating, review_text, td_id)
+            )
+    finally:
+        conn.close()
+    return get_test_drive(td_id)
+
 # ---------- Purchases ----------
 def create_purchase(user_id: int, car_id: int, price: float):
     conn = get_connection()
@@ -448,7 +458,7 @@ def get_admin_stats():
     finally:
         conn.close()
 
-# ---------- Reviews ----------
+# ---------- Reviews (вспомогательные, если нужны) ----------
 def create_review(user_id: int, test_drive_id: int, rating: int, comment: str):
     conn = get_connection()
     try:

@@ -1,14 +1,14 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { useNotification } from '../context/NotificationContext'; // Импорт тостера
+import { useNotification } from '../context/NotificationContext';
 import api, { getImageUrl } from '../services/api';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import styles from './UserDashboard.module.css';
 
 const UserDashboard = () => {
-  const { user, setUser } = useAuth();   // больше нет notifications/clearNotifications
-  const { addNotification } = useNotification(); // хук тостов
+  const { user, setUser } = useAuth();
+  const { addNotification } = useNotification();
 
   const [activeTab, setActiveTab] = useState('profile');
   const [purchases, setPurchases] = useState([]);
@@ -17,15 +17,15 @@ const UserDashboard = () => {
   const [favorites, setFavorites] = useState([]);
   const [compareIds, setCompareIds] = useState([]);
   const [loading, setLoading] = useState(true);
-  
+
   const [printingId, setPrintingId] = useState(null);
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [activeReviewTd, setActiveReviewTd] = useState(null);
   const [hoverRating, setHoverRating] = useState(null);
-  
+
   const [showViewModal, setShowViewModal] = useState(false);
   const [viewComment, setViewComment] = useState(null);
-  
+
   const [profileForm, setProfileForm] = useState({
     full_name: user?.full_name || '',
     phone: user?.phone || '',
@@ -44,7 +44,7 @@ const UserDashboard = () => {
     testdrives: 1,
     loans: 1,
   });
-  const PER_PAGE = 5;
+  const PER_PAGE = 15;
 
   const tabs = [
     { key: 'profile', label: 'Профиль' },
@@ -64,7 +64,10 @@ const UserDashboard = () => {
         api.get('/testdrives/my'),
         api.get('/loans/my'),
       ]);
-      setPurchases(pRes.data);
+      const sortedPurchases = [...pRes.data].sort(
+        (a, b) => new Date(b.purchase_date) - new Date(a.purchase_date)
+      );
+      setPurchases(sortedPurchases);
       setTestDrives(tRes.data);
       setLoans(lRes.data);
 
@@ -119,7 +122,7 @@ const UserDashboard = () => {
     const updated = favorites.filter(car => getCarId(car) !== carId);
     setFavorites(updated);
     localStorage.setItem('favorites', JSON.stringify(updated));
-    
+
     const updatedCompare = compareIds.filter(cId => cId !== carId);
     setCompareIds(updatedCompare);
     localStorage.setItem('compareIds', JSON.stringify(updatedCompare));
@@ -160,19 +163,31 @@ const UserDashboard = () => {
     setShowViewModal(true);
   };
 
+  // ========== ИСПРАВЛЕННАЯ ФУНКЦИЯ ОТПРАВКИ ОТЗЫВА ==========
   const handleReviewSubmit = async (e, tdId) => {
     e.preventDefault();
     try {
-      await api.post('/testdrives/review', {
-        test_drive_id: tdId,
+      // Отправляем POST на обновлённый эндпоинт
+      await api.post(`/testdrives/${tdId}/review`, {
         rating: Number(reviewForm.rating),
-        comment: reviewForm.comment
+        review_text: reviewForm.comment
       });
+
       addNotification('Спасибо за ваш отзыв!', 'success');
+
+      // Мгновенно обновляем состояние без лишнего запроса
+      setTestDrives(prev =>
+        prev.map(td =>
+          td.id === tdId
+            ? { ...td, rating: reviewForm.rating, review_text: reviewForm.comment }
+            : td
+        )
+      );
+
+      // Сброс формы и закрытие модалки
       setReviewForm({ test_drive_id: null, rating: 5, comment: '' });
       setShowReviewModal(false);
       setActiveReviewTd(null);
-      fetchData();
     } catch (err) {
       console.error('Ошибка отправки отзыва:', err);
       addNotification('Не удалось отправить отзыв', 'error');
@@ -265,20 +280,20 @@ const UserDashboard = () => {
             <form onSubmit={handleProfileSubmit} className={styles.profileForm}>
               <div className={styles.field}>
                 <label>ФИО владельца</label>
-                <input 
-                  type="text" 
-                  value={profileForm.full_name} 
-                  onChange={e => setProfileForm({ ...profileForm, full_name: e.target.value })} 
-                  required 
+                <input
+                  type="text"
+                  value={profileForm.full_name}
+                  onChange={e => setProfileForm({ ...profileForm, full_name: e.target.value })}
+                  required
                 />
               </div>
               <div className={styles.field}>
                 <label>Номер телефона</label>
-                <input 
-                  type="text" 
-                  value={profileForm.phone} 
-                  onChange={e => setProfileForm({ ...profileForm, phone: e.target.value })} 
-                  required 
+                <input
+                  type="text"
+                  value={profileForm.phone}
+                  onChange={e => setProfileForm({ ...profileForm, phone: e.target.value })}
+                  required
                 />
               </div>
               <button type="submit" className={styles.saveBtn}>
@@ -354,10 +369,10 @@ const UserDashboard = () => {
                     <p><strong>Автомобиль:</strong> {td.car_brand || td.brand || 'Luxury'} {td.car_model || td.model || 'Car'}</p>
                     <p><strong>Дата сессии:</strong> {td.preferred_date ? new Date(td.preferred_date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }) : 'Не назначена'}</p>
                     <p><strong>Контактный телефон:</strong> {td.phone}</p>
-                    
+
                     {(td.admin_comment || td.comment) && (
-                      <button 
-                        type="button" 
+                      <button
+                        type="button"
                         className={styles.actionBtn}
                         onClick={() => openViewCommentModal(td, 'testdrive')}
                         style={{ marginTop: '0.5rem' }}
@@ -367,8 +382,8 @@ const UserDashboard = () => {
                     )}
 
                     {td.status === 'approved' && (
-                      <button 
-                        className={styles.actionBtn} 
+                      <button
+                        className={styles.actionBtn}
                         onClick={() => openReviewModal(td)}
                         style={{ marginTop: '0.5rem' }}
                       >
@@ -408,10 +423,10 @@ const UserDashboard = () => {
                     <p><strong>Период кредитования:</strong> {loan.term_months || loan.term} мес.</p>
                     <p><strong>Процентная ставка:</strong> {loan.interest_rate || loan.rate}% годовых</p>
                     <p><strong>Ежемесячный платеж:</strong> {loan.monthly_payment?.toLocaleString('ru-RU')} ₽</p>
-                    
+
                     {(loan.admin_comment || loan.comment) && (
-                      <button 
-                        type="button" 
+                      <button
+                        type="button"
                         className={styles.actionBtn}
                         onClick={() => openViewCommentModal(loan, 'loan')}
                         style={{ marginTop: '0.5rem' }}
@@ -443,9 +458,9 @@ const UserDashboard = () => {
               return (
                 <div key={fallbackKey} className={styles.favCard}>
                   <div className={styles.favImageWrapper}>
-                    <img 
-                      src={getImageUrl(imgPath)} 
-                      alt={`${brand} ${model}`} 
+                    <img
+                      src={getImageUrl(imgPath)}
+                      alt={`${brand} ${model}`}
                       className={styles.favImage}
                       onError={(e) => { e.target.src = '/images/default-car.jpg'; }}
                     />
@@ -496,10 +511,10 @@ const UserDashboard = () => {
                     <span className={styles.price}>{car.price?.toLocaleString('ru-RU')} ₽</span>
                     <button onClick={() => toggleCompare(carId)} className={styles.removeCarBtn} style={{ background: 'none', border: 'none', color: '#ff4d4d', fontSize: '1.5rem', cursor: 'pointer' }}>✕</button>
                   </div>
-                  <img 
-                    src={getImageUrl(imgPath)} 
-                    alt={`${car.brand} ${car.model}`} 
-                    className={styles.compareImage} 
+                  <img
+                    src={getImageUrl(imgPath)}
+                    alt={`${car.brand} ${car.model}`}
+                    className={styles.compareImage}
                     onError={(e) => { e.target.src = '/images/default-car.jpg'; }}
                   />
                   <h3 className={styles.compareName}>{car.brand} {car.model}</h3>
@@ -567,8 +582,8 @@ const UserDashboard = () => {
             </div>
             <div style={{ textAlign: 'center', padding: '4rem 2rem', background: 'var(--glass-bg)', borderRadius: '20px', color: 'var(--text)', opacity: 0.6 }}>
               <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ marginBottom: '1rem', opacity: 0.5 }}>
-                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M13.73 21a2 2 0 0 1-3.46 0" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" strokeLinecap="round" strokeLinejoin="round" />
+                <path d="M13.73 21a2 2 0 0 1-3.46 0" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
               <p style={{ margin: 0, fontSize: '1.1rem', fontWeight: '500' }}>
                 Все уведомления теперь приходят во всплывающих окнах (тостах).
@@ -587,7 +602,7 @@ const UserDashboard = () => {
   return (
     <motion.div className={styles.container} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }}>
       <h2 className={styles.title}>Личный кабинет – {user?.full_name || 'Клиент'}</h2>
-      
+
       <div className={styles.tabs}>
         {tabs.map(tab => (
           <button
@@ -608,14 +623,14 @@ const UserDashboard = () => {
 
       <AnimatePresence>
         {showReviewModal && activeReviewTd && (
-          <motion.div 
+          <motion.div
             className={styles.modalOverlay}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => { setShowReviewModal(false); setActiveReviewTd(null); }}
           >
-            <motion.div 
+            <motion.div
               className={styles.modalContent}
               initial={{ scale: 0.95, opacity: 0, y: 20 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
@@ -628,7 +643,7 @@ const UserDashboard = () => {
               <p className={styles.modalSubtitle}>
                 {activeReviewTd.car_brand || activeReviewTd.brand || 'Luxury'} {activeReviewTd.car_model || activeReviewTd.model || 'Car'}
               </p>
-              
+
               <form onSubmit={(e) => handleReviewSubmit(e, activeReviewTd.id)} className={styles.modalForm}>
                 <div className={styles.modalField}>
                   <label>Ваша оценка поездки</label>
@@ -649,11 +664,11 @@ const UserDashboard = () => {
                     })}
                   </div>
                 </div>
-                
+
                 <div className={styles.modalField}>
                   <label>Ваш отзыв</label>
-                  <textarea 
-                    placeholder="Расскажите, как прошёл тест-драйв, понравилась ли управляемость и динамика автомобиля..." 
+                  <textarea
+                    placeholder="Расскажите, как прошёл тест-драйв, понравилась ли управляемость и динамика автомобиля..."
                     value={reviewForm.comment}
                     onChange={(e) => setReviewForm({ ...reviewForm, comment: e.target.value })}
                     className={styles.modalTextarea}
@@ -661,11 +676,11 @@ const UserDashboard = () => {
                     required
                   />
                 </div>
-                
+
                 <div className={styles.modalActions}>
-                  <button 
-                    type="button" 
-                    className={styles.cancelBtn} 
+                  <button
+                    type="button"
+                    className={styles.cancelBtn}
                     onClick={() => { setShowReviewModal(false); setActiveReviewTd(null); }}
                   >
                     Отмена
@@ -682,14 +697,14 @@ const UserDashboard = () => {
 
       <AnimatePresence>
         {showViewModal && viewComment && (
-          <motion.div 
+          <motion.div
             className={styles.modalOverlay}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => { setShowViewModal(false); setViewComment(null); }}
           >
-            <motion.div 
+            <motion.div
               className={styles.modalContent}
               initial={{ scale: 0.95, opacity: 0, y: 20 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
@@ -700,17 +715,17 @@ const UserDashboard = () => {
               <button className={styles.modalClose} onClick={() => { setShowViewModal(false); setViewComment(null); }}>✕</button>
               <h3 className={styles.modalTitle}>{viewComment.title}</h3>
               <p className={styles.modalSubtitle}>{viewComment.subtitle}</p>
-              
+
               <div className={styles.modalField}>
                 <div style={{ background: 'rgba(128, 128, 128, 0.08)', padding: '1.2rem', borderRadius: '14px', fontStyle: 'italic', lineHeight: '1.6', borderLeft: '4px solid var(--primary)', color: 'var(--text)', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
                   {viewComment.comment}
                 </div>
               </div>
-              
+
               <div className={styles.modalActions}>
-                <button 
-                  type="button" 
-                  className={styles.submitBtn} 
+                <button
+                  type="button"
+                  className={styles.submitBtn}
                   onClick={() => { setShowViewModal(false); setViewComment(null); }}
                 >
                   Закрыть

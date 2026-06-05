@@ -174,6 +174,9 @@ const AdminPanel = () => {
   const [showCommentView, setShowCommentView] = useState(false);
   const [commentViewData, setCommentViewData] = useState({ title: '', text: '' });
 
+  // ---------- НОВЫЙ СТЕЙТ ДЛЯ МОДАЛЬНОГО ОКНА ОТЗЫВА ----------
+  const [reviewModal, setReviewModal] = useState({ show: false, rating: 0, comment: '', car: '', user: '' });
+
   // ================= ЗАГРУЗКА ДАННЫХ =================
   const fetchData = async () => {
     setLoading(true);
@@ -788,6 +791,23 @@ const AdminPanel = () => {
                       <span className={`${styles.status} ${td.status === 'approved' ? styles.approved : td.status === 'rejected' ? styles.rejected : styles.pending}`}>
                         {td.status === 'approved' ? 'Одобрена' : td.status === 'rejected' ? 'Отклонена' : 'Ожидает'}
                       </span>
+                      {/* Добавляем кнопку просмотра отзыва, если есть рейтинг */}
+                      {td.rating ? (
+                        <button
+                          className={styles.commentIconBtn}
+                          style={{ color: '#ffb400', opacity: 1, marginLeft: '10px' }}
+                          onClick={() => setReviewModal({
+                            show: true,
+                            rating: td.rating,
+                            comment: td.review_text || 'Пользователь оставил оценку без текстового комментария.',
+                            car: `${td.car_brand} ${td.car_model}`,
+                            user: td.user_email || td.user?.email || 'Клиент'
+                          })}
+                          title="Посмотреть отзыв"
+                        >
+                          ⭐ {td.rating}/5
+                        </button>
+                      ) : null}
                       {(td.admin_comment || td.comment) && (
                         <button
                           className={styles.commentIconBtn}
@@ -1042,6 +1062,142 @@ const AdminPanel = () => {
               <div className={styles.modelList}>
                 {filteredModels.map(model => <button key={model} type="button" className={`${styles.modelItem} ${model === carForm.model ? styles.modelItemActive : ''}`} onClick={() => selectModel(model)}>{model}</button>)}
                 {filteredModels.length === 0 && <p className={styles.noModels}>Нет подходящих моделей</p>}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ===== ФИНАЛЬНОЕ МОДАЛЬНОЕ ОКНО ДЛЯ ПРОСМОТРА ОТЗЫВОВ ===== */}
+      <AnimatePresence>
+        {reviewModal.show && (
+          <motion.div
+            className={styles.modelOverlay}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setReviewModal({ ...reviewModal, show: false })}
+            style={{
+              background: 'rgba(0, 0, 0, 0.7)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              position: 'fixed',
+              top: 0, left: 0, right: 0, bottom: 0,
+              zIndex: 9999
+            }}
+          >
+            <motion.div
+              className={styles.modelModal}
+              initial={{ scale: 0.95, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 20 }}
+              onClick={e => e.stopPropagation()}
+              style={{
+                background: 'var(--bg, #ffffff)',
+                border: '2px solid #7c4dff',
+                boxShadow: '0 15px 40px rgba(0, 0, 0, 0.3)',
+                borderRadius: '20px',
+                padding: '2rem',
+                maxWidth: '550px',
+                width: '90%',
+                maxHeight: '85vh',
+                display: 'flex',
+                flexDirection: 'column',
+                position: 'relative',
+                color: 'var(--text)',
+                boxSizing: 'border-box'
+              }}
+            >
+              {/* Шапка модального окна — всегда зафиксирована сверху */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem', flexShrink: 0 }}>
+                <h3 style={{ margin: 0, fontSize: '1.5rem', fontWeight: '700', color: 'var(--text)' }}>
+                  Отзыв о тест-драйве
+                </h3>
+                <button 
+                  type="button" 
+                  onClick={() => setReviewModal({ ...reviewModal, show: false })} 
+                  style={{
+                    background: 'transparent',
+                    border: 'none',
+                    color: 'var(--text)',
+                    fontSize: '1.5rem',
+                    cursor: 'pointer',
+                    opacity: 0.6,
+                    transition: 'opacity 0.2s ease',
+                    padding: '0'
+                  }}
+                  onMouseOver={(e) => e.target.style.opacity = 1}
+                  onMouseOut={(e) => e.target.style.opacity = 0.6}
+                >
+                  ✕
+                </button>
+              </div>
+              
+              <p style={{ opacity: 0.7, marginBottom: '1.2rem', fontSize: '0.95rem', fontWeight: '500', flexShrink: 0 }}>
+                {reviewModal.user} • {reviewModal.car}
+              </p>
+
+              {/* Контентный блок со скроллом для защиты от огромного текста */}
+              <div style={{ 
+                display: 'flex', 
+                flexDirection: 'column', 
+                gap: '1.2rem', 
+                overflowY: 'auto', 
+                flexGrow: 1,
+                paddingRight: '6px',
+                marginBottom: '1rem'
+              }}>
+                <div style={{ fontSize: '1.8rem', color: '#7c4dff', letterSpacing: '4px', flexShrink: 0 }}>
+                  {'★'.repeat(reviewModal.rating || 0)}{'☆'.repeat(5 - (reviewModal.rating || 0))}
+                </div>
+                
+                <div style={{ 
+                  background: 'var(--accent, #f4effa)',
+                  padding: '1.2rem', 
+                  borderRadius: '14px', 
+                  fontStyle: 'italic', 
+                  lineHeight: '1.6', 
+                  borderLeft: '4px solid #7c4dff', 
+                  borderTop: '1px solid rgba(124, 77, 255, 0.2)',
+                  borderRight: '1px solid rgba(124, 77, 255, 0.2)',
+                  borderBottom: '1px solid rgba(124, 77, 255, 0.2)',
+                  whiteSpace: 'pre-wrap', 
+                  wordBreak: 'break-word',
+                  color: 'var(--text)'
+                }}>
+                  "{reviewModal.comment}"
+                </div>
+              </div>
+
+              {/* Подвал с кнопкой — всегда прижат к низу */}
+              <div style={{ display: 'flex', justifyContent: 'flex-end', flexShrink: 0, marginTop: 'auto' }}>
+                <button
+                  type="button"
+                  onClick={() => setReviewModal({ ...reviewModal, show: false })}
+                  style={{ 
+                    background: '#7c4dff', 
+                    color: '#ffffff', 
+                    padding: '0.7rem 2.2rem',
+                    borderRadius: '30px',
+                    border: 'none',
+                    fontWeight: '600',
+                    fontSize: '1rem',
+                    cursor: 'pointer',
+                    boxShadow: '0 4px 12px rgba(124, 77, 255, 0.3)',
+                    transition: 'all 0.2s ease'
+                  }}
+                  onMouseOver={(e) => {
+                    e.target.style.transform = 'translateY(-2px)';
+                    e.target.style.boxShadow = '0 6px 18px rgba(124, 77, 255, 0.4)';
+                  }}
+                  onMouseOut={(e) => {
+                    e.target.style.transform = 'translateY(0)';
+                    e.target.style.boxShadow = '0 4px 12px rgba(124, 77, 255, 0.3)';
+                  }}
+                >
+                  Закрыть
+                </button>
               </div>
             </motion.div>
           </motion.div>

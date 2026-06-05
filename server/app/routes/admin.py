@@ -4,9 +4,9 @@ from ..dependencies import get_current_admin, get_current_admin_or_manager
 from ..audit import event_manager
 from ..cache import cached
 
-router = APIRouter(prefix="/api/admin", tags=["admin"])
+router = APIRouter()
 
-# ---- ЗАГЛУШКА: Новые заявки (исправляет ошибку 404 в консоли) ----
+# ---- ЗАГЛУШКА: Новые заявки ----
 @router.get("/applications/new")
 def get_new_applications(current_user=Depends(get_current_admin_or_manager)):
     return []
@@ -57,11 +57,18 @@ def update_loan_status(loan_id: int, payload: dict = Body(...), current_user=Dep
     updated = crud.update_loan_application_status(loan_id, new_status, comment)
     if not updated:
         raise HTTPException(status_code=404, detail="Loan application not found")
-    event_manager.notify("LOAN_STATUS_CHANGED", {"admin": current_user["email"], "loan_id": loan_id, "new_status": new_status})
+        
+    # Добавили передачу user_id
+    event_manager.notify("LOAN_STATUS_CHANGED", {
+        "admin": current_user["email"], 
+        "loan_id": loan_id, 
+        "new_status": new_status,
+        "user_id": updated.get("user_id")
+    })
     return updated
 
 # ---- Заявки на тест-драйв ----
-@router.options("/testdrives/{td_id}/status")        # ← разрешаем preflight CORS
+@router.options("/testdrives/{td_id}/status")
 def options_testdrive_status():
     return {"message": "OK"}
 
@@ -70,9 +77,16 @@ def update_testdrive_status(td_id: int, payload: dict = Body(...), current_user=
     new_status = payload.get("status")
     if new_status not in ("approved", "rejected"):
         raise HTTPException(status_code=400, detail="Status must be 'approved' or 'rejected'")
-    comment = payload.get("comment", "")              # ← получаем комментарий
-    updated = crud.update_test_drive_status(td_id, new_status, comment)   # ← передаём в БД
+    comment = payload.get("comment", "")
+    updated = crud.update_test_drive_status(td_id, new_status, comment)
     if not updated:
         raise HTTPException(status_code=404, detail="Test drive request not found")
-    event_manager.notify("TESTDRIVE_STATUS_CHANGED", {"admin": current_user["email"], "td_id": td_id, "new_status": new_status})
+        
+    # Добавили передачу user_id
+    event_manager.notify("TESTDRIVE_STATUS_CHANGED", {
+        "admin": current_user["email"], 
+        "td_id": td_id, 
+        "new_status": new_status,
+        "user_id": updated.get("user_id")
+    })
     return updated

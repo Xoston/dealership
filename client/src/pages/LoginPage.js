@@ -3,7 +3,8 @@ import { useAuth } from '../context/AuthContext';
 import { useNotification } from '../context/NotificationContext';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import styles from './Auth.module.css';
+// Исправлено: используем верное имя файла стилей
+import styles from './Auth.module.css'; 
 
 const LoginPage = () => {
   const { login } = useAuth();
@@ -16,7 +17,7 @@ const LoginPage = () => {
     e.preventDefault();
     try {
       await login(email, password);
-      addNotification('Вы успешно вошли в систему', 'success');
+      // Уведомление "Вы успешно вошли в систему" удалено
       navigate('/dashboard');
     } catch (err) {
       addNotification('Неверный Email или пароль. Попробуйте снова.', 'error');
