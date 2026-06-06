@@ -3,8 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { useNotification } from '../context/NotificationContext';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-// Исправлено: используем верное имя файла стилей
-import styles from './Auth.module.css'; 
+import styles from './Auth.module.css';
 
 const LoginPage = () => {
   const { login } = useAuth();
@@ -12,15 +11,19 @@ const LoginPage = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [errorMsg, setErrorMsg] = useState('');    // <-- локальная ошибка
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setErrorMsg('');   // сбрасываем предыдущую ошибку
     try {
       await login(email, password);
-      // Уведомление "Вы успешно вошли в систему" удалено
       navigate('/dashboard');
     } catch (err) {
-      addNotification('Неверный Email или пароль. Попробуйте снова.', 'error');
+      const msg =
+        err.response?.data?.detail || 'Неверный Email или пароль. Попробуйте снова.';
+      setErrorMsg(msg);
+      addNotification(msg, 'error');   // оставим и глобальное уведомление
     }
   };
 
@@ -34,6 +37,23 @@ const LoginPage = () => {
       >
         <h2 className={styles.title}>Добро пожаловать</h2>
         <p className={styles.subtitle}>Войдите, чтобы продолжить</p>
+
+        {/* Локальное сообщение об ошибке */}
+        {errorMsg && (
+          <div style={{
+            background: '#fdecea',
+            color: '#d32f2f',
+            padding: '0.8rem 1rem',
+            borderRadius: '10px',
+            marginBottom: '1rem',
+            fontSize: '0.9rem',
+            fontWeight: 500,
+            border: '1px solid rgba(211,47,47,0.2)'
+          }}>
+            {errorMsg}
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} className={styles.form}>
           <div className={styles.field}>
             <label>Email</label>
@@ -57,6 +77,7 @@ const LoginPage = () => {
           </div>
           <button type="submit" className={styles.btn}>Войти</button>
         </form>
+
         <p className={styles.footerText}>
           Ещё нет аккаунта? <Link to="/register">Зарегистрироваться</Link>
         </p>

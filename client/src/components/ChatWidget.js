@@ -16,6 +16,23 @@ const ChatWidget = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  // Блокировка прокрутки фоновой страницы при открытом чате,
+  // оставляем только вертикальную прокрутку внутри чата
+  useEffect(() => {
+    if (open) {
+      // Запрещаем прокрутку body и скрываем горизонтальную полосу
+      document.body.style.overflow = 'hidden';
+      document.body.style.overflowX = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+      document.body.style.overflowX = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+      document.body.style.overflowX = '';
+    };
+  }, [open]);
+
   const sendMessage = async () => {
     const text = input.trim();
     if (!text || loading) return;

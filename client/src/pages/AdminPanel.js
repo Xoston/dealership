@@ -909,7 +909,21 @@ const AdminPanel = () => {
               <motion.div className={styles.loanCommentModal} initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} onClick={e => e.stopPropagation()}>
                 <button className={styles.modalClose} onClick={() => setShowCommentView(false)}>✕</button>
                 <h3>{commentViewData.title}</h3>
-                <div className={styles.commentViewBody}>
+                <div style={{ 
+                  background: 'var(--accent, #f4effa)',
+                  padding: '1.2rem', 
+                  borderRadius: '14px', 
+                  fontStyle: 'italic', 
+                  lineHeight: '1.6', 
+                  borderLeft: '4px solid var(--primary)', 
+                  borderTop: '1px solid var(--primary)',
+                  borderRight: '1px solid var(--primary)',
+                  borderBottom: '1px solid var(--primary)',
+                  whiteSpace: 'pre-wrap', 
+                  wordBreak: 'break-word',
+                  color: 'var(--text)',
+                  marginBottom: '1rem'
+                }}>
                   {commentViewData.text}
                 </div>
                 <div className={styles.loanCommentButtons}>
@@ -1068,7 +1082,7 @@ const AdminPanel = () => {
         )}
       </AnimatePresence>
 
-      {/* ===== ФИНАЛЬНОЕ МОДАЛЬНОЕ ОКНО ДЛЯ ПРОСМОТРА ОТЗЫВОВ ===== */}
+      {/* ===== ФИНАЛЬНОЕ МОДАЛЬНОЕ ОКНО ДЛЯ ПРОСМОТРА ОТЗЫВОВ (ЦВЕТА var(--primary)) ===== */}
       <AnimatePresence>
         {reviewModal.show && (
           <motion.div
@@ -1095,7 +1109,7 @@ const AdminPanel = () => {
               onClick={e => e.stopPropagation()}
               style={{
                 background: 'var(--bg, #ffffff)',
-                border: '2px solid #7c4dff',
+                border: '2px solid var(--primary)',
                 boxShadow: '0 15px 40px rgba(0, 0, 0, 0.3)',
                 borderRadius: '20px',
                 padding: '2rem',
@@ -1148,7 +1162,7 @@ const AdminPanel = () => {
                 paddingRight: '6px',
                 marginBottom: '1rem'
               }}>
-                <div style={{ fontSize: '1.8rem', color: '#7c4dff', letterSpacing: '4px', flexShrink: 0 }}>
+                <div style={{ fontSize: '1.8rem', color: 'var(--primary)', letterSpacing: '4px', flexShrink: 0 }}>
                   {'★'.repeat(reviewModal.rating || 0)}{'☆'.repeat(5 - (reviewModal.rating || 0))}
                 </div>
                 
@@ -1158,10 +1172,10 @@ const AdminPanel = () => {
                   borderRadius: '14px', 
                   fontStyle: 'italic', 
                   lineHeight: '1.6', 
-                  borderLeft: '4px solid #7c4dff', 
-                  borderTop: '1px solid rgba(124, 77, 255, 0.2)',
-                  borderRight: '1px solid rgba(124, 77, 255, 0.2)',
-                  borderBottom: '1px solid rgba(124, 77, 255, 0.2)',
+                  borderLeft: '4px solid var(--primary)', 
+                  borderTop: '1px solid var(--primary)',
+                  borderRight: '1px solid var(--primary)',
+                  borderBottom: '1px solid var(--primary)',
                   whiteSpace: 'pre-wrap', 
                   wordBreak: 'break-word',
                   color: 'var(--text)'
@@ -1176,7 +1190,7 @@ const AdminPanel = () => {
                   type="button"
                   onClick={() => setReviewModal({ ...reviewModal, show: false })}
                   style={{ 
-                    background: '#7c4dff', 
+                    background: 'var(--primary)', 
                     color: '#ffffff', 
                     padding: '0.7rem 2.2rem',
                     borderRadius: '30px',
@@ -1184,16 +1198,16 @@ const AdminPanel = () => {
                     fontWeight: '600',
                     fontSize: '1rem',
                     cursor: 'pointer',
-                    boxShadow: '0 4px 12px rgba(124, 77, 255, 0.3)',
+                    boxShadow: '0 4px 12px var(--primary)',
                     transition: 'all 0.2s ease'
                   }}
                   onMouseOver={(e) => {
                     e.target.style.transform = 'translateY(-2px)';
-                    e.target.style.boxShadow = '0 6px 18px rgba(124, 77, 255, 0.4)';
+                    e.target.style.boxShadow = '0 6px 18px var(--primary)';
                   }}
                   onMouseOut={(e) => {
                     e.target.style.transform = 'translateY(0)';
-                    e.target.style.boxShadow = '0 4px 12px rgba(124, 77, 255, 0.3)';
+                    e.target.style.boxShadow = '0 4px 12px var(--primary)';
                   }}
                 >
                   Закрыть

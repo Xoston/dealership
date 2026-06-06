@@ -16,15 +16,27 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light');
 
-  // Проверка активной сессии при старте/перезагрузке страницы
+  // При запуске проверяем токен и восстанавливаем сессию
   useEffect(() => {
-    api.get('/auth/me')
-      .then(res => setUser(res.data))
-      .catch(() => setUser(null))
-      .finally(() => setLoading(false));
+    const token = localStorage.getItem('token');
+    if (token) {
+      // Явно добавляем заголовок ко всем запросам
+      api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      api.get('/auth/me')
+        .then(res => setUser(res.data))
+        .catch(() => {
+          // Токен истёк или невалиден – сбрасываем
+          localStorage.removeItem('token');
+          delete api.defaults.headers.common['Authorization'];
+          setUser(null);
+        })
+        .finally(() => setLoading(false));
+    } else {
+      setLoading(false);
+    }
   }, []);
 
-  // Управление темами оформления (Light / Dark)
+  // Переключение темы
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
     localStorage.setItem('theme', theme);
@@ -36,8 +48,14 @@ export const AuthProvider = ({ children }) => {
 
   // Вход в систему
   const login = async (email, password) => {
+    // Этот запрос не требует токена
     const res = await api.post('/auth/login', { email, password });
-    localStorage.setItem('token', res.data.access_token);
+    const token = res.data.access_token;
+    localStorage.setItem('token', token);
+
+    // Явно устанавливаем токен для всех последующих запросов
+    api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+
     const userRes = await api.get('/auth/me');
     setUser(userRes.data);
     return res.data;
@@ -51,6 +69,7 @@ export const AuthProvider = ({ children }) => {
       console.error('Ошибка при деавторизации:', err);
     }
     localStorage.removeItem('token');
+    delete api.defaults.headers.common['Authorization'];
     setUser(null);
   };
 

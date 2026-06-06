@@ -43,6 +43,19 @@ def create_user(user_data: dict):
         conn.close()
     return get_user_by_id(user_id)
 
+def update_user_profile(user_id: int, full_name: str, phone: str):
+    """Обновляет ФИО и телефон пользователя."""
+    conn = get_connection()
+    try:
+        with conn:
+            conn.execute(
+                "UPDATE users SET full_name = ?, phone = ? WHERE id = ?",
+                (full_name, phone, user_id)
+            )
+    finally:
+        conn.close()
+    return get_user_by_id(user_id)
+
 # ---------- Cars ----------
 def get_cars(brand=None, model=None, min_price=None, max_price=None,
              year_from=None, year_to=None, body_type=None, restyling=None, search=None):

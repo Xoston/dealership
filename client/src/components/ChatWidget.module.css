@@ -77,6 +77,7 @@
   flex: 1;
   padding: 1rem;
   overflow-y: auto;
+  overflow-x: hidden;          /* ← запрещаем горизонтальный скролл */
   display: flex;
   flex-direction: column;
   gap: 0.8rem;
@@ -101,6 +102,10 @@
   border-radius: 16px;
   font-size: 0.9rem;
   line-height: 1.4;
+  /* ↓↓↓ принудительный перенос длинных слов ↓↓↓ */
+  word-break: break-word;       /* разрывает строку внутри слова, если не помещается */
+  overflow-wrap: break-word;    /* альтернативное свойство */
+  white-space: pre-wrap;        /* сохраняет пробелы и переносит текст */
 }
 
 .userMsg .bubble {
@@ -151,4 +156,4 @@
 
 .footer button:hover {
   transform: scale(1.05);
-}
+}   

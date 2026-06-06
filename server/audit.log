@@ -372,3 +372,45 @@
 {"timestamp": "2026-06-05T14:48:27.196010", "event": "USER_LOGIN", "data": {"email": "admin@luxury.com"}}
 {"timestamp": "2026-06-05T15:53:10.218344", "event": "USER_LOGIN", "data": {"email": "admin@luxury.com"}}
 {"timestamp": "2026-06-05T15:53:10.224748", "event": "USER_LOGIN", "data": {"email": "admin@luxury.com"}}
+{"timestamp": "2026-06-05T18:34:06.185465", "event": "USER_LOGIN", "data": {"email": "admin@luxury.com"}}
+{"timestamp": "2026-06-05T18:34:06.191885", "event": "USER_LOGIN", "data": {"email": "admin@luxury.com"}}
+{"timestamp": "2026-06-05T18:34:20.560809", "event": "LOAN_CALCULATED", "data": {"user": "admin@luxury.com", "car_id": 2, "amount": 123.0}}
+{"timestamp": "2026-06-05T18:34:20.566452", "event": "LOAN_CALCULATED", "data": {"user": "admin@luxury.com", "car_id": 2, "amount": 123.0}}
+{"timestamp": "2026-06-05T18:39:35.309171", "event": "LOAN_CALCULATED", "data": {"user": "admin@luxury.com", "car_id": 2, "amount": 123.0}}
+{"timestamp": "2026-06-05T18:39:35.316606", "event": "LOAN_CALCULATED", "data": {"user": "admin@luxury.com", "car_id": 2, "amount": 123.0}}
+{"timestamp": "2026-06-05T18:40:07.480175", "event": "LOAN_CALCULATED", "data": {"user": "admin@luxury.com", "car_id": 2, "amount": 123.0}}
+{"timestamp": "2026-06-05T18:40:07.484835", "event": "LOAN_CALCULATED", "data": {"user": "admin@luxury.com", "car_id": 2, "amount": 123.0}}
+{"timestamp": "2026-06-05T18:41:22.323683", "event": "LOAN_CALCULATED", "data": {"user": "admin@luxury.com", "car_id": 2, "amount": 123.0}}
+{"timestamp": "2026-06-05T18:41:22.333719", "event": "LOAN_CALCULATED", "data": {"user": "admin@luxury.com", "car_id": 2, "amount": 123.0}}
+{"timestamp": "2026-06-05T18:44:22.836514", "event": "LOAN_CALCULATED", "data": {"user": "admin@luxury.com", "car_id": 3, "amount": 123.0}}
+{"timestamp": "2026-06-05T18:44:22.840539", "event": "LOAN_CALCULATED", "data": {"user": "admin@luxury.com", "car_id": 3, "amount": 123.0}}
+{"timestamp": "2026-06-05T19:16:03.881499", "event": "CAR_UPDATED", "data": {"admin": "admin@luxury.com", "car_id": 1}}
+{"timestamp": "2026-06-05T19:16:03.885782", "event": "CAR_UPDATED", "data": {"admin": "admin@luxury.com", "car_id": 1}}
+{"timestamp": "2026-06-05T19:16:03.958486", "event": "IMAGE_ADDED", "data": {"admin": "admin@luxury.com", "car_id": 1}}
+{"timestamp": "2026-06-05T19:16:03.961880", "event": "IMAGE_ADDED", "data": {"admin": "admin@luxury.com", "car_id": 1}}
+{"timestamp": "2026-06-05T19:16:04.029315", "event": "IMAGE_ADDED", "data": {"admin": "admin@luxury.com", "car_id": 1}}
+{"timestamp": "2026-06-05T19:16:04.033229", "event": "IMAGE_ADDED", "data": {"admin": "admin@luxury.com", "car_id": 1}}
+{"timestamp": "2026-06-05T19:16:04.092956", "event": "IMAGE_ADDED", "data": {"admin": "admin@luxury.com", "car_id": 1}}
+{"timestamp": "2026-06-05T19:16:04.096290", "event": "IMAGE_ADDED", "data": {"admin": "admin@luxury.com", "car_id": 1}}
+{"timestamp": "2026-06-05T19:16:04.151525", "event": "IMAGE_ADDED", "data": {"admin": "admin@luxury.com", "car_id": 1}}
+{"timestamp": "2026-06-05T19:16:04.153908", "event": "IMAGE_ADDED", "data": {"admin": "admin@luxury.com", "car_id": 1}}
+{"timestamp": "2026-06-05T19:16:04.208438", "event": "IMAGE_ADDED", "data": {"admin": "admin@luxury.com", "car_id": 1}}
+{"timestamp": "2026-06-05T19:16:04.212846", "event": "IMAGE_ADDED", "data": {"admin": "admin@luxury.com", "car_id": 1}}
+{"timestamp": "2026-06-05T19:16:04.276055", "event": "IMAGE_ADDED", "data": {"admin": "admin@luxury.com", "car_id": 1}}
+{"timestamp": "2026-06-05T19:16:04.280419", "event": "IMAGE_ADDED", "data": {"admin": "admin@luxury.com", "car_id": 1}}
+{"timestamp": "2026-06-05T19:16:04.342285", "event": "IMAGE_ADDED", "data": {"admin": "admin@luxury.com", "car_id": 1}}
+{"timestamp": "2026-06-05T19:16:04.345765", "event": "IMAGE_ADDED", "data": {"admin": "admin@luxury.com", "car_id": 1}}
+{"timestamp": "2026-06-05T19:16:04.406848", "event": "IMAGE_ADDED", "data": {"admin": "admin@luxury.com", "car_id": 1}}
+{"timestamp": "2026-06-05T19:16:04.411072", "event": "IMAGE_ADDED", "data": {"admin": "admin@luxury.com", "car_id": 1}}
+{"timestamp": "2026-06-05T19:16:04.477769", "event": "IMAGE_ADDED", "data": {"admin": "admin@luxury.com", "car_id": 1}}
+{"timestamp": "2026-06-05T19:16:04.483616", "event": "IMAGE_ADDED", "data": {"admin": "admin@luxury.com", "car_id": 1}}
+{"timestamp": "2026-06-05T19:16:12.499703", "event": "CAR_UPDATED", "data": {"admin": "admin@luxury.com", "car_id": 1}}
+{"timestamp": "2026-06-05T19:16:12.503553", "event": "CAR_UPDATED", "data": {"admin": "admin@luxury.com", "car_id": 1}}
+{"timestamp": "2026-06-06T06:20:34.073789", "event": "USER_LOGIN", "data": {"email": "admin@luxury.com"}}
+{"timestamp": "2026-06-06T06:20:34.086317", "event": "USER_LOGIN", "data": {"email": "admin@luxury.com"}}
+{"timestamp": "2026-06-06T06:57:22.739652", "event": "USER_DELETED", "data": {"admin": "admin@luxury.com", "user_id": 7}}
+{"timestamp": "2026-06-06T06:57:22.743592", "event": "USER_DELETED", "data": {"admin": "admin@luxury.com", "user_id": 7}}
+{"timestamp": "2026-06-06T06:58:45.112810", "event": "USER_LOGIN", "data": {"email": "admin@luxury.com"}}
+{"timestamp": "2026-06-06T06:58:45.115612", "event": "USER_LOGIN", "data": {"email": "admin@luxury.com"}}
+{"timestamp": "2026-06-06T07:00:09.794400", "event": "CAR_CREATED", "data": {"admin": "admin@luxury.com", "car_id": 15}}
+{"timestamp": "2026-06-06T07:00:09.798954", "event": "CAR_CREATED", "data": {"admin": "admin@luxury.com", "car_id": 15}}

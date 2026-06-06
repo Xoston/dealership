@@ -394,3 +394,205 @@
   .columnLabel { font-size: 0.7rem; }
   .analyticsGrid { grid-template-columns: 1fr; }
 }
+
+/* ========================
+   СТИЛИ ДЛЯ МОДАЛЬНОГО ОКНА ОТЗЫВОВ
+   (используются, если убрать inline-стили)
+   ======================== */
+.reviewOverlay {
+  background: rgba(0, 0, 0, 0.7) !important;
+  backdrop-filter: none !important;
+}
+.reviewModal {
+  background: var(--bg) !important;
+  border: 2px solid var(--primary) !important;
+  border-radius: 20px !important;
+  max-width: 550px !important;
+  max-height: 85vh !important;
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3) !important;
+}
+.reviewModal .modalClose {
+  color: var(--text);
+}
+.reviewStars {
+  color: var(--primary) !important;
+  font-size: 1.8rem;
+  letter-spacing: 4px;
+}
+.reviewCommentBlock {
+  background: var(--accent, #f4effa) !important;
+  border-left: 4px solid var(--primary) !important;
+  border-top: 1px solid var(--primary) !important;
+  border-right: 1px solid var(--primary) !important;
+  border-bottom: 1px solid var(--primary) !important;
+  color: var(--text) !important;
+}
+.reviewCloseBtn {
+  background: var(--primary) !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 12px var(--primary) !important;
+}
+.reviewCloseBtn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px var(--primary) !important;
+}
+
+/* ========================
+   АДАПТИВНОСТЬ
+   ======================== */
+@media (max-width: 1024px) {
+  .analyticsGrid {
+    grid-template-columns: 1fr;
+  }
+  .pieChartContainer {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .pieChart {
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 0 1rem;
+    margin: 1rem auto;
+  }
+  .title {
+    font-size: 1.8rem;
+    margin-bottom: 1.2rem;
+  }
+  .tabs {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    gap: 0.5rem;
+    padding-bottom: 0.5rem;
+  }
+  .tab {
+    padding: 0.6rem 1.2rem;
+    font-size: 0.9rem;
+    flex-shrink: 0;
+  }
+  .dashboard {
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+  }
+  .statCard p {
+    font-size: 2rem;
+  }
+  .filterPanel {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .filterInput, .filterInputSmall {
+    width: 100%;
+  }
+  .formRow {
+    flex-direction: column;
+  }
+  .modal {
+    max-width: 100%;
+    margin: 0 1rem;
+    max-height: 90vh;
+  }
+  .modalHeader {
+    padding: 1rem 1rem 0.5rem;
+  }
+  .modalBody {
+    padding: 0 1rem 1rem;
+  }
+  .modalFooter {
+    padding: 0.5rem 1rem;
+  }
+  .specsGrid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .actionsCell {
+    white-space: normal;
+  }
+  .actionsCell button {
+    margin-bottom: 0.5rem;
+  }
+  .table th, .table td {
+    padding: 0.7rem 0.5rem;
+    font-size: 0.9rem;
+  }
+  .editBtn, .deleteCarBtn {
+    font-size: 0.8rem;
+    padding: 0.3rem 0.6rem;
+  }
+  .approveBtn, .rejectBtn {
+    font-size: 0.8rem;
+    padding: 0.3rem 0.6rem;
+  }
+  .columnChart {
+    height: 150px;
+    gap: 0.5rem;
+  }
+  .columnValue {
+    font-size: 1rem;
+  }
+  .columnLabel {
+    font-size: 0.7rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .title {
+    font-size: 1.5rem;
+  }
+  .tab {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.8rem;
+  }
+  .statCard {
+    padding: 1rem;
+  }
+  .statCard p {
+    font-size: 1.6rem;
+  }
+  .dashboard {
+    grid-template-columns: 1fr 1fr;
+    gap: 0.8rem;
+  }
+  .analyticsBlock {
+    padding: 1rem;
+  }
+  .blockTitle {
+    font-size: 1.1rem;
+  }
+  .specsGrid {
+    grid-template-columns: 1fr;
+  }
+  .formGroup input, .formGroup select, .formGroup textarea {
+    font-size: 0.9rem;
+  }
+  .submitBtn, .cancelBtn {
+    padding: 0.7rem 1.5rem;
+    font-size: 0.9rem;
+  }
+  .modal {
+    max-width: 100%;
+    border-radius: 16px;
+  }
+  .modelModal {
+    max-width: 95%;
+    max-height: 80vh;
+  }
+  .loanCommentModal {
+    padding: 1.2rem;
+  }
+  .loanCommentButtons {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  .loanCommentButtons .submitBtn,
+  .loanCommentButtons .cancelBtn {
+    width: 100%;
+    text-align: center;
+  }
+  .commentViewBody {
+    max-height: 30vh;
+  }
+}

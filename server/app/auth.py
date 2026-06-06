@@ -2,7 +2,6 @@ from datetime import datetime, timedelta
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 from .config import SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES
-import json
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 

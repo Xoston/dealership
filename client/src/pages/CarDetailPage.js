@@ -145,7 +145,6 @@ const CarDetailPage = () => {
           <h1 className={styles.title}>{car.brand} {car.model}</h1>
           <p className={styles.year}>{car.year} год</p>
           <p className={styles.price}>{car.price.toLocaleString('ru-RU')} ₽</p>
-          {car.description && <p className={styles.description}>{car.description}</p>}
 
           <motion.button className={styles.buyButton} whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.98 }} onClick={() => setShowPurchaseModal(true)}>
             Купить
@@ -179,6 +178,9 @@ const CarDetailPage = () => {
               </div>
             </motion.div>
           )}
+
+          {/* Описание автомобиля (теперь после кнопок) */}
+          {car.description && <p className={styles.description}>{car.description}</p>}
 
           {/* Характеристики */}
           {(car.engine_volume || car.power || car.fuel_type || car.consumption || car.drive_type || car.transmission || car.acceleration || car.max_speed || car.clearance || car.seats) && (
@@ -312,4 +314,4 @@ const CarDetailPage = () => {
   );
 };
 
-export default CarDetailPage; 
+export default CarDetailPage;

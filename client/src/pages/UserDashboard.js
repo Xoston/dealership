@@ -52,8 +52,7 @@ const UserDashboard = () => {
     { key: 'testdrives', label: 'Тест-драйвы' },
     { key: 'loans', label: 'Кредитные заявки' },
     { key: 'favorites', label: 'Избранное' },
-    { key: 'compare', label: 'Сравнение авто' },
-    { key: 'notifications', label: 'Уведомления' }
+    { key: 'compare', label: 'Сравнение авто' }
   ];
 
   const fetchData = useCallback(async () => {
@@ -132,8 +131,14 @@ const UserDashboard = () => {
     if (!carId) return;
     let updated;
     if (compareIds.includes(carId)) {
+      // Убираем из сравнения
       updated = compareIds.filter(cId => cId !== carId);
     } else {
+      // Добавляем только если ещё нет трёх машин
+      if (compareIds.length >= 3) {
+        addNotification('Можно сравнивать не более 3 автомобилей одновременно', 'warning');
+        return;
+      }
       updated = [...compareIds, carId];
     }
     setCompareIds(updated);
@@ -454,6 +459,8 @@ const UserDashboard = () => {
               const model = car.model || car.car_model || 'Car';
               const imgPath = resolveCarImage(car);
               const fallbackKey = carId ? `fav-${carId}` : `fav-idx-${idx}`;
+              // Проверка: заблокирована ли кнопка сравнения (лимит 3)
+              const isCompareDisabled = compareIds.length >= 3 && !compareIds.includes(carId);
 
               return (
                 <div key={fallbackKey} className={styles.favCard}>
@@ -480,6 +487,12 @@ const UserDashboard = () => {
                       <button
                         className={`${styles.compareToggle} ${compareIds.includes(carId) ? styles.compareActive : ''}`}
                         onClick={() => toggleCompare(carId)}
+                        disabled={isCompareDisabled}
+                        style={
+                          isCompareDisabled
+                            ? { opacity: 0.5, cursor: 'not-allowed', pointerEvents: 'none' }
+                            : {}
+                        }
                       >
                         <span className={styles.compareIcon}></span>
                         {compareIds.includes(carId) ? 'В сравнении' : 'Добавить к сравнению'}
@@ -572,26 +585,6 @@ const UserDashboard = () => {
           <p className={styles.empty}>Нет выбранных авто для сравнения. Откройте вкладку «Избранное» и отметьте нужные модели галочками.</p>
         );
 
-      case 'notifications':
-        return (
-          <div className={styles.notificationsTab}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-              <h2 style={{ color: 'var(--text)', margin: 0, fontFamily: "'Playfair Display', serif" }}>
-                Центр уведомлений
-              </h2>
-            </div>
-            <div style={{ textAlign: 'center', padding: '4rem 2rem', background: 'var(--glass-bg)', borderRadius: '20px', color: 'var(--text)', opacity: 0.6 }}>
-              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ marginBottom: '1rem', opacity: 0.5 }}>
-                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" strokeLinecap="round" strokeLinejoin="round" />
-                <path d="M13.73 21a2 2 0 0 1-3.46 0" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-              <p style={{ margin: 0, fontSize: '1.1rem', fontWeight: '500' }}>
-                Все уведомления теперь приходят во всплывающих окнах (тостах).
-              </p>
-            </div>
-          </div>
-        );
-
       default:
         return null;
     }
@@ -654,6 +647,7 @@ const UserDashboard = () => {
                         <span
                           key={`star-${star}`}
                           className={`${styles.star} ${isActive ? styles.starActive : ''}`}
+                          style={{ color: (hoverRating || reviewForm.rating) >= star ? 'var(--primary)' : 'rgba(128, 128, 128, 0.3)' }}
                           onClick={() => setReviewForm({ ...reviewForm, rating: star })}
                           onMouseEnter={() => setHoverRating(star)}
                           onMouseLeave={() => setHoverRating(null)}
