@@ -6,7 +6,7 @@
 
 * **Frontend:** React 18, Axios, Framer Motion (анимации), CSS-модули.
 * **Backend:** FastAPI (Python 3.11), REST API.
-* **База данных:** PostgreSQL / СУБД с поддержкой реляционных связей.
+* **База данных:** SQLite3.
 * **Контейнеризация:** Docker, Docker Compose.
 
 ### Предварительные требования
