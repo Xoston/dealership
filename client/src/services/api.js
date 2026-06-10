@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'http://localhost:8000/api',
+  baseURL: 'http://localhost:8001/api',
   headers: { 'Content-Type': 'application/json' },
   withCredentials: true,
 });
@@ -19,7 +19,7 @@ api.interceptors.request.use(
 );
 
 // Базовый URL для статических файлов (изображений)
-export const IMAGE_BASE = 'http://localhost:8000';
+export const IMAGE_BASE = 'http://localhost:8001';
 
 // Помощник: если URL относительный, делает его абсолютным
 export const getImageUrl = (url) => {
