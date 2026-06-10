@@ -446,3 +446,11 @@
 {"timestamp": "2026-06-10T14:50:19.195829", "event": "CAR_CREATED", "data": {"admin": "admin@luxury.com", "car_id": 23}}
 {"timestamp": "2026-06-10T14:50:59.208099", "event": "CAR_CREATED", "data": {"admin": "admin@luxury.com", "car_id": 24}}
 {"timestamp": "2026-06-10T14:50:59.222296", "event": "CAR_CREATED", "data": {"admin": "admin@luxury.com", "car_id": 24}}
+{"timestamp": "2026-06-10T15:16:56.420148", "event": "USER_ROLE_CHANGED", "data": {"admin": "admin@luxury.com", "user_id": 18, "new_role": "user"}}
+{"timestamp": "2026-06-10T15:16:56.423720", "event": "USER_ROLE_CHANGED", "data": {"admin": "admin@luxury.com", "user_id": 18, "new_role": "user"}}
+{"timestamp": "2026-06-10T15:16:58.557220", "event": "USER_DELETED", "data": {"admin": "admin@luxury.com", "user_id": 18}}
+{"timestamp": "2026-06-10T15:16:58.561243", "event": "USER_DELETED", "data": {"admin": "admin@luxury.com", "user_id": 18}}
+{"timestamp": "2026-06-10T15:17:00.902002", "event": "USER_ROLE_CHANGED", "data": {"admin": "admin@luxury.com", "user_id": 20, "new_role": "manager"}}
+{"timestamp": "2026-06-10T15:17:00.903677", "event": "USER_ROLE_CHANGED", "data": {"admin": "admin@luxury.com", "user_id": 20, "new_role": "manager"}}
+{"timestamp": "2026-06-10T15:25:16.996287", "event": "CAR_CREATED", "data": {"admin": "manager@mail.ru", "car_id": 25}}
+{"timestamp": "2026-06-10T15:25:17.002618", "event": "CAR_CREATED", "data": {"admin": "manager@mail.ru", "car_id": 25}}

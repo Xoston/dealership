@@ -35,7 +35,7 @@ def read_cars(
     )
 
 @router.get("/{car_id}", response_model=schemas.CarOut)
-@cached(ttl=30)
+#@cached(ttl=30)
 def read_car(car_id: int):
     car = crud.get_car(car_id)
     if not car:

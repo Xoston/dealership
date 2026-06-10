@@ -20,12 +20,10 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (token) {
-      // Явно добавляем заголовок ко всем запросам
       api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       api.get('/auth/me')
         .then(res => setUser(res.data))
         .catch((err) => {
-          // Токен истёк или невалиден – сбрасываем
           console.error('Ошибка при проверке сессии:', err.response || err);
           localStorage.removeItem('token');
           delete api.defaults.headers.common['Authorization'];
@@ -50,13 +48,10 @@ export const AuthProvider = ({ children }) => {
   // Вход в систему
   const login = async (email, password) => {
     try {
-      // Этот запрос не требует токена. Отправляем JSON.
       const res = await api.post('/auth/login', { email, password });
       const token = res.data.access_token;
       
       localStorage.setItem('token', token);
-
-      // Явно устанавливаем токен для всех последующих запросов
       api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
 
       const userRes = await api.get('/auth/me');
@@ -64,7 +59,25 @@ export const AuthProvider = ({ children }) => {
       return res.data;
     } catch (err) {
       console.error('Детальная ошибка логина (смотри статус ответа):', err.response || err);
-      throw err; // Прокидываем дальше, чтобы страница логина могла отреагировать
+      throw err;
+    }
+  };
+
+  // Регистрация
+  const register = async (formData) => {
+    try {
+      const res = await api.post('/auth/register', formData);
+      const token = res.data.access_token;
+
+      localStorage.setItem('token', token);
+      api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+
+      const userRes = await api.get('/auth/me');
+      setUser(userRes.data);
+      return res.data;
+    } catch (err) {
+      console.error('Ошибка регистрации:', err.response || err);
+      throw err;
     }
   };
 
@@ -75,7 +88,6 @@ export const AuthProvider = ({ children }) => {
     } catch (err) {
       console.error('Ошибка при деавторизации:', err.response || err);
     } finally {
-      // Блок finally гарантирует, что мы очистим стейт даже если сервер недоступен
       localStorage.removeItem('token');
       delete api.defaults.headers.common['Authorization'];
       setUser(null);
@@ -83,7 +95,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout, theme, toggleTheme }}>
+    <AuthContext.Provider value={{ user, loading, login, register, logout, theme, toggleTheme }}>
       {children}
     </AuthContext.Provider>
   );

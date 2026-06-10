@@ -134,4 +134,4 @@ async def chat(payload: dict = Body(...)):
             return {"reply": reply}
     except Exception as e:
         print(f"[CHAT ERROR] {e}")
-        return {"reply": "Связь с ИИ потеряна. Проверьте, запущена ли Ollama."}
+        return {"reply": "чат временно не работает"}

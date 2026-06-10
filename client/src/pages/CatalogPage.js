@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import { useAuth } from '../context/AuthContext';
 import { getCars } from '../services/carService';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
@@ -84,14 +85,17 @@ const transmissions = [
 ];
 
 const CatalogPage = () => {
+  const { user } = useAuth(); // получаем текущего пользователя
+
+  // Формируем персональный ключ для избранного
+  const favKey = user?.id ? `favorites_${user.id}` : 'favorites';
+
   const [cars, setCars] = useState([]);
   const [loading, setLoading] = useState(true);
-  // Базовые фильтры (отправляются на сервер)
   const [filters, setFilters] = useState({
     brand: '', model: '', min_price: '', max_price: '',
     year_from: '', year_to: '', body_type: '', restyling: '',
   });
-  // Расширенные технические фильтры (клиентская фильтрация)
   const [techFilters, setTechFilters] = useState({
     engine_volume_min: '', engine_volume_max: '',
     power_min: '', power_max: '',
@@ -102,11 +106,15 @@ const CatalogPage = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [compareList, setCompareList] = useState(JSON.parse(localStorage.getItem('compareList') || '[]'));
-  const [favorites, setFavorites] = useState(JSON.parse(localStorage.getItem('favorites') || '[]'));
+  const [favorites, setFavorites] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
-  // Сортировка
   const [sortBy, setSortBy] = useState('');
   const [sortDir, setSortDir] = useState('asc');
+
+  // При монтировании или смене пользователя загружаем его избранное
+  useEffect(() => {
+    setFavorites(JSON.parse(localStorage.getItem(favKey) || '[]'));
+  }, [user, favKey]);
 
   const resetAll = () => {
     setFilters({
@@ -128,15 +136,14 @@ const CatalogPage = () => {
   const fetchCars = useCallback(async () => {
     setLoading(true);
     try {
-      const params = { ...filters };
-      Object.keys(params).forEach(key => {
-        if (params[key] === '' || params[key] === null || params[key] === undefined) {
-          delete params[key];
+      const params = {};
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value !== '' && value !== null && value !== undefined) {
+          params[key] = value;
         }
       });
-      // Если есть поисковый запрос, передаём его как параметр search
-      if (searchQuery) {
-        params.search = searchQuery;
+      if (searchQuery.trim()) {
+        params.search = searchQuery.trim();
       }
       const res = await getCars(params);
       setCars(res.data);
@@ -152,10 +159,8 @@ const CatalogPage = () => {
     fetchCars();
   }, [fetchCars]);
 
-  // Клиентская фильтрация по тех. характеристикам + поиск по тексту
   const filteredByTech = useMemo(() => {
     return cars.filter(car => {
-      // Поиск по тексту (марка, модель, год) работает всегда, если есть searchQuery
       if (searchQuery) {
         const q = searchQuery.toLowerCase();
         const matches = (
@@ -165,7 +170,6 @@ const CatalogPage = () => {
         );
         if (!matches) return false;
       }
-      // Технические фильтры
       if (techFilters.engine_volume_min && (car.engine_volume || 0) < parseFloat(techFilters.engine_volume_min)) return false;
       if (techFilters.engine_volume_max && (car.engine_volume || 0) > parseFloat(techFilters.engine_volume_max)) return false;
       if (techFilters.power_min && (car.power || 0) < parseInt(techFilters.power_min)) return false;
@@ -177,7 +181,6 @@ const CatalogPage = () => {
     });
   }, [cars, techFilters, searchQuery]);
 
-  // Сортировка
   const sortedCars = useMemo(() => {
     if (!sortBy) return filteredByTech;
     const dir = sortDir === 'asc' ? 1 : -1;
@@ -192,7 +195,6 @@ const CatalogPage = () => {
     });
   }, [filteredByTech, sortBy, sortDir]);
 
-  // Пагинация
   const totalPages = Math.ceil(sortedCars.length / ITEMS_PER_PAGE);
   const paginatedCars = sortedCars.slice(
     (currentPage - 1) * ITEMS_PER_PAGE,
@@ -208,7 +210,6 @@ const CatalogPage = () => {
   const toggleCompare = (car) => {
     let newList;
     const isAlreadyCompared = compareList.some(item => item.id === car.id);
-    
     if (isAlreadyCompared) {
       newList = compareList.filter(item => item.id !== car.id);
     } else {
@@ -222,17 +223,17 @@ const CatalogPage = () => {
     localStorage.setItem('compareList', JSON.stringify(newList));
   };
 
+  // Избранное теперь сохраняется в персональный ключ
   const toggleFavorite = (car) => {
     let newFav;
     const isAlreadyFavorite = favorites.some(item => item.id === car.id);
-
     if (isAlreadyFavorite) {
       newFav = favorites.filter(item => item.id !== car.id);
     } else {
       newFav = [...favorites, car];
     }
     setFavorites(newFav);
-    localStorage.setItem('favorites', JSON.stringify(newFav));
+    localStorage.setItem(favKey, JSON.stringify(newFav));
   };
 
   const handleFilterChange = (field, value) => {
@@ -339,7 +340,6 @@ const CatalogPage = () => {
         )}
       </div>
 
-      {/* Панель сортировки */}
       <div className={styles.sortPanel}>
         <span className={styles.sortLabel}>Сортировать:</span>
         <button
@@ -453,7 +453,6 @@ const CatalogPage = () => {
         </>
       )}
 
-      {/* Модальное окно с расширенными фильтрами */}
       <AnimatePresence>
         {showFilters && (
           <motion.div
@@ -537,7 +536,6 @@ const CatalogPage = () => {
                   </div>
                 </div>
 
-                {/* Технические характеристики */}
                 <details className={styles.techDetails}>
                   <summary>Технические характеристики</summary>
                   <div className={styles.filterRow}>

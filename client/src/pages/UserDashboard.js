@@ -55,6 +55,9 @@ const UserDashboard = () => {
     { key: 'compare', label: 'Сравнение авто' }
   ];
 
+  // Персональный ключ для избранного
+  const favKey = user?.id ? `favorites_${user.id}` : 'favorites';
+
   const fetchData = useCallback(async () => {
     try {
       setLoading(true);
@@ -70,7 +73,8 @@ const UserDashboard = () => {
       setTestDrives(tRes.data);
       setLoans(lRes.data);
 
-      const cachedFavs = JSON.parse(localStorage.getItem('favorites') || '[]');
+      // Загружаем избранное с персональным ключом
+      const cachedFavs = JSON.parse(localStorage.getItem(favKey) || '[]');
       setFavorites(cachedFavs);
 
       const cachedCompareIds = JSON.parse(localStorage.getItem('compareIds') || '[]');
@@ -80,7 +84,7 @@ const UserDashboard = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [user, favKey]); // обновляем при смене пользователя
 
   useEffect(() => {
     fetchData();
@@ -120,7 +124,7 @@ const UserDashboard = () => {
     if (!carId) return;
     const updated = favorites.filter(car => getCarId(car) !== carId);
     setFavorites(updated);
-    localStorage.setItem('favorites', JSON.stringify(updated));
+    localStorage.setItem(favKey, JSON.stringify(updated)); // персональный ключ
 
     const updatedCompare = compareIds.filter(cId => cId !== carId);
     setCompareIds(updatedCompare);
@@ -131,10 +135,8 @@ const UserDashboard = () => {
     if (!carId) return;
     let updated;
     if (compareIds.includes(carId)) {
-      // Убираем из сравнения
       updated = compareIds.filter(cId => cId !== carId);
     } else {
-      // Добавляем только если ещё нет трёх машин
       if (compareIds.length >= 3) {
         addNotification('Можно сравнивать не более 3 автомобилей одновременно', 'warning');
         return;
@@ -168,11 +170,9 @@ const UserDashboard = () => {
     setShowViewModal(true);
   };
 
-  // ========== ИСПРАВЛЕННАЯ ФУНКЦИЯ ОТПРАВКИ ОТЗЫВА ==========
   const handleReviewSubmit = async (e, tdId) => {
     e.preventDefault();
     try {
-      // Отправляем POST на обновлённый эндпоинт
       await api.post(`/testdrives/${tdId}/review`, {
         rating: Number(reviewForm.rating),
         review_text: reviewForm.comment
@@ -180,7 +180,6 @@ const UserDashboard = () => {
 
       addNotification('Спасибо за ваш отзыв!', 'success');
 
-      // Мгновенно обновляем состояние без лишнего запроса
       setTestDrives(prev =>
         prev.map(td =>
           td.id === tdId
@@ -189,7 +188,6 @@ const UserDashboard = () => {
         )
       );
 
-      // Сброс формы и закрытие модалки
       setReviewForm({ test_drive_id: null, rating: 5, comment: '' });
       setShowReviewModal(false);
       setActiveReviewTd(null);
@@ -225,7 +223,6 @@ const UserDashboard = () => {
     return compareCars.some(car => car[fieldKey] !== firstValue);
   };
 
-  // Пагинация
   const renderPagination = (tabKey, totalItems) => {
     const totalPages = Math.ceil(totalItems / PER_PAGE);
     const current = page[tabKey] || 1;
@@ -459,7 +456,6 @@ const UserDashboard = () => {
               const model = car.model || car.car_model || 'Car';
               const imgPath = resolveCarImage(car);
               const fallbackKey = carId ? `fav-${carId}` : `fav-idx-${idx}`;
-              // Проверка: заблокирована ли кнопка сравнения (лимит 3)
               const isCompareDisabled = compareIds.length >= 3 && !compareIds.includes(carId);
 
               return (
