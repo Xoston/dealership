@@ -12,7 +12,7 @@ const WebSocketListener = () => {
     const token = localStorage.getItem('token');
     if (!token) return;
 
-    const wsUrl = `ws://localhost:8000/ws/notifications?token=${token}`;
+    const wsUrl = `ws://localhost:8001/ws/notifications?token=${token}`;
     const ws = new WebSocket(wsUrl);
 
     ws.onopen = () => {

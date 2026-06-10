@@ -1,16 +1,9 @@
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import LoanCalculator from '../LoanCalculator';
-import api from '../../services/api';
-
-jest.mock('../../services/api');
 
 describe('LoanCalculator component', () => {
-  beforeEach(() => {
-    api.post.mockClear();
-  });
-
   const renderComponent = () => render(<LoanCalculator />);
 
   test('renders form elements', () => {
@@ -18,22 +11,11 @@ describe('LoanCalculator component', () => {
 
     expect(screen.getByLabelText(/Сумма кредита/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/Срок/i)).toBeInTheDocument();
-    // В компоненте label: "Процентная ставка (%)"
     expect(screen.getByLabelText(/Процентная ставка/i)).toBeInTheDocument();
     expect(screen.getByText(/Рассчитать/i)).toBeInTheDocument();
   });
 
   test('calculates and displays loan result', async () => {
-    const mockResponse = {
-      data: {
-        monthly_payment: 166071.93,
-        total_payment: 5978589.48,
-        overpayment: 978589.48,
-        schedule: [],
-      },
-    };
-    api.post.mockResolvedValueOnce(mockResponse);
-
     renderComponent();
 
     fireEvent.change(screen.getByLabelText(/Сумма кредита/i), { target: { value: '5000000' } });
@@ -41,22 +23,23 @@ describe('LoanCalculator component', () => {
     fireEvent.change(screen.getByLabelText(/Процентная ставка/i), { target: { value: '12' } });
     fireEvent.click(screen.getByText(/Рассчитать/i));
 
+    // Ждём появления результата
     expect(await screen.findByText(/Ежемесячный платёж:/i)).toBeInTheDocument();
-    expect(screen.getByText(/166\s*071\.93/i)).toBeInTheDocument();
+    // Проверяем наличие "166 072" (форматированное значение)
+    const payments = screen.getAllByText(/166\s*072/);
+    expect(payments.length).toBeGreaterThan(0);
   });
 
-  test('displays error message on API failure', async () => {
-    api.post.mockRejectedValueOnce(new Error('Network error'));
-
+  test('displays error message on invalid input', async () => {
     renderComponent();
 
-    fireEvent.change(screen.getByLabelText(/Сумма кредита/i), { target: { value: '5000000' } });
+    // Оставляем пустую сумму — должна появиться ошибка
+    fireEvent.change(screen.getByLabelText(/Сумма кредита/i), { target: { value: '' } });
     fireEvent.change(screen.getByLabelText(/Срок/i), { target: { value: '36' } });
     fireEvent.change(screen.getByLabelText(/Процентная ставка/i), { target: { value: '12' } });
     fireEvent.click(screen.getByText(/Рассчитать/i));
 
-    await waitFor(() => {
-      expect(screen.getByText(/Ошибка при расчёте/i)).toBeInTheDocument();
-    });
+    // Ждём появления сообщения об ошибке
+    expect(await screen.findByText(/Пожалуйста, введите корректные параметры расчета/i)).toBeInTheDocument();
   });
-});
+}); 

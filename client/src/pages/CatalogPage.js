@@ -134,9 +134,9 @@ const CatalogPage = () => {
           delete params[key];
         }
       });
-      if (searchQuery && !filters.brand && !filters.model) {
-        // поиск по марке, модели или году
-        params.brand = searchQuery;   // сервер сам найдёт совпадения по бренду
+      // Если есть поисковый запрос, передаём его как параметр search
+      if (searchQuery) {
+        params.search = searchQuery;
       }
       const res = await getCars(params);
       setCars(res.data);
@@ -152,11 +152,11 @@ const CatalogPage = () => {
     fetchCars();
   }, [fetchCars]);
 
-  // Клиентская фильтрация по тех. характеристикам + поиск по году
+  // Клиентская фильтрация по тех. характеристикам + поиск по тексту
   const filteredByTech = useMemo(() => {
     return cars.filter(car => {
-      // Поиск по тексту (марка, модель, год)
-      if (searchQuery && !filters.brand && !filters.model) {
+      // Поиск по тексту (марка, модель, год) работает всегда, если есть searchQuery
+      if (searchQuery) {
         const q = searchQuery.toLowerCase();
         const matches = (
           (car.brand?.toLowerCase().includes(q)) ||
@@ -175,7 +175,7 @@ const CatalogPage = () => {
       if (techFilters.transmission && car.transmission !== techFilters.transmission) return false;
       return true;
     });
-  }, [cars, techFilters, searchQuery, filters]);
+  }, [cars, techFilters, searchQuery]);
 
   // Сортировка
   const sortedCars = useMemo(() => {

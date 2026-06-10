@@ -422,3 +422,27 @@
 {"timestamp": "2026-06-10T14:11:54.979712", "event": "CAR_CREATED", "data": {"admin": "admin@test.com", "car_id": 18}}
 {"timestamp": "2026-06-10T14:11:55.264193", "event": "LOAN_CALCULATED", "data": {"user": "admin@test.com", "car_id": 18, "amount": 5000000.0}}
 {"timestamp": "2026-06-10T14:11:55.271428", "event": "LOAN_CALCULATED", "data": {"user": "admin@test.com", "car_id": 18, "amount": 5000000.0}}
+{"timestamp": "2026-06-10T14:29:30.746049", "event": "CAR_CREATED", "data": {"admin": "admin@test.com", "car_id": 19}}
+{"timestamp": "2026-06-10T14:29:30.754783", "event": "CAR_CREATED", "data": {"admin": "admin@test.com", "car_id": 19}}
+{"timestamp": "2026-06-10T14:29:32.159922", "event": "CAR_CREATED", "data": {"admin": "admin@test.com", "car_id": 20}}
+{"timestamp": "2026-06-10T14:29:32.166125", "event": "CAR_CREATED", "data": {"admin": "admin@test.com", "car_id": 20}}
+{"timestamp": "2026-06-10T14:29:33.723508", "event": "CAR_CREATED", "data": {"admin": "admin@test.com", "car_id": 21}}
+{"timestamp": "2026-06-10T14:29:33.730024", "event": "CAR_CREATED", "data": {"admin": "admin@test.com", "car_id": 21}}
+{"timestamp": "2026-06-10T14:29:34.110647", "event": "LOAN_CALCULATED", "data": {"user": "admin@test.com", "car_id": 21, "amount": 5000000.0}}
+{"timestamp": "2026-06-10T14:29:34.116502", "event": "LOAN_CALCULATED", "data": {"user": "admin@test.com", "car_id": 21, "amount": 5000000.0}}
+{"timestamp": "2026-06-10T14:47:12.168538", "event": "CAR_CREATED", "data": {"admin": "admin@luxury.com", "car_id": 22}}
+{"timestamp": "2026-06-10T14:47:12.184264", "event": "CAR_CREATED", "data": {"admin": "admin@luxury.com", "car_id": 22}}
+{"timestamp": "2026-06-10T14:47:23.517753", "event": "LOAN_CALCULATED", "data": {"user": "admin@luxury.com", "car_id": 22, "amount": 123.0}}
+{"timestamp": "2026-06-10T14:47:23.525442", "event": "LOAN_CALCULATED", "data": {"user": "admin@luxury.com", "car_id": 22, "amount": 123.0}}
+{"timestamp": "2026-06-10T14:47:40.486587", "event": "TESTDRIVE_REQUESTED", "data": {"user": "admin@luxury.com", "car_id": 22}}
+{"timestamp": "2026-06-10T14:47:40.495065", "event": "TESTDRIVE_REQUESTED", "data": {"user": "admin@luxury.com", "car_id": 22}}
+{"timestamp": "2026-06-10T14:47:50.438339", "event": "PURCHASE_MADE", "data": {"user": "admin@luxury.com", "car_id": 22, "price": 123.0}}
+{"timestamp": "2026-06-10T14:47:50.451627", "event": "PURCHASE_MADE", "data": {"user": "admin@luxury.com", "car_id": 22, "price": 123.0}}
+{"timestamp": "2026-06-10T14:48:00.364313", "event": "TESTDRIVE_STATUS_CHANGED", "data": {"admin": "admin@luxury.com", "td_id": 11, "new_status": "approved", "user_id": 19}}
+{"timestamp": "2026-06-10T14:48:00.372055", "event": "TESTDRIVE_STATUS_CHANGED", "data": {"admin": "admin@luxury.com", "td_id": 11, "new_status": "approved", "user_id": 19}}
+{"timestamp": "2026-06-10T14:48:04.918625", "event": "LOAN_STATUS_CHANGED", "data": {"admin": "admin@luxury.com", "loan_id": 46, "new_status": "approved", "user_id": 19}}
+{"timestamp": "2026-06-10T14:48:04.928948", "event": "LOAN_STATUS_CHANGED", "data": {"admin": "admin@luxury.com", "loan_id": 46, "new_status": "approved", "user_id": 19}}
+{"timestamp": "2026-06-10T14:50:19.185911", "event": "CAR_CREATED", "data": {"admin": "admin@luxury.com", "car_id": 23}}
+{"timestamp": "2026-06-10T14:50:19.195829", "event": "CAR_CREATED", "data": {"admin": "admin@luxury.com", "car_id": 23}}
+{"timestamp": "2026-06-10T14:50:59.208099", "event": "CAR_CREATED", "data": {"admin": "admin@luxury.com", "car_id": 24}}
+{"timestamp": "2026-06-10T14:50:59.222296", "event": "CAR_CREATED", "data": {"admin": "admin@luxury.com", "car_id": 24}}
