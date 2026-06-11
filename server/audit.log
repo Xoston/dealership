@@ -454,3 +454,21 @@
 {"timestamp": "2026-06-10T15:17:00.903677", "event": "USER_ROLE_CHANGED", "data": {"admin": "admin@luxury.com", "user_id": 20, "new_role": "manager"}}
 {"timestamp": "2026-06-10T15:25:16.996287", "event": "CAR_CREATED", "data": {"admin": "manager@mail.ru", "car_id": 25}}
 {"timestamp": "2026-06-10T15:25:17.002618", "event": "CAR_CREATED", "data": {"admin": "manager@mail.ru", "car_id": 25}}
+{"timestamp": "2026-06-10T15:49:11.937280", "event": "PURCHASE_MADE", "data": {"user": "admin@luxury.com", "car_id": 23, "price": 100000000.0}}
+{"timestamp": "2026-06-10T15:49:11.955413", "event": "PURCHASE_MADE", "data": {"user": "admin@luxury.com", "car_id": 23, "price": 100000000.0}}
+{"timestamp": "2026-06-11T06:02:40.275407", "event": "CAR_CREATED", "data": {"admin": "admin@test.com", "car_id": 26}}
+{"timestamp": "2026-06-11T06:02:40.279204", "event": "CAR_CREATED", "data": {"admin": "admin@test.com", "car_id": 26}}
+{"timestamp": "2026-06-11T06:02:41.163058", "event": "CAR_CREATED", "data": {"admin": "admin@test.com", "car_id": 27}}
+{"timestamp": "2026-06-11T06:02:41.166463", "event": "CAR_CREATED", "data": {"admin": "admin@test.com", "car_id": 27}}
+{"timestamp": "2026-06-11T06:02:42.166062", "event": "CAR_CREATED", "data": {"admin": "admin@test.com", "car_id": 28}}
+{"timestamp": "2026-06-11T06:02:42.168655", "event": "CAR_CREATED", "data": {"admin": "admin@test.com", "car_id": 28}}
+{"timestamp": "2026-06-11T06:02:42.337418", "event": "LOAN_CALCULATED", "data": {"user": "admin@test.com", "car_id": 28, "amount": 5000000.0}}
+{"timestamp": "2026-06-11T06:02:42.340708", "event": "LOAN_CALCULATED", "data": {"user": "admin@test.com", "car_id": 28, "amount": 5000000.0}}
+{"timestamp": "2026-06-11T06:06:09.157298", "event": "CAR_CREATED", "data": {"admin": "admin@test.com", "car_id": 29}}
+{"timestamp": "2026-06-11T06:06:09.211585", "event": "CAR_CREATED", "data": {"admin": "admin@test.com", "car_id": 29}}
+{"timestamp": "2026-06-11T06:06:10.962744", "event": "CAR_CREATED", "data": {"admin": "admin@test.com", "car_id": 30}}
+{"timestamp": "2026-06-11T06:06:10.969626", "event": "CAR_CREATED", "data": {"admin": "admin@test.com", "car_id": 30}}
+{"timestamp": "2026-06-11T06:06:12.480645", "event": "CAR_CREATED", "data": {"admin": "admin@test.com", "car_id": 31}}
+{"timestamp": "2026-06-11T06:06:12.486824", "event": "CAR_CREATED", "data": {"admin": "admin@test.com", "car_id": 31}}
+{"timestamp": "2026-06-11T06:06:12.830570", "event": "LOAN_CALCULATED", "data": {"user": "admin@test.com", "car_id": 31, "amount": 5000000.0}}
+{"timestamp": "2026-06-11T06:06:12.837321", "event": "LOAN_CALCULATED", "data": {"user": "admin@test.com", "car_id": 31, "amount": 5000000.0}}
